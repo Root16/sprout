@@ -2,10 +2,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace Root16.Sprout
+namespace Root16.Sprout;
+
+public interface IDataSink<TDest>
 {
-	public interface IDataSink<TDest>
-	{
-		IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<TDest>> dests);
-	}
+	IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<TDest>> dests);
 }
