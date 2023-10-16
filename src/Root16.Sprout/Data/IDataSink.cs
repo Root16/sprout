@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Root16.Sprout;
+namespace Root16.Sprout.Data;
 
 public interface IDataSink<TDest>
 {

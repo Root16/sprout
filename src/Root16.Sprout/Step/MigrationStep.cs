@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Root16.Sprout.Data;
 using Root16.Sprout.Progress;
 using Root16.Sprout.Query;
 using System;

@@ -1,4 +1,5 @@
-﻿using Root16.Sprout.Progress;
+﻿using Root16.Sprout.Data;
+using Root16.Sprout.Progress;
 using Root16.Sprout.Strategy;
 using System;
 using System.Collections.Generic;
