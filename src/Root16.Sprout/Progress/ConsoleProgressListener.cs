@@ -6,26 +6,26 @@ namespace Root16.Sprout.Progress;
 
 public class ConsoleProgressListener : IProgressListener
 {
-	public void OnRunStart(IMigrationRuntime runtime)
+	public void OnRunStart(IIntegrationRuntime runtime)
 	{
 	}
 
-	public void OnStepStart(IMigrationRuntime runtime, string name)
+	public void OnStepStart(IIntegrationRuntime runtime, string name)
 	{
 	}
 
-	public void OnProgressChange(IMigrationRuntime runtime, MigrationProgress progress)
+	public void OnProgressChange(IIntegrationRuntime runtime, IntegrationProgress progress)
 	{
 		Console.CursorLeft = 0;
 		Console.Write(progress.ToString());
 	}
 
-	public void OnStepComplete(IMigrationRuntime runtime, string name)
+	public void OnStepComplete(IIntegrationRuntime runtime, string name)
 	{
 		Console.WriteLine();
 	}
 
-	public void OnRunComplete(IMigrationRuntime runtime)
+	public void OnRunComplete(IIntegrationRuntime runtime)
 	{
 	}
 }

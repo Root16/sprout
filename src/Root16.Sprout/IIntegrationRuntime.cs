@@ -6,12 +6,12 @@ using System.Collections.Generic;
 
 namespace Root16.Sprout;
 
-public interface IMigrationRuntime : IDisposable
+public interface IIntegrationRuntime : IDisposable
 {
-	IMigrationStrategy DefaultStrategy { get; }
+	IIntegationStrategy DefaultStrategy { get; }
 	T GetDataSource<T>() where T : IDataSource;
 	T GetDataSource<T>(string name) where T : IDataSource;
-	void ReportProgress(MigrationProgress progress);
+	void ReportProgress(IntegrationProgress progress);
 	void RunAllSteps();
 	IDictionary<string, object> Variables { get; }
 }

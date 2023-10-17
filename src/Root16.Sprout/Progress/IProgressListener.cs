@@ -2,9 +2,9 @@
 
 public interface IProgressListener
 {
-	void OnRunStart(IMigrationRuntime runtime);
-	void OnStepStart(IMigrationRuntime runtime, string name);
-	void OnProgressChange(IMigrationRuntime runtime, MigrationProgress progress);
-	void OnStepComplete(IMigrationRuntime runtime, string name);
-	void OnRunComplete(IMigrationRuntime runtime);
+	void OnRunStart(IIntegrationRuntime runtime);
+	void OnStepStart(IIntegrationRuntime runtime, string name);
+	void OnProgressChange(IIntegrationRuntime runtime, IntegrationProgress progress);
+	void OnStepComplete(IIntegrationRuntime runtime, string name);
+	void OnRunComplete(IIntegrationRuntime runtime);
 }

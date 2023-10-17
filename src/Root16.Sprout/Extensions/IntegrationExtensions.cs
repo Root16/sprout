@@ -8,39 +8,39 @@ using System.Text;
 
 namespace Root16.Sprout.Extensions;
 
-public static class MigrationExtensions
+public static class IntegrationExtensions
 {
-	public static IMigrationBuilder AddSqlDataSource(this IMigrationBuilder builder, string connectionStringName)
+	public static IIntegrationBuilder AddSqlDataSource(this IIntegrationBuilder builder, string connectionStringName)
 	{
 		//TODO
-		//var connectionMigrationToolkitString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
+		//var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
+		//return builder.AddSqlDataSource(connectionStringName, connectionString);
 		throw new NotImplementedException();
-		return builder.AddSqlDataSource(connectionStringName, "");
 	}
 
-	public static IMigrationBuilder AddSqlDataSource(this IMigrationBuilder builder, string name, string connectionString)
+	public static IIntegrationBuilder AddSqlDataSource(this IIntegrationBuilder builder, string name, string connectionString)
 	{
 		return builder.AddDataSource(name, new SqlDataSource(connectionString, builder.CreateLogger<SqlDataSource>()));
 	}
 
-	public static IMigrationBuilder AddLoggingProgressListener(this IMigrationBuilder builder)
+	public static IIntegrationBuilder AddLoggingProgressListener(this IIntegrationBuilder builder)
 	{
 		return builder.AddProgressListener(new LoggingProgressListener(builder.CreateLogger<LoggingProgressListener>()));
 	}
 
-	public static IMigrationBuilder AddConsoleProgressListener(this IMigrationBuilder builder)
+	public static IIntegrationBuilder AddConsoleProgressListener(this IIntegrationBuilder builder)
 	{
 		return builder.AddProgressListener(new ConsoleProgressListener());
 	}
 
-	public static IMigrationBuilder AddStep<T>(this IMigrationBuilder builder, string name) where T : IMigrationStep
+	public static IIntegrationBuilder AddStep<T>(this IIntegrationBuilder builder, string name) where T : IIntegrationStep
 	{
 		//TODO
 		throw new NotImplementedException();
 		//return builder.AddStep(name, (Action<T>)null);
 	}
 
-	public static IMigrationBuilder AddStep<T>(this IMigrationBuilder builder, string name, Action<T> configure) where T : IMigrationStep
+	public static IIntegrationBuilder AddStep<T>(this IIntegrationBuilder builder, string name, Action<T> configure) where T : IIntegrationStep
 	{
 		//TODO
 		throw new NotImplementedException();
@@ -49,17 +49,17 @@ public static class MigrationExtensions
 		//return builder.AddStep(name, step);
 	}
 
-	public static SqlDataSource GetSqlDataSource(this IMigrationRuntime runtime, string name)
+	public static SqlDataSource GetSqlDataSource(this IIntegrationRuntime runtime, string name)
 	{
 		return runtime.GetDataSource<SqlDataSource>(name);
 	}
 
-	public static SqlDataSource GetSqlDataSource(this IMigrationRuntime runtime)
+	public static SqlDataSource GetSqlDataSource(this IIntegrationRuntime runtime)
 	{
 		return runtime.GetDataSource<SqlDataSource>();
 	}
 
-	public static T GetVariable<T>(this IMigrationRuntime runtime, string key)
+	public static T GetVariable<T>(this IIntegrationRuntime runtime, string key)
 	{
 		if (runtime.Variables.TryGetValue(key, out object value))
 		{
@@ -69,7 +69,7 @@ public static class MigrationExtensions
 		throw new KeyNotFoundException();
 	}
 
-	public static bool TryGetVariable<T>(this IMigrationRuntime runtime, string key, out T value)
+	public static bool TryGetVariable<T>(this IIntegrationRuntime runtime, string key, out T value)
 	{
 		if (runtime.Variables.TryGetValue(key, out object obj))
 		{

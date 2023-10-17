@@ -5,11 +5,11 @@ using System.Text;
 
 namespace Root16.Sprout;
 
-public static class MigrationFactory
+public static class IntegrationFactory
 {
-	public static IMigrationRuntime Create(Action<IMigrationBuilder> configure)
+	public static IIntegrationRuntime Create(Action<IIntegrationBuilder> configure)
 	{
-		var builder = new Migration();
+		var builder = new Integration();
 		configure?.Invoke(builder);
 		return builder.Create();
 	}

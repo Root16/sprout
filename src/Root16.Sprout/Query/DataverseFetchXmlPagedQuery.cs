@@ -12,15 +12,15 @@ using System.Xml.Linq;
 
 namespace Root16.Sprout.Query;
 
-public class XrmFetchXmlPagedQuery : IPagedQuery<Entity>
+public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 {
-	private readonly XrmDataSource dataSource;
+	private readonly DataverseDataSource dataSource;
 	private readonly string fetchXml;
 	private string pagingCookie = null;
 	private int page = 1;
 	private int pageSize;
 
-	public XrmFetchXmlPagedQuery(XrmDataSource dataSource, string fetchXml)
+	public DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string fetchXml)
 	{
 		this.dataSource = dataSource;
 		this.fetchXml = fetchXml;
@@ -33,7 +33,7 @@ public class XrmFetchXmlPagedQuery : IPagedQuery<Entity>
 	{
 		if (page > 1 && pageSize != this.pageSize)
 		{
-			throw new NotImplementedException($"{nameof(XrmFetchXmlPagedQuery)} does not support changing page size.");
+			throw new NotImplementedException($"{nameof(DataverseFetchXmlPagedQuery)} does not support changing page size.");
 		}
 
 		this.pageSize = pageSize;

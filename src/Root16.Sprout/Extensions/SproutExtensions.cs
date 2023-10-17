@@ -9,28 +9,28 @@ using System.Threading.Tasks;
 
 namespace Root16.Sprout.Extensions;
 
-public static class XrmSdkMigrationExtensions
+public static class SproutExtensions
 {
-	public static IMigrationBuilder AddXrmDataSource(this IMigrationBuilder builder, string connectionStringName)
+	public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string connectionStringName)
 	{
 		var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
-		return builder.AddXrmDataSource(connectionStringName, connectionString);
+		return builder.AddDataverseDataSource(connectionStringName, connectionString);
 	}
 
-	public static IMigrationBuilder AddXrmDataSource(this IMigrationBuilder builder, string name, string connectionString)
+	public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string name, string connectionString)
 	{
-		var ds = new XrmDataSource(connectionString, builder.CreateLogger<XrmDataSource>());
+		var ds = new DataverseDataSource(connectionString, builder.CreateLogger<DataverseDataSource>());
 		return builder.AddDataSource(name, ds);
 	}
 
-	public static XrmDataSource GetXrmDataSource(this IMigrationRuntime runtime, string name)
+	public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime, string name)
 	{
-		return runtime.GetDataSource<XrmDataSource>(name);
+		return runtime.GetDataSource<DataverseDataSource>(name);
 	}
 
-	public static XrmDataSource GetXrmDataSource(this IMigrationRuntime runtime)
+	public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime)
 	{
-		return runtime.GetDataSource<XrmDataSource>();
+		return runtime.GetDataSource<DataverseDataSource>();
 	}
 
 	public static Entity GetDelta(this Entity updates, Entity original)

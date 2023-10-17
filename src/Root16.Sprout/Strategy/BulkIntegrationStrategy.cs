@@ -8,23 +8,23 @@ using System.Text;
 
 namespace Root16.Sprout.Strategy;
 
-public class BulkMigrationStrategy : IMigrationStrategy
+public class BulkIntegrationStrategy : IIntegationStrategy
 {
-	private readonly ILogger<BulkMigrationStrategy> logger;
+	private readonly ILogger<BulkIntegrationStrategy> logger;
 
-	public BulkMigrationStrategy(ILogger<BulkMigrationStrategy> logger)
+	public BulkIntegrationStrategy(ILogger<BulkIntegrationStrategy> logger)
 	{
 		this.logger = logger;
 	}
 
 	public int BatchSize { get; set; } = 200;
 
-	public void Migrate<TSource, TDest>(IMigrationRuntime runtime, IMigrationStep<TSource, TDest> step)
+	public void Migrate<TSource, TDest>(IIntegrationRuntime runtime, IIntegrationStep<TSource, TDest> step)
 	{
 		var query = step.GetSourceQuery(runtime);
 		var dest = step.GetDataSink(runtime);
 
-		var progress = new MigrationProgress(step.Name, query.GetTotalRecordCount());
+		var progress = new IntegrationProgress(step.Name, query.GetTotalRecordCount());
 		runtime.ReportProgress(progress);
 
 		int retryCount = 0;

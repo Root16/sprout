@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace Root16.Sprout.Strategy;
 
-public class ParallelMigrationStrategy : IMigrationStrategy
+public class ParallelIntegrationStrategy : IIntegationStrategy
 {
-	private readonly ILogger<ParallelMigrationStrategy> logger;
+	private readonly ILogger<ParallelIntegrationStrategy> logger;
 
-	public ParallelMigrationStrategy(ILogger<ParallelMigrationStrategy> logger)
+	public ParallelIntegrationStrategy(ILogger<ParallelIntegrationStrategy> logger)
 	{
 		this.logger = logger;
 	}
@@ -21,12 +21,12 @@ public class ParallelMigrationStrategy : IMigrationStrategy
 	public int BatchSize { get; set; } = 200;
 	public int MaxDegreeOfParallelism { get; set; } = 20;
 
-	public void Migrate<TSource, TDest>(IMigrationRuntime runtime, IMigrationStep<TSource, TDest> step)
+	public void Migrate<TSource, TDest>(IIntegrationRuntime runtime, IIntegrationStep<TSource, TDest> step)
 	{
 		var query = step.GetSourceQuery(runtime);
 		var dest = step.GetDataSink(runtime);
 
-		var progress = new MigrationProgress(step.Name, query.GetTotalRecordCount());
+		var progress = new IntegrationProgress(step.Name, query.GetTotalRecordCount());
 		runtime.ReportProgress(progress);
 
 		while (query.MoreRecords)

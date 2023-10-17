@@ -5,9 +5,9 @@ using System.Threading;
 
 namespace Root16.Sprout.Progress;
 
-public class MigrationProgress
+public class IntegrationProgress
 {
-	public MigrationProgress(string stepName, int? totalRecordCount)
+	public IntegrationProgress(string stepName, int? totalRecordCount)
 	{
 		StepName = stepName;
 		createCount = 0;

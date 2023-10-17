@@ -7,18 +7,18 @@ using System.Collections.Generic;
 
 namespace Root16.Sprout.Step;
 
-public interface IMigrationStep
+public interface IIntegrationStep
 {
 	string Name { get; set; }
 
-	void Run(IMigrationRuntime runtime);
+	void Run(IIntegrationRuntime runtime);
 }
 
-public abstract class MigrationStep : IMigrationStep
+public abstract class IntegrationStep : IIntegrationStep
 {
-	protected ILogger<MigrationStep> Logger { get; }
+	protected ILogger<IntegrationStep> Logger { get; }
 
-	public MigrationStep(ILogger<MigrationStep> logger)
+	public IntegrationStep(ILogger<IntegrationStep> logger)
 	{
 		Name = GetType().Name;
 		Logger = logger;
@@ -26,36 +26,36 @@ public abstract class MigrationStep : IMigrationStep
 
 	public string Name { get; set; }
 
-	public abstract void Run(IMigrationRuntime runtime);
+	public abstract void Run(IIntegrationRuntime runtime);
 }
 
-public interface IMigrationStep<TSource, TDest> : IMigrationStep
+public interface IIntegrationStep<TSource, TDest> : IIntegrationStep
 {
-	IPagedQuery<TSource> GetSourceQuery(IMigrationRuntime runtime);
-	IDataSink<TDest> GetDataSink(IMigrationRuntime runtime);
+	IPagedQuery<TSource> GetSourceQuery(IIntegrationRuntime runtime);
+	IDataSink<TDest> GetDataSink(IIntegrationRuntime runtime);
 	IReadOnlyList<DataChange<TDest>> MapRecord(TSource source);
 	void OnBeforeMap(IReadOnlyList<TSource> sourceRecords);
 	IReadOnlyList<DataChange<TDest>> OnBeforeUpdate(IReadOnlyList<DataChange<TDest>> destRecords);
 	void OnAfterUpdate(IReadOnlyList<TSource> sourceRecords, IReadOnlyList<DataChange<TDest>> errors);
 }
 
-public abstract class MigrationStep<TSource, TDest> : MigrationStep, IMigrationStep<TSource, TDest>
+public abstract class IntegrationStep<TSource, TDest> : IntegrationStep, IIntegrationStep<TSource, TDest>
 {
-	private readonly ILogger<MigrationStep<TSource, TDest>> logger;
+	private readonly ILogger<IntegrationStep<TSource, TDest>> logger;
 
-	protected MigrationStep(ILogger<MigrationStep<TSource, TDest>> logger) : base(logger)
+	protected IntegrationStep(ILogger<IntegrationStep<TSource, TDest>> logger) : base(logger)
 	{
 		this.logger = logger;
 	}
 
-	public override void Run(IMigrationRuntime runtime)
+	public override void Run(IIntegrationRuntime runtime)
 	{
 		runtime.DefaultStrategy.Migrate(runtime, this);
 	}
 
-	public abstract IDataSink<TDest> GetDataSink(IMigrationRuntime runtime);
+	public abstract IDataSink<TDest> GetDataSink(IIntegrationRuntime runtime);
 
-	public abstract IPagedQuery<TSource> GetSourceQuery(IMigrationRuntime runtime);
+	public abstract IPagedQuery<TSource> GetSourceQuery(IIntegrationRuntime runtime);
 
 	public abstract IReadOnlyList<DataChange<TDest>> MapRecord(TSource source);
 
