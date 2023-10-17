@@ -13,7 +13,7 @@ using System.Text;
 
 namespace Root16.Sprout;
 
-internal class Migration : IMigrationRuntime, IMigrationBuilder
+internal class Integration : IIntegrationRuntime, IIntegrationBuilder
 {
 	private OrderedDictionary steps;
 	private Dictionary<string, IDataSource> dataSources;
@@ -21,7 +21,7 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 	private ILoggerFactory loggerFactory;
 	private bool disposeLoggerFactory;
 
-	internal Migration()
+	internal Integration()
 	{
 		steps = new OrderedDictionary();
 		dataSources = new Dictionary<string, IDataSource>(StringComparer.CurrentCultureIgnoreCase);
@@ -29,15 +29,15 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		Variables = new Dictionary<String, Object>(StringComparer.CurrentCultureIgnoreCase);
 	}
 
-	public IMigrationStrategy DefaultStrategy { get; private set; }
+	public IIntegationStrategy DefaultStrategy { get; private set; }
 
 	public IDictionary<string, object> Variables { get; }
 
-	public IMigrationRuntime Create()
+	public IIntegrationRuntime Create()
 	{
 		if (DefaultStrategy == null)
 		{
-			DefaultStrategy = new BulkMigrationStrategy(CreateLogger<BulkMigrationStrategy>());
+			DefaultStrategy = new BulkIntegrationStrategy(CreateLogger<BulkIntegrationStrategy>());
 		}
 		return this;
 	}
@@ -59,11 +59,11 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		builder
 			.AddFilter("Microsoft", LogLevel.Warning)
 			.AddFilter("System", LogLevel.Warning)
-			.AddFilter("Root16.MigrationToolkit", LogLevel.Information)
+			.AddFilter("Root16.Sprout", LogLevel.Information)
 			.AddConsole();
 	}
 
-	public IMigrationBuilder UseLoggerFactory(ILoggerFactory loggerFactory)
+	public IIntegrationBuilder UseLoggerFactory(ILoggerFactory loggerFactory)
 	{
 		this.loggerFactory = loggerFactory;
 		disposeLoggerFactory = false;
@@ -71,7 +71,7 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		return this;
 	}
 
-	public IMigrationBuilder UseLoggerFactory(Action<ILoggingBuilder> configure)
+	public IIntegrationBuilder UseLoggerFactory(Action<ILoggingBuilder> configure)
 	{
 		loggerFactory = LoggerFactory.Create(builder =>
 		{
@@ -94,12 +94,12 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		}
 	}
 
-	public IMigrationBuilder UseDefaultStrategy<T>() where T : IMigrationStrategy
+	public IIntegrationBuilder UseDefaultStrategy<T>() where T : IIntegationStrategy
 	{
 		return UseDefaultStrategy<T>(null);
 	}
 
-	public IMigrationBuilder UseDefaultStrategy<T>(Action<T> configure) where T : IMigrationStrategy
+	public IIntegrationBuilder UseDefaultStrategy<T>(Action<T> configure) where T : IIntegationStrategy
 	{
 		DefaultStrategy = (T)Activator.CreateInstance(typeof(T), CreateLogger<T>());
 
@@ -108,13 +108,13 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		return this;
 	}
 
-	public IMigrationBuilder AddDataSource(string name, IDataSource dataSource)
+	public IIntegrationBuilder AddDataSource(string name, IDataSource dataSource)
 	{
 		dataSources.Add(name, dataSource);
 		return this;
 	}
 
-	public IMigrationBuilder AddStep(string name, IMigrationStep step)
+	public IIntegrationBuilder AddStep(string name, IIntegrationStep step)
 	{
 		step.Name = name;
 		steps.Add(name, step);
@@ -126,7 +126,7 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		ReportRunStart();
 		foreach (DictionaryEntry entry in steps)
 		{
-			var step = ((IMigrationStep)entry.Value);
+			var step = ((IIntegrationStep)entry.Value);
 			ReportStepStart(step.Name);
 			step.Run(this);
 			ReportStepComplete(step.Name);
@@ -152,7 +152,7 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		}
 	}
 
-	public void ReportProgress(MigrationProgress progress)
+	public void ReportProgress(IntegrationProgress progress)
 	{
 		foreach (var listener in progressListeners)
 		{
@@ -185,7 +185,7 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		}
 	}
 
-	public IMigrationBuilder AddProgressListener(IProgressListener listener)
+	public IIntegrationBuilder AddProgressListener(IProgressListener listener)
 	{
 		progressListeners.Add(listener);
 		return this;
@@ -199,7 +199,7 @@ internal class Migration : IMigrationRuntime, IMigrationBuilder
 		}
 	}
 
-	public IMigrationBuilder ClearProgressListeners()
+	public IIntegrationBuilder ClearProgressListeners()
 	{
 		progressListeners.Clear();
 		return this;

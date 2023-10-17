@@ -8,13 +8,13 @@ using System.Linq;
 
 namespace Root16.Sprout.Step;
 
-public abstract class DataverseDestinationStep<TSource> : MigrationStep<TSource, Entity>
+public abstract class DataverseDestinationStep<TSource> : IntegrationStep<TSource, Entity>
 {
 	public DataverseDestinationStep(ILogger<DataverseDestinationStep<TSource>> logger) : base(logger)
 	{
 
 	}
-	protected virtual DataverseDataSource GetDataverseDataSource(IMigrationRuntime runtime)
+	protected virtual DataverseDataSource GetDataverseDataSource(IIntegrationRuntime runtime)
 	{
 		return runtime.GetDataverseDataSource();
 	}
@@ -24,7 +24,7 @@ public abstract class DataverseDestinationStep<TSource> : MigrationStep<TSource,
 	public DataverseDataSink DataverseDataSink { get; protected set; }
 	public DataverseDataSource DataverseDataSource { get; protected set; }
 
-	public override IDataSink<Entity> GetDataSink(IMigrationRuntime runtime)
+	public override IDataSink<Entity> GetDataSink(IIntegrationRuntime runtime)
 	{
 		DataverseDataSink = DataverseDataSource.CreateDataSink();
 		DataverseDataSink.DryRun = this.DryRun;
@@ -37,7 +37,7 @@ public abstract class DataverseDestinationStep<TSource> : MigrationStep<TSource,
 	{
 	}
 
-	public override void Run(IMigrationRuntime runtime)
+	public override void Run(IIntegrationRuntime runtime)
 	{
 		DataverseDataSource = GetDataverseDataSource(runtime);
 		base.Run(runtime);

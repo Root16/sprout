@@ -15,27 +15,27 @@ public class LoggingProgressListener : IProgressListener
 		this.logger = logger;
 	}
 
-	public void OnRunStart(IMigrationRuntime runtime)
+	public void OnRunStart(IIntegrationRuntime runtime)
 	{
 		logger.LogInformation($"Starting run...");
 	}
 
-	public void OnStepStart(IMigrationRuntime runtime, string name)
+	public void OnStepStart(IIntegrationRuntime runtime, string name)
 	{
 		logger.LogInformation($"Step {name} starting...");
 	}
 
-	public void OnProgressChange(IMigrationRuntime runtime, MigrationProgress progress)
+	public void OnProgressChange(IIntegrationRuntime runtime, IntegrationProgress progress)
 	{
 		logger.LogDebug(progress.ToString());
 	}
 
-	public void OnStepComplete(IMigrationRuntime runtime, string name)
+	public void OnStepComplete(IIntegrationRuntime runtime, string name)
 	{
 		logger.LogInformation($"Step {name} complete.");
 	}
 
-	public void OnRunComplete(IMigrationRuntime runtime)
+	public void OnRunComplete(IIntegrationRuntime runtime)
 	{
 		logger.LogInformation($"Run complete.");
 	}

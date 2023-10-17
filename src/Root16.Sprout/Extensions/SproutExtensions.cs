@@ -11,24 +11,24 @@ namespace Root16.Sprout.Extensions;
 
 public static class SproutExtensions
 {
-	public static IMigrationBuilder AddDataverseDataSource(this IMigrationBuilder builder, string connectionStringName)
+	public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string connectionStringName)
 	{
 		var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
 		return builder.AddDataverseDataSource(connectionStringName, connectionString);
 	}
 
-	public static IMigrationBuilder AddDataverseDataSource(this IMigrationBuilder builder, string name, string connectionString)
+	public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string name, string connectionString)
 	{
 		var ds = new DataverseDataSource(connectionString, builder.CreateLogger<DataverseDataSource>());
 		return builder.AddDataSource(name, ds);
 	}
 
-	public static DataverseDataSource GetDataverseDataSource(this IMigrationRuntime runtime, string name)
+	public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime, string name)
 	{
 		return runtime.GetDataSource<DataverseDataSource>(name);
 	}
 
-	public static DataverseDataSource GetDataverseDataSource(this IMigrationRuntime runtime)
+	public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime)
 	{
 		return runtime.GetDataSource<DataverseDataSource>();
 	}
