@@ -13,19 +13,19 @@ using System.Threading.Tasks;
 
 namespace Root16.Sprout.Data;
 
-public class XrmDataSinkError
+public class DataverseDataSinkError
 {
 	public OrganizationServiceFault Fault { get; set; }
 	public OrganizationRequest Request { get; set; }
 }
-public class XrmDataSink : IDataSink<Entity>
+public class DataverseDataSink : IDataSink<Entity>
 {
-	private readonly XrmDataSource dataSource;
+	private readonly DataverseDataSource dataSource;
 	public bool DryRun { get; set; }
 	public bool BypassCustomPluginExecution { get; set; }
-	public event EventHandler<XrmDataSinkError> OnError;
+	public event EventHandler<DataverseDataSinkError> OnError;
 
-	public XrmDataSink(XrmDataSource dataSource)
+	public DataverseDataSink(DataverseDataSource dataSource)
 	{
 		this.dataSource = dataSource;
 	}
@@ -38,7 +38,7 @@ public class XrmDataSink : IDataSink<Entity>
 
 	private void ReportError(OrganizationServiceFault error, OrganizationRequest request)
 	{
-		OnError?.Invoke(this, new XrmDataSinkError
+		OnError?.Invoke(this, new DataverseDataSinkError
 		{
 			Fault = error,
 			Request = request
@@ -46,15 +46,15 @@ public class XrmDataSink : IDataSink<Entity>
 	}
 }
 
-public class XrmDataSource : IDataSource
+public class DataverseDataSource : IDataSource
 {
-	private readonly ILogger<XrmDataSource> logger;
+	private readonly ILogger<DataverseDataSource> logger;
 
-	public XrmDataSource(string crmConnectionString, ILogger<XrmDataSource> logger) : this(new ServiceClient(crmConnectionString), logger)
+	public DataverseDataSource(string crmConnectionString, ILogger<DataverseDataSource> logger) : this(new ServiceClient(crmConnectionString), logger)
 	{
 	}
 
-	public XrmDataSource(ServiceClient crmServiceClient, ILogger<XrmDataSource> logger)
+	public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
 	{
 		CrmServiceClient = crmServiceClient;
 		//TODO: check this
@@ -64,9 +64,9 @@ public class XrmDataSource : IDataSource
 
 	public ServiceClient CrmServiceClient { get; }
 
-	public XrmDataSink CreateDataSink()
+	public DataverseDataSink CreateDataSink()
 	{
-		return new XrmDataSink(this);
+		return new DataverseDataSink(this);
 	}
 
 	public IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<Entity>> changes, bool dryRun, bool bypassCustomPluginExecution, Action<OrganizationServiceFault, OrganizationRequest> errorHandler)
@@ -139,7 +139,7 @@ public class XrmDataSource : IDataSource
 
 	public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
 	{
-		return new XrmFetchXmlPagedQuery(this, fetchXml);
+		return new DataverseFetchXmlPagedQuery(this, fetchXml);
 	}
 
 	protected OrganizationRequest CreateOrganizationRequest(DataChange<Entity> change, bool bypassCustomPluginExecution)

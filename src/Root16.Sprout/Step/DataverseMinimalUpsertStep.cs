@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 namespace Root16.Sprout.Step
 {
 
-	public abstract class XrmMinimalUpsertStep<TSource> : XrmDestinationStep<TSource>
+	public abstract class DataverseMinimalUpsertStep<TSource> : DataverseDestinationStep<TSource>
 	{
-		public XrmMinimalUpsertStep(ILogger<XrmMinimalUpsertStep<TSource>> logger) : base(logger)
+		public DataverseMinimalUpsertStep(ILogger<DataverseMinimalUpsertStep<TSource>> logger) : base(logger)
 		{
 		}
 
@@ -113,7 +113,7 @@ namespace Root16.Sprout.Step
 							sb.AppendLine($"creating ({delta.LogicalName}):");
 							foreach (var attribute in delta.Attributes)
 							{
-								sb.AppendLine($"    {attribute.Key}: - => {XrmSdkMigrationExtensions.DisplayAttributeValue(attribute.Value)}");
+								sb.AppendLine($"    {attribute.Key}: - => {SproutExtensions.DisplayAttributeValue(attribute.Value)}");
 							}
 							Logger.LogDebug(sb.ToString());
 						}
