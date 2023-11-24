@@ -2,6 +2,7 @@
 using Root16.Sprout.Data;
 using Root16.Sprout.Progress;
 using Root16.Sprout.Query;
+using Root16.Sprout.Strategy;
 using System;
 using System.Collections.Generic;
 
@@ -9,30 +10,22 @@ namespace Root16.Sprout.Step;
 
 public interface IIntegrationStep
 {
-	string Name { get; set; }
-
-	void Run(IIntegrationRuntime runtime);
+	Task RunAsync();
 }
 
 public abstract class IntegrationStep : IIntegrationStep
 {
-	protected ILogger<IntegrationStep> Logger { get; }
-
-	public IntegrationStep(ILogger<IntegrationStep> logger)
+	public IntegrationStep()
 	{
-		Name = GetType().Name;
-		Logger = logger;
 	}
 
-	public string Name { get; set; }
-
-	public abstract void Run(IIntegrationRuntime runtime);
+	public abstract Task RunAsync();
 }
 
 public interface IIntegrationStep<TSource, TDest> : IIntegrationStep
 {
-	IPagedQuery<TSource> GetSourceQuery(IIntegrationRuntime runtime);
-	IDataSink<TDest> GetDataSink(IIntegrationRuntime runtime);
+	IPagedQuery<TSource> GetSourceQuery();
+	IDataSink<TDest> GetDataSink();
 	IReadOnlyList<DataChange<TDest>> MapRecord(TSource source);
 	void OnBeforeMap(IReadOnlyList<TSource> sourceRecords);
 	IReadOnlyList<DataChange<TDest>> OnBeforeUpdate(IReadOnlyList<DataChange<TDest>> destRecords);
@@ -41,21 +34,23 @@ public interface IIntegrationStep<TSource, TDest> : IIntegrationStep
 
 public abstract class IntegrationStep<TSource, TDest> : IntegrationStep, IIntegrationStep<TSource, TDest>
 {
-	private readonly ILogger<IntegrationStep<TSource, TDest>> logger;
+    private readonly IIntegationStrategy integationStrategy;
+    private readonly ILogger<IntegrationStep<TSource, TDest>> logger;
 
-	protected IntegrationStep(ILogger<IntegrationStep<TSource, TDest>> logger) : base(logger)
+	protected IntegrationStep(IIntegationStrategy integationStrategy,  ILogger<IntegrationStep<TSource, TDest>> logger)
 	{
-		this.logger = logger;
+        this.integationStrategy = integationStrategy;
+        this.logger = logger;
 	}
 
-	public override void Run(IIntegrationRuntime runtime)
+	public override async Task RunAsync()
 	{
-		runtime.DefaultStrategy.Migrate(runtime, this);
+		integationStrategy.Migrate(this);
 	}
 
-	public abstract IDataSink<TDest> GetDataSink(IIntegrationRuntime runtime);
+	public abstract IDataSink<TDest> GetDataSink();
 
-	public abstract IPagedQuery<TSource> GetSourceQuery(IIntegrationRuntime runtime);
+	public abstract IPagedQuery<TSource> GetSourceQuery();
 
 	public abstract IReadOnlyList<DataChange<TDest>> MapRecord(TSource source);
 

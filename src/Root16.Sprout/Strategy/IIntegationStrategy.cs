@@ -7,5 +7,5 @@ namespace Root16.Sprout.Strategy;
 
 public interface IIntegationStrategy
 {
-	void Migrate<TSource, TDest>(IIntegrationRuntime integration, IIntegrationStep<TSource, TDest> step);
+	void Migrate<TSource, TDest>(IIntegrationStep<TSource, TDest> step);
 }

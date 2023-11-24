@@ -19,13 +19,13 @@ public class BulkIntegrationStrategy : IIntegationStrategy
 
 	public int BatchSize { get; set; } = 200;
 
-	public void Migrate<TSource, TDest>(IIntegrationRuntime runtime, IIntegrationStep<TSource, TDest> step)
+	public void Migrate<TSource, TDest>(IIntegrationStep<TSource, TDest> step)
 	{
-		var query = step.GetSourceQuery(runtime);
-		var dest = step.GetDataSink(runtime);
+		var query = step.GetSourceQuery();
+		var dest = step.GetDataSink();
 
-		var progress = new IntegrationProgress(step.Name, query.GetTotalRecordCount());
-		runtime.ReportProgress(progress);
+		var progress = new IntegrationProgress(step.GetType().Name, query.GetTotalRecordCount());
+		// runtime.ReportProgress(progress);
 
 		int retryCount = 0;
 		while (query.MoreRecords)
@@ -75,7 +75,7 @@ public class BulkIntegrationStrategy : IIntegationStrategy
 
 				step.OnAfterUpdate(page, errors);
 
-				runtime.ReportProgress(progress);
+				// runtime.ReportProgress(progress);
 				retryCount = 0;
 			}
 			catch (Exception e)
