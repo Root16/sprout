@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Root16.Sprout.Query;
 
+// TODO: make async
 public interface IPagedQuery<T>
 {
 	bool MoreRecords { get; }

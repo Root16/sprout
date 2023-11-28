@@ -1,10 +1,11 @@
-﻿using Root16.Sprout.Progress;
+﻿using Root16.Sprout.Processors;
+using Root16.Sprout.Progress;
 using System;
 using System.Collections.Generic;
 
 namespace Root16.Sprout.Data;
 
-public interface IDataSink<TDest>
+public interface IDataOperationEndpoint<T>
 {
-	IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<TDest>> dests);
+	Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations);
 }

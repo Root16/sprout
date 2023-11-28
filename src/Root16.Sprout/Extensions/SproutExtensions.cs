@@ -11,27 +11,27 @@ namespace Root16.Sprout.Extensions;
 
 public static class SproutExtensions
 {
-	public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string connectionStringName)
-	{
-		var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
-		return builder.AddDataverseDataSource(connectionStringName, connectionString);
-	}
+	//public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string connectionStringName)
+	//{
+	//	var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
+	//	return builder.AddDataverseDataSource(connectionStringName, connectionString);
+	//}
 
-	public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string name, string connectionString)
-	{
-		var ds = new DataverseDataSource(connectionString, builder.CreateLogger<DataverseDataSource>());
-		return builder.AddDataSource(name, ds);
-	}
+	//public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string name, string connectionString)
+	//{
+	//	var ds = new DataverseDataSource(connectionString, builder.CreateLogger<DataverseDataSource>());
+	//	return builder.AddDataSource(name, ds);
+	//}
 
-	public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime, string name)
-	{
-		return runtime.GetDataSource<DataverseDataSource>(name);
-	}
+	//public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime, string name)
+	//{
+	//	return runtime.GetDataSource<DataverseDataSource>(name);
+	//}
 
-	public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime)
-	{
-		return runtime.GetDataSource<DataverseDataSource>();
-	}
+	//public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime)
+	//{
+	//	return runtime.GetDataSource<DataverseDataSource>();
+	//}
 
 	public static Entity GetDelta(this Entity updates, Entity original)
 	{

@@ -2,6 +2,7 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Processors;
 using Root16.Sprout.Progress;
 using Root16.Sprout.Query;
 using System;
@@ -18,7 +19,7 @@ public class DataverseDataSinkError
 	public OrganizationServiceFault Fault { get; set; }
 	public OrganizationRequest Request { get; set; }
 }
-public class DataverseDataSink : IDataSink<Entity>
+public class DataverseDataSink : IDataOperationEndpoint<Entity>
 {
 	private readonly DataverseDataSource dataSource;
 	public bool DryRun { get; set; }
@@ -44,6 +45,14 @@ public class DataverseDataSink : IDataSink<Entity>
 			Request = request
 		});
 	}
+
+    public Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations)
+    {
+		var results = (IReadOnlyList<DataOperationResult<Entity>>)operations
+			.Select(o => new DataOperationResult<Entity>(o, true))
+			.ToList();
+		return Task.FromResult(results);
+    }
 }
 
 public class DataverseDataSource : IDataSource

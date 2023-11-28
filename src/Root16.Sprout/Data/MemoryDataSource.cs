@@ -1,11 +1,12 @@
-﻿using Root16.Sprout.Progress;
+﻿using Root16.Sprout.Processors;
+using Root16.Sprout.Progress;
 using Root16.Sprout.Query;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Root16.Sprout.Data;
 
-public class MemoryDataSource<T> : IDataSource, IDataSink<T>
+public class MemoryDataSource<T> : IDataSource, IDataOperationEndpoint<T>
 {
 	public List<T> Records { get; }
 
@@ -23,10 +24,12 @@ public class MemoryDataSource<T> : IDataSource, IDataSink<T>
 		return new MemoryPagedQuery<T>(Records.ToArray());
 	}
 
-	public IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<T>> records)
-	{
-		Records.AddRange(records.Select(r => r.Target));
-		return records.Select(r => DataChangeType.Create).ToList();
+    public Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations)
+    {
+		Records.AddRange(operations.Select(r => r.Data));
+		IReadOnlyList<DataOperationResult<T>> results = operations
+			.Select(r => new DataOperationResult<T>(r, true))
+			.ToList();
+		return Task.FromResult(results);
 	}
-
 }

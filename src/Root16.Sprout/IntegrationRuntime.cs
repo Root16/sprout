@@ -38,8 +38,6 @@ public class IntegrationRuntime : IIntegrationRuntime
         {
             await RunStepAsync(reg);
         }
-
-        return Task.CompletedTask;
     }
 
 }

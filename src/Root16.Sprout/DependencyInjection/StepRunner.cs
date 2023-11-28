@@ -26,7 +26,7 @@ namespace Root16.Sprout.DependencyInjection
             
             using var scope = serviceScopeFactory.CreateScope();
             var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredService(reg.StepType);
-            step.Run();
+            await step.RunAsync();
         }
     }
 }
