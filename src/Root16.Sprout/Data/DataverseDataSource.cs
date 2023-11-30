@@ -24,17 +24,11 @@ public class DataverseDataSink : IDataOperationEndpoint<Entity>
 	private readonly DataverseDataSource dataSource;
 	public bool DryRun { get; set; }
 	public bool BypassCustomPluginExecution { get; set; }
-	public event EventHandler<DataverseDataSinkError> OnError;
+	public event EventHandler<DataverseDataSinkError>? OnError;
 
 	public DataverseDataSink(DataverseDataSource dataSource)
 	{
 		this.dataSource = dataSource;
-	}
-
-	public IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<Entity>> dests)
-	{
-
-		return dataSource.Update(dests, DryRun, BypassCustomPluginExecution, ReportError);
 	}
 
 	private void ReportError(OrganizationServiceFault error, OrganizationRequest request)
@@ -46,22 +40,15 @@ public class DataverseDataSink : IDataOperationEndpoint<Entity>
 		});
 	}
 
-    public Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations)
+    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations)
     {
-		var results = (IReadOnlyList<DataOperationResult<Entity>>)operations
-			.Select(o => new DataOperationResult<Entity>(o, true))
-			.ToList();
-		return Task.FromResult(results);
+		return await dataSource.PerformOperationsAsync(operations, DryRun, BypassCustomPluginExecution, ReportError);
     }
 }
 
 public class DataverseDataSource : IDataSource
 {
 	private readonly ILogger<DataverseDataSource> logger;
-
-	public DataverseDataSource(string crmConnectionString, ILogger<DataverseDataSource> logger) : this(new ServiceClient(crmConnectionString), logger)
-	{
-	}
 
 	public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
 	{
@@ -78,17 +65,20 @@ public class DataverseDataSource : IDataSource
 		return new DataverseDataSink(this);
 	}
 
-	public IReadOnlyList<DataChangeType> Update(IEnumerable<DataChange<Entity>> changes, bool dryRun, bool bypassCustomPluginExecution, Action<OrganizationServiceFault, OrganizationRequest> errorHandler)
+	public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> changes, bool dryRun, bool bypassCustomPluginExecution, Action<OrganizationServiceFault, OrganizationRequest> errorHandler)
 	{
 		var requests = new OrganizationRequestCollection();
 
 		requests.AddRange(changes.Select(c => CreateOrganizationRequest(c, bypassCustomPluginExecution)));
-		return ExecuteMultiple(requests, dryRun, errorHandler);
+		return await ExecuteMultipleAsync(requests, dryRun, errorHandler);
 	}
 
-	public IReadOnlyList<DataChangeType> ExecuteMultiple(OrganizationRequestCollection requests, bool dryRun, Action<OrganizationServiceFault, OrganizationRequest> errorHandler)
+	public async Task<IReadOnlyList<DataOperationResult<Entity>>> ExecuteMultipleAsync(
+		OrganizationRequestCollection requests, 
+		bool dryRun, 
+		Action<OrganizationServiceFault, OrganizationRequest>? errorHandler)
 	{
-		var results = new List<DataChangeType>();
+		var results = new List<DataOperationResult<Entity>>();
 
 		if (requests.Count == 1)
 		{
@@ -96,14 +86,14 @@ public class DataverseDataSource : IDataSource
 			{
 				if (!dryRun)
 				{
-					var response = CrmServiceClient.Execute(requests[0]);
+					var response = await CrmServiceClient.ExecuteAsync(requests[0]);
 				}
-				results.Add(ResultFromRequestType(requests[0]));
+				results.Add(ResultFromRequestType(requests[0], true));
 			}
 			catch (FaultException<OrganizationServiceFault> e)
 			{
 				logger.LogError(e.Message);
-				results.Add(DataChangeType.Error);
+				results.Add(ResultFromRequestType(requests[0], false));
 			}
 		}
 		else if (requests.Count > 1)
@@ -117,22 +107,29 @@ public class DataverseDataSource : IDataSource
 				Requests = requests
 			};
 
-			ExecuteMultipleResponseItemCollection responses;
-			for (var i = 0; i < requests.Count; i++)
+			if (dryRun)
 			{
-				results.Add(ResultFromRequestType(requests[i]));
-			}
-
-			if (!dryRun)
-			{
-				responses = ((ExecuteMultipleResponse)CrmServiceClient.Execute(executeMultiple)).Responses;
-				foreach (var response in responses)
+				for (var i = 0; i < requests.Count; i++)
 				{
-					if (response.Fault != null)
+					results.Add(ResultFromRequestType(requests[i], true));
+				}
+			}
+			else
+			{
+				var executeMultipleResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(executeMultiple);
+				var responses = executeMultipleResponse.Responses;
+				for (var i = 0; i < requests.Count; i++)
+				{
+					var response = responses.FirstOrDefault(r => r.RequestIndex == i);
+					if (response?.Fault != null)
 					{
-						results[response.RequestIndex] = DataChangeType.Error;
+						results.Add(ResultFromRequestType(requests[i], false));
 						logger.LogError(response.Fault.Message);
-						errorHandler(response.Fault, requests[response.RequestIndex]);
+						errorHandler?.Invoke(response.Fault, requests[response.RequestIndex]);
+					}
+					else
+					{
+						results.Add(ResultFromRequestType(requests[i], true));
 					}
 				}
 			}
@@ -141,9 +138,9 @@ public class DataverseDataSource : IDataSource
 		return results;
 	}
 
-	private static DataChangeType ResultFromRequestType(OrganizationRequest request)
+	private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
 	{
-		return request.RequestName == "Create" ? DataChangeType.Create : DataChangeType.Update;
+		return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, (Entity)request.Parameters["Target"]), wasSuccessful);
 	}
 
 	public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
@@ -151,26 +148,26 @@ public class DataverseDataSource : IDataSource
 		return new DataverseFetchXmlPagedQuery(this, fetchXml);
 	}
 
-	protected OrganizationRequest CreateOrganizationRequest(DataChange<Entity> change, bool bypassCustomPluginExecution)
+	protected OrganizationRequest CreateOrganizationRequest(DataOperation<Entity> change, bool bypassCustomPluginExecution)
 	{
 		OrganizationRequest request;
-		if (change.Type == DataChangeType.Create)
+		if (change.OperationType == "Create")
 		{
 			request = new CreateRequest
 			{
-				Target = change.Target,
+				Target = change.Data,
 			};
 		}
-		else if (change.Type == DataChangeType.Update)
+		else if (change.OperationType == "Update")
 		{
 			request = new UpdateRequest
 			{
-				Target = change.Target,
+				Target = change.Data,
 			};
 		}
 		else
 		{
-			throw new NotImplementedException("Unknown change type.");
+			throw new NotImplementedException("Unknown operation type.");
 		}
 
 		if (bypassCustomPluginExecution)

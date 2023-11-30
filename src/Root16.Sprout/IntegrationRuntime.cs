@@ -18,7 +18,15 @@ public class IntegrationRuntime : IIntegrationRuntime
     public async Task RunStepAsync(string name)
     {
         var reg = stepRegistrations.FirstOrDefault(step => step.Name == name);
-        if (reg == null) throw new InvalidCastException($"Step named '{name}' is not registered.");
+        if (reg == null) throw new InvalidOperationException($"Step named '{name}' is not registered.");
+
+        await RunStepAsync(reg);
+    }
+
+    public async Task RunStepAsync<TStep>() where TStep : class, IIntegrationStep
+    {
+        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep));
+        if (reg == null) throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
 
         await RunStepAsync(reg);
     }
