@@ -1,38 +1,10 @@
 ﻿using Microsoft.Xrm.Sdk;
-using Root16.Sprout.Data;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Root16.Sprout.Extensions;
 
-public static class SproutExtensions
+public static class EntityExtensions
 {
-	//public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string connectionStringName)
-	//{
-	//	var connectionString = ConfigurationManager.ConnectionStrings[connectionStringName].ConnectionString;
-	//	return builder.AddDataverseDataSource(connectionStringName, connectionString);
-	//}
-
-	//public static IIntegrationBuilder AddDataverseDataSource(this IIntegrationBuilder builder, string name, string connectionString)
-	//{
-	//	var ds = new DataverseDataSource(connectionString, builder.CreateLogger<DataverseDataSource>());
-	//	return builder.AddDataSource(name, ds);
-	//}
-
-	//public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime, string name)
-	//{
-	//	return runtime.GetDataSource<DataverseDataSource>(name);
-	//}
-
-	//public static DataverseDataSource GetDataverseDataSource(this IIntegrationRuntime runtime)
-	//{
-	//	return runtime.GetDataSource<DataverseDataSource>();
-	//}
-
 	public static Entity CloneWithModifiedAttributes(this Entity updates, Entity original)
 	{
 		Entity delta = new Entity(original.LogicalName, original.Id);

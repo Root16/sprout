@@ -20,6 +20,7 @@ public record DataverseDataSinkError(OrganizationServiceFault Fault, Organizatio
 public class DataverseDataSource : IDataSource<Entity>
 {
 	private readonly ILogger<DataverseDataSource> logger;
+	public string? Name { get; set; }
     public bool DryRun { get; set; }
     public bool BypassCustomPluginExecution { get; set; }
     public event EventHandler<DataverseDataSinkError>? OnError;

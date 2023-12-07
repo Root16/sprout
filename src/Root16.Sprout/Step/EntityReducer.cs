@@ -97,7 +97,7 @@ public class EntityReducer
                         sb.AppendLine($"creating ({delta.LogicalName}):");
                         foreach (var attribute in delta.Attributes)
                         {
-                            sb.AppendLine($"    {attribute.Key}: - => {SproutExtensions.DisplayAttributeValue(attribute.Value)}");
+                            sb.AppendLine($"    {attribute.Key}: - => {EntityExtensions.DisplayAttributeValue(attribute.Value)}");
                         }
                         logger.LogDebug(sb.ToString());
                     }
