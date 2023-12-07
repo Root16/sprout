@@ -1,8 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-using Microsoft.PowerPlatform.Dataverse.Client;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.Progress;
@@ -29,15 +26,6 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddDataverseDataSource(this IServiceCollection services, string connectionStringName)
-    {
-        return services.AddTransient(services =>
-        {
-            var factory = services.GetRequiredService<IDataverseDataSourceFactory>();
-            return factory.CreateDataSource(connectionStringName);
-        });
-    }
-
     public static IServiceCollection AddSprout(this IServiceCollection services)
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
@@ -47,32 +35,5 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<EntityReducer>();
         services.TryAddSingleton<IDataverseDataSourceFactory, DataverseDataSourceFactory>();
         return services;
-    }
-}
-
-public interface IDataverseDataSourceFactory
-{
-    DataverseDataSource CreateDataSource(string name);
-}
-
-public class DataverseDataSourceFactory : IDataverseDataSourceFactory
-{
-    private readonly IServiceProvider serviceProvider;
-
-    public DataverseDataSourceFactory(IServiceProvider serviceProvider)
-    {
-        this.serviceProvider = serviceProvider;
-    }
-
-    public DataverseDataSource CreateDataSource(string connectionStringName)
-    {
-        var config = serviceProvider.GetRequiredService<IConfiguration>();
-        var logger = serviceProvider.GetRequiredService<ILogger<DataverseDataSource>>();
-        var serviceClient = new ServiceClient(
-            config.GetConnectionString(connectionStringName),
-            serviceProvider.GetRequiredService<ILogger<ServiceClient>>()
-        );
-        var ds = new DataverseDataSource(serviceClient, logger);
-        return ds;
     }
 }

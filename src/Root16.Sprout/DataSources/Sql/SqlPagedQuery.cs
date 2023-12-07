@@ -9,7 +9,6 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
     private readonly string commandText;
     private readonly string totalRowCountCommandText;
     private readonly bool addPaging;
-    private int page;
 
     public SqlPagedQuery(SqlConnection connection, string commandText, string totalRowCountCommandText = null, bool addPaging = true)
     {
@@ -17,32 +16,31 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
         this.commandText = commandText;
         this.totalRowCountCommandText = totalRowCountCommandText;
         this.addPaging = addPaging;
-        page = 0;
-        MoreRecords = true;
     }
 
-    public bool MoreRecords { get; private set; }
-
-    public IReadOnlyList<DataRow> GetNextPage(int pageSize)
+    public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
         using (var command = connection.CreateCommand())
         {
             command.CommandText = commandText;
             if (addPaging)
             {
-                command.CommandText += $" OFFSET {page * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+                command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
             }
             command.Connection.Open();
-            var reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+            var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
             try
             {
                 DataTable table = new DataTable();
                 table.Load(reader);
-                page++;
-                MoreRecords = table.Rows.Count == pageSize;
 
                 var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
-                return rows;
+                return new PagedQueryResult<DataRow>
+                (
+                    rows,
+                    table.Rows.Count == pageSize,
+                    null
+                );
             }
             finally
             {
@@ -51,7 +49,7 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
         }
     }
 
-    public int? GetTotalRecordCount()
+    public async Task<int?> GetTotalRecordCountAsync()
     {
         if (string.IsNullOrEmpty(totalRowCountCommandText)) return null;
 
@@ -61,7 +59,7 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
             cmd.Connection.Open();
             try
             {
-                return (int)cmd.ExecuteScalar();
+                return (int?)await cmd.ExecuteScalarAsync();
             }
             finally
             {

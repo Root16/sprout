@@ -8,33 +8,32 @@ public class DynamicSqlPagedQuery : IPagedQuery<DataRow>
     private readonly SqlConnection connection;
     private readonly Func<int, int, string> commandGenerator;
     private readonly string totalRowCountCommandText;
-    private int page;
 
     public DynamicSqlPagedQuery(SqlConnection connection, Func<int, int, string> commandGenerator, string totalRowCountCommandText = null)
     {
         this.connection = connection;
         this.commandGenerator = commandGenerator;
         this.totalRowCountCommandText = totalRowCountCommandText;
-        MoreRecords = true;
     }
 
-    public bool MoreRecords { get; private set; }
-
-    public IReadOnlyList<DataRow> GetNextPage(int pageSize)
+    public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = commandGenerator(page, pageSize);
+        command.CommandText = commandGenerator(pageNumber, pageSize);
         command.Connection.Open();
-        var reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+        var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
         try
         {
             DataTable table = new DataTable();
             table.Load(reader);
-            page++;
-            MoreRecords = table.Rows.Count == pageSize;
 
             var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
-            return rows;
+            return new PagedQueryResult<DataRow>
+            (
+                rows,
+                table.Rows.Count == pageSize,
+                null
+            );
         }
         finally
         {
@@ -42,7 +41,7 @@ public class DynamicSqlPagedQuery : IPagedQuery<DataRow>
         }
     }
 
-    public int? GetTotalRecordCount()
+    public async Task<int?> GetTotalRecordCountAsync()
     {
         if (string.IsNullOrEmpty(totalRowCountCommandText)) return null;
 
@@ -51,7 +50,7 @@ public class DynamicSqlPagedQuery : IPagedQuery<DataRow>
         cmd.Connection.Open();
         try
         {
-            return (int)cmd.ExecuteScalar();
+            return (int?)await cmd.ExecuteScalarAsync();
         }
         finally
         {
