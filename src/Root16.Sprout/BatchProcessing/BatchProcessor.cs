@@ -3,14 +3,27 @@ using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchRunner
+public class BatchProcessor
 {
-    public BatchRunner(IProgressListener progressListener)
+    public BatchProcessor(IProgressListener progressListener)
     {
         this.progressListener = progressListener;
     }
 
     private readonly IProgressListener progressListener;
+
+    public async Task ProcessAllBatchesAsync<TInput, TOutput>(
+        IBatchIntegrationStep<TInput, TOutput> step,
+        int? pageSize = null)
+    {
+        PagedQueryState<TInput>? queryState = null;
+        do
+        {
+            queryState = await ProcessBatchAsync(step, queryState, pageSize);
+        }
+        while (queryState.MoreRecords);
+
+    }
 
     public async Task<PagedQueryState<TInput>> ProcessBatchAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput,TOutput> step,
@@ -18,21 +31,19 @@ public class BatchRunner
         int? pageSize = null)
     {
         // initialize state if needed
-        var query = step.GetSourceQuery();
+        var query = step.GetInputQuery();
         if (queryState == null)
         {
             var total = await query.GetTotalRecordCountAsync();
-            queryState = new(true, 0, total, pageSize ?? 200, null);
+            queryState = new(0, pageSize ?? 200, 0, total, true, null);
         }
 
         // get batch of data (IPagedQuery)
-        pageSize ??= 200;
         var progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
 
-        // TODO: pass in query state
         var result = await query.GetNextPageAsync(queryState.NextPageNumber, queryState.RecordsPerPage, queryState.Bookmark);
         var batch = result.Records;
-        var proccessedCount = batch.Count;
+        var proccessedCount = queryState.RecordsProcessed + batch.Count;
 
         batch = await step.OnBeforeMapAsync(batch);
 
@@ -52,10 +63,11 @@ public class BatchRunner
         // return state (more records, paging details) from IPagedQuery
 
         return new PagedQueryState<TInput>(
-            result.MoreRecords,
             queryState.NextPageNumber + 1,
-            queryState.TotalRecordCount,
             queryState.RecordsPerPage,
+            proccessedCount,
+            queryState.TotalRecordCount,
+            result.MoreRecords,
             queryState.Bookmark);
     }
 }

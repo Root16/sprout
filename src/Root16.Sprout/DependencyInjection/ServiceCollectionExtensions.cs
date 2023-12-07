@@ -29,10 +29,10 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSprout(this IServiceCollection services)
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
-        services.TryAddTransient<BatchRunner>();
+        services.TryAddTransient<BatchProcessor>();
         services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
         services.TryAddTransient<DataverseDataSource>();
-        services.TryAddTransient<EntityReducer>();
+        services.TryAddTransient<EntityOperationReducer>();
         services.TryAddSingleton<IDataverseDataSourceFactory, DataverseDataSourceFactory>();
         return services;
     }

@@ -9,15 +9,15 @@ namespace Root16.Sprout.Sample;
 internal class TestStep : BatchIntegrationStep<Contact,Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
-    private readonly EntityReducer entityReducer;
-    private readonly BatchRunner runner;
+    private readonly EntityOperationReducer reducer;
+    private readonly BatchProcessor batchProcessor;
     private MemoryDataSource<Contact> memoryDS;
 
-    public TestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityReducer entityReducer, BatchRunner runner)
+    public TestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
-        this.entityReducer = entityReducer;
-        this.runner = runner;
+        this.reducer = reducer;
+        this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
     }
 
@@ -42,14 +42,14 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
                     </entity>
                 </fetch>"));
 
-        entityReducer.SetPotentialMatches(matches.Entities);
+        reducer.SetPotentialMatches(matches.Entities);
 
         return batch;
     }
 
     public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
     {
-        return entityReducer.ReduceChanges(batch, entity => string.Concat(
+        return reducer.ReduceOperations(batch, entity => string.Concat(
                 entity.GetAttributeValue<string>("firstname"),
                 "|",
                 entity.GetAttributeValue<string>("lastname")
@@ -58,12 +58,12 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
 
     public override async Task RunAsync()
     {
-        await runner.ProcessBatchAsync(this, null);
+        await batchProcessor.ProcessAllBatchesAsync(this);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
 
-    public override IPagedQuery<Contact> GetSourceQuery()
+    public override IPagedQuery<Contact> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }

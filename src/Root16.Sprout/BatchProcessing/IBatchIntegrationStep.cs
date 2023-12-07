@@ -5,7 +5,7 @@ namespace Root16.Sprout.BatchProcessing;
 public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
 {
     IDataSource<TOutput> OutputDataSource { get; }
-    IPagedQuery<TInput> GetSourceQuery();
+    IPagedQuery<TInput> GetInputQuery();
 	IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput input);
 
     Task<IReadOnlyList<TInput>> OnBeforeMapAsync(IReadOnlyList<TInput> batch);

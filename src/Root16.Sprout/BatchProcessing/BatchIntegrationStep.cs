@@ -9,7 +9,7 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
     }
 
     public abstract IDataSource<TOutput> OutputDataSource { get; }
-    public abstract IPagedQuery<TInput> GetSourceQuery();
+    public abstract IPagedQuery<TInput> GetInputQuery();
     public abstract IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput source);
     public virtual Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<TOutput>> results)
     {

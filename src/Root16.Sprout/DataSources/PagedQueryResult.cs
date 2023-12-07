@@ -9,9 +9,10 @@ public record PagedQueryResult<T>
 
 public record PagedQueryState<T>
 (
-    bool MoreRecords,
     int NextPageNumber,
-    int? TotalRecordCount,
     int RecordsPerPage,
+    int RecordsProcessed,
+    int? TotalRecordCount,
+    bool MoreRecords,
     object? Bookmark
 );

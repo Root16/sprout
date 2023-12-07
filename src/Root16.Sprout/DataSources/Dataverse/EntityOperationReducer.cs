@@ -4,12 +4,12 @@ using System.Text;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class EntityReducer
+public class EntityOperationReducer
 {
     private IEnumerable<Entity>? entities;
-    private readonly ILogger<EntityReducer> logger;
+    private readonly ILogger<EntityOperationReducer> logger;
 
-    public EntityReducer(ILogger<EntityReducer> logger)
+    public EntityOperationReducer(ILogger<EntityOperationReducer> logger)
     {
         this.logger = logger;
     }
@@ -35,12 +35,12 @@ public class EntityReducer
         return updates.CloneWithModifiedAttributes(original);
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceChanges(IEnumerable<DataOperation<Entity>> changes, Func<Entity, string> keySelector)
+    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, string> keySelector)
     {
-        return ReduceChanges(changes, (e1, e2) => StringComparer.OrdinalIgnoreCase.Equals(keySelector(e1), keySelector(e2)));
+        return ReduceOperations(changes, (e1, e2) => StringComparer.OrdinalIgnoreCase.Equals(keySelector(e1), keySelector(e2)));
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceChanges(IEnumerable<DataOperation<Entity>> changes, Func<Entity,Entity,bool> entityEqualityComparer)
+    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity,Entity,bool> entityEqualityComparer)
     {
         if (entities == null)
         {
