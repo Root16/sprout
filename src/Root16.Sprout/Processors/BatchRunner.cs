@@ -30,8 +30,11 @@ public class BatchRunner
 
         // get batch of data (IPagedQuery)
         pageSize ??= 200;
+        var progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
+
         // TODO: pass in query state
         var batch = query.GetNextPage(pageSize.Value);
+        var proccessedCount = batch.Count;
 
         batch = await step.OnBeforeMapAsync(batch);
 
@@ -44,7 +47,8 @@ public class BatchRunner
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)
-        // progressListener.OnProgressChange();
+        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? "Error" : r.Operation.OperationType));
+        progressListener.OnProgressChange(progress);
 
 
         // return state (more records, paging details) from IPagedQuery
