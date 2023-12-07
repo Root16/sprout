@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Root16.Sprout;
-using Root16.Sprout.Data;
+using Root16.Sprout.DataSources;
 using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Sample;
 

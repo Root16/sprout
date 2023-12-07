@@ -1,14 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
-using Root16.Sprout.Extensions;
-using Root16.Sprout.Processors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Root16.Sprout.Step;
+namespace Root16.Sprout.DataSources.Dataverse;
 
 public class EntityReducer
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xrm.Sdk;
 using System.Text;
 
-namespace Root16.Sprout.Extensions;
+namespace Root16.Sprout.DataSources.Dataverse;
 
 public static class EntityExtensions
 {

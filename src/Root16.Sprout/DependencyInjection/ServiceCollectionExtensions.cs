@@ -3,15 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Root16.Sprout.Data;
-using Root16.Sprout.Processors;
+using Root16.Sprout.BatchProcessing;
+using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.Progress;
-using Root16.Sprout.Step;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Root16.Sprout.DependencyInjection;
 

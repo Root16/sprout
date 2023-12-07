@@ -1,8 +1,6 @@
-﻿using Root16.Sprout.Data;
-using Root16.Sprout.Processors;
-using Root16.Sprout.Query;
+﻿using Root16.Sprout.DataSources;
 
-namespace Root16.Sprout.Step;
+namespace Root16.Sprout.BatchProcessing;
 
 public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationStep<TInput, TOutput>
 {

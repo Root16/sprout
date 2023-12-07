@@ -1,10 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Root16.Sprout.Data;
+﻿using Root16.Sprout.DataSources;
 using Root16.Sprout.Progress;
-using Root16.Sprout.Query;
-using Root16.Sprout.Step;
 
-namespace Root16.Sprout.Processors;
+namespace Root16.Sprout.BatchProcessing;
 
 public class BatchRunner
 {
@@ -55,60 +52,5 @@ public class BatchRunner
 
         return queryState;
     }
-}
-
-public record DataOperation<T>(string OperationType, T Data);
-public record DataOperationResult<T>(DataOperation<T> Operation, bool WasSuccessful);
-
-public interface IDataProcessor<TInput, TOutput>
-{
-    TOutput Process(TInput record);
-}
-
-public interface IDataProcessor<T>
-{
-    Task<IEnumerable<T>> ProcessBatchAsync(IEnumerable<T> input);
-}
-
-public class DelegateDataProcessor<T> : IDataProcessor<T>
-{
-    private readonly Func<IEnumerable<T>, IEnumerable<T>> processor;
-
-    public DelegateDataProcessor(Func<IEnumerable<T>,IEnumerable<T>> processor)
-    {
-        this.processor = processor;
-    }
-
-    public Task<IEnumerable<T>> ProcessBatchAsync(IEnumerable<T> input)
-    {
-        return Task.FromResult(processor(input));
-    }
-}
-
-public class AsyncDelegateDataProcessor<T> : IDataProcessor<T>
-{
-    private readonly Func<IEnumerable<T>, Task<IEnumerable<T>>> processor;
-
-    public AsyncDelegateDataProcessor(Func<IEnumerable<T>, Task<IEnumerable<T>>> processor)
-    {
-        this.processor = processor;
-    }
-
-    public async Task<IEnumerable<T>> ProcessBatchAsync(IEnumerable<T> input)
-    {
-        return await processor(input);
-    }
-}
-
-public interface IDataRepository<T>
-{
-    Task PerformOperationsAsync(IEnumerable<DataOperation<T>> operations);
-}
-
-public class PagedQueryState
-{
-    public int? TotalRecordCount { get; set; }
-    public bool MoreRecords { get; set; }
-    public object? State { get; set; }
 }
 

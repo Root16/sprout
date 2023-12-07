@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Progress;
-using Root16.Sprout.Step;
 
 namespace Root16.Sprout;
 

@@ -1,4 +1,4 @@
-﻿namespace Root16.Sprout.Step;
+﻿namespace Root16.Sprout;
 
 public interface IIntegrationStep
 {

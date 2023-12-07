@@ -1,12 +1,9 @@
 ﻿using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ServiceModel;
-using System.Threading.Tasks;
 
-namespace Root16.Sprout.Data;
+namespace Root16.Sprout.DataSources;
 
 public class ExecuteParallelResult
 {

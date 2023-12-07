@@ -1,6 +1,6 @@
-﻿using Root16.Sprout.Processors;
+﻿using Root16.Sprout.BatchProcessing;
 
-namespace Root16.Sprout.Data;
+namespace Root16.Sprout.DataSources;
 
 public interface IDataSource<T>
 {

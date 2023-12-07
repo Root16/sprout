@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace Root16.Sprout.Query;
+﻿namespace Root16.Sprout.DataSources;
 
 public class MemoryPagedQuery<T> : IPagedQuery<T>
 {

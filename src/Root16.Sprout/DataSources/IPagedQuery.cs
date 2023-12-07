@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Root16.Sprout.Query;
+﻿namespace Root16.Sprout.DataSources;
 
 // TODO: make async
 public interface IPagedQuery<T>

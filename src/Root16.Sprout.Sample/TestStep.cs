@@ -1,17 +1,8 @@
-﻿using Microsoft.Crm.Sdk.Messages;
-using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
+﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Root16.Sprout.Data;
-using Root16.Sprout.DependencyInjection;
-using Root16.Sprout.Processors;
-using Root16.Sprout.Query;
-using Root16.Sprout.Step;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Root16.Sprout.DataSources;
+using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.BatchProcessing;
 
 namespace Root16.Sprout.Sample;
 

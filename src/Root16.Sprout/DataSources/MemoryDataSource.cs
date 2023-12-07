@@ -1,10 +1,4 @@
-﻿using Root16.Sprout.Processors;
-using Root16.Sprout.Progress;
-using Root16.Sprout.Query;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Root16.Sprout.Data;
+﻿namespace Root16.Sprout.DataSources;
 
 public class MemoryDataSource<T> : IDataSource<T>
 {
