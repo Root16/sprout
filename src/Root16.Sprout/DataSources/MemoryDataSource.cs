@@ -18,7 +18,7 @@ public class MemoryDataSource<T> : IDataSource<T>
 		return new MemoryPagedQuery<T>(Records.ToArray());
 	}
 
-    public Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations)
+    public Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
 		Records.AddRange(operations.Select(r => r.Data));
 		IReadOnlyList<DataOperationResult<T>> results = operations

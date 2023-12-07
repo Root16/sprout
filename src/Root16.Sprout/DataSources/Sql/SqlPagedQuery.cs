@@ -7,10 +7,10 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
 {
     private readonly SqlConnection connection;
     private readonly string commandText;
-    private readonly string totalRowCountCommandText;
+    private readonly string? totalRowCountCommandText;
     private readonly bool addPaging;
 
-    public SqlPagedQuery(SqlConnection connection, string commandText, string totalRowCountCommandText = null, bool addPaging = true)
+    public SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
     {
         this.connection = connection;
         this.commandText = commandText;

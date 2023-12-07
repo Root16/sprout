@@ -8,6 +8,10 @@ public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
     IPagedQuery<TInput> GetInputQuery();
 	IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput input);
 
+    int BatchSize { get; }
+    bool DryRun { get; }
+    IEnumerable<string> DataOperationFlags { get; }
+
     Task<IReadOnlyList<TInput>> OnBeforeMapAsync(IReadOnlyList<TInput> batch);
     Task<IReadOnlyList<DataOperation<TOutput>>> OnAfterMapAsync(IReadOnlyList<DataOperation<TOutput>> batch);
     Task<IReadOnlyList<DataOperation<TOutput>>> OnBeforeDeliveryAsync(IReadOnlyList<DataOperation<TOutput>> batch);

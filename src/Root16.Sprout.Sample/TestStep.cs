@@ -19,6 +19,7 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
+        DryRun = true;
     }
 
     public override async Task<IReadOnlyList<Contact>> OnBeforeMapAsync(IReadOnlyList<Contact> batch)

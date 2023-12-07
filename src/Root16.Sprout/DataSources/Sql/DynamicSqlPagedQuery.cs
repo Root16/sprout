@@ -7,9 +7,9 @@ public class DynamicSqlPagedQuery : IPagedQuery<DataRow>
 {
     private readonly SqlConnection connection;
     private readonly Func<int, int, string> commandGenerator;
-    private readonly string totalRowCountCommandText;
+    private readonly string? totalRowCountCommandText;
 
-    public DynamicSqlPagedQuery(SqlConnection connection, Func<int, int, string> commandGenerator, string totalRowCountCommandText = null)
+    public DynamicSqlPagedQuery(SqlConnection connection, Func<int, int, string> commandGenerator, string? totalRowCountCommandText = null)
     {
         this.connection = connection;
         this.commandGenerator = commandGenerator;

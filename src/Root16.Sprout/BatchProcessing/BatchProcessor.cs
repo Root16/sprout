@@ -19,7 +19,7 @@ public class BatchProcessor
         PagedQueryState<TInput>? queryState = null;
         do
         {
-            queryState = await ProcessBatchAsync(step, queryState, pageSize);
+            queryState = await ProcessBatchAsync(step, queryState);
         }
         while (queryState.MoreRecords);
 
@@ -27,15 +27,14 @@ public class BatchProcessor
 
     public async Task<PagedQueryState<TInput>> ProcessBatchAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput,TOutput> step,
-        PagedQueryState<TInput>? queryState,
-        int? pageSize = null)
+        PagedQueryState<TInput>? queryState)
     {
         // initialize state if needed
         var query = step.GetInputQuery();
         if (queryState == null)
         {
             var total = await query.GetTotalRecordCountAsync();
-            queryState = new(0, pageSize ?? 200, 0, total, true, null);
+            queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
         // get batch of data (IPagedQuery)
@@ -52,7 +51,7 @@ public class BatchProcessor
         data = await step.OnAfterMapAsync(data);
 
         data = await step.OnBeforeDeliveryAsync(data);
-        var results = await step.OutputDataSource.PerformOperationsAsync(data);
+        var results = await step.OutputDataSource.PerformOperationsAsync(data, step.DryRun, step.DataOperationFlags);
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)

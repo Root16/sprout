@@ -6,7 +6,18 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
 {
     protected BatchIntegrationStep()
     {
+        BatchSize = 200;
     }
+
+    public bool DryRun { get; set; }
+    public int BatchSize { get; set; }
+    
+    private HashSet<string> dataOperationFlags = new(StringComparer.OrdinalIgnoreCase);
+    public IEnumerable<string> DataOperationFlags { get { return dataOperationFlags; } }
+
+
+    public void AddDataOperationFlag(string flag) => dataOperationFlags.Add(flag);
+    public void RemoveDataOperationFlag(string flag) => dataOperationFlags.Remove(flag);
 
     public abstract IDataSource<TOutput> OutputDataSource { get; }
     public abstract IPagedQuery<TInput> GetInputQuery();

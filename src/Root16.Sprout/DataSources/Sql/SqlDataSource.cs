@@ -17,12 +17,12 @@ public class SqlDataSource : IDataSource<DataRow>
         connection = new SqlConnection(connectionString);
     }
 
-    public SqlPagedQuery CreatePagedQuery(string commandText, string totalRowCountCommandText = null, bool addPaging = true)
+    public SqlPagedQuery CreatePagedQuery(string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
     {
         return new SqlPagedQuery(connection, commandText, totalRowCountCommandText, addPaging);
     }
 
-    public DynamicSqlPagedQuery CreatePagedQuery(Func<int, int, string> commandGenerator, string totalRowCountCommandText = null)
+    public DynamicSqlPagedQuery CreatePagedQuery(Func<int, int, string> commandGenerator, string? totalRowCountCommandText = null)
     {
         return new DynamicSqlPagedQuery(connection, commandGenerator, totalRowCountCommandText);
     }
@@ -44,7 +44,7 @@ public class SqlDataSource : IDataSource<DataRow>
         }
     }
 
-    public Task<IReadOnlyList<DataOperationResult<DataRow>>> PerformOperationsAsync(IEnumerable<DataOperation<DataRow>> operations)
+    public Task<IReadOnlyList<DataOperationResult<DataRow>>> PerformOperationsAsync(IEnumerable<DataOperation<DataRow>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
         throw new NotImplementedException();
     }

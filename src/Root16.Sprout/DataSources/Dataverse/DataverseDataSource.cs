@@ -6,38 +6,30 @@ using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public record DataverseDataSinkError(OrganizationServiceFault Fault, OrganizationRequest Request);
-
 public class DataverseDataSource : IDataSource<Entity>
 {
     private readonly ILogger<DataverseDataSource> logger;
-    public string? Name { get; set; }
-    public bool DryRun { get; set; }
-    public bool BypassCustomPluginExecution { get; set; }
-    public event EventHandler<DataverseDataSinkError>? OnError;
 
     public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
-        //TODO: check this
         ServiceClient.MaxConnectionTimeout = TimeSpan.FromMinutes(11);
         this.logger = logger;
     }
 
     public ServiceClient CrmServiceClient { get; }
 
-    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> changes, bool dryRun, bool bypassCustomPluginExecution, Action<OrganizationServiceFault, OrganizationRequest> errorHandler)
+    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
         var requests = new OrganizationRequestCollection();
 
-        requests.AddRange(changes.Select(c => CreateOrganizationRequest(c, bypassCustomPluginExecution)));
-        return await ExecuteMultipleAsync(requests, dryRun, errorHandler);
+        requests.AddRange(operations.Select(c => CreateOrganizationRequest(c, dataOperationFlags)));
+        return await ExecuteMultipleAsync(requests, dryRun);
     }
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> ExecuteMultipleAsync(
         OrganizationRequestCollection requests,
-        bool dryRun,
-        Action<OrganizationServiceFault, OrganizationRequest>? errorHandler)
+        bool dryRun)
     {
         var results = new List<DataOperationResult<Entity>>();
 
@@ -86,7 +78,6 @@ public class DataverseDataSource : IDataSource<Entity>
                     {
                         results.Add(ResultFromRequestType(requests[i], false));
                         logger.LogError(response.Fault.Message);
-                        errorHandler?.Invoke(response.Fault, requests[response.RequestIndex]);
                     }
                     else
                     {
@@ -109,7 +100,7 @@ public class DataverseDataSource : IDataSource<Entity>
         return new DataverseFetchXmlPagedQuery(this, fetchXml);
     }
 
-    protected OrganizationRequest CreateOrganizationRequest(DataOperation<Entity> change, bool bypassCustomPluginExecution)
+    protected OrganizationRequest CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
     {
         OrganizationRequest request;
         if (change.OperationType == "Create")
@@ -131,25 +122,16 @@ public class DataverseDataSource : IDataSource<Entity>
             throw new NotImplementedException("Unknown operation type.");
         }
 
-        if (bypassCustomPluginExecution)
+        if (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassCustomPluginExecution) == true)
         {
-            request.Parameters.Add("BypassCustomPluginExecution", true);
+            request.Parameters.Add(DataverseDataSourceFlags.BypassCustomPluginExecution, true);
+        }
+
+        if (dataOperationFlags.Contains(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob) == true)
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob, true);
         }
 
         return request;
-    }
-
-    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations)
-    {
-        return await PerformOperationsAsync(operations, DryRun, BypassCustomPluginExecution, ReportError);
-    }
-
-    private void ReportError(OrganizationServiceFault error, OrganizationRequest request)
-    {
-        OnError?.Invoke(this, new DataverseDataSinkError
-        (
-            error,
-            request
-        ));
     }
 }
