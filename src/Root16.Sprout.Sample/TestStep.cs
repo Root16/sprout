@@ -1,8 +1,10 @@
 ﻿using Microsoft.Crm.Sdk.Messages;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.Data;
 using Root16.Sprout.Processors;
+using Root16.Sprout.Query;
 using Root16.Sprout.Step;
 using System;
 using System.Collections.Generic;
@@ -12,60 +14,87 @@ using System.Threading.Tasks;
 
 namespace Root16.Sprout.Sample
 {
-    internal class TestStep : IIntegrationStep
+    internal class TestStep : BatchIntegrationStep<Contact,Entity>
     {
-        private readonly BatchProcessBuilder batchProcessBuilder;
         private readonly DataverseDataSource dataverseDataSource;
+        private readonly EntityReducer entityReducer;
+        private readonly BatchRunner runner;
+        private MemoryDataSource<Contact> memoryDS;
 
-        public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public TestStep(BatchProcessBuilder batchProcessBuilder, DataverseDataSource dataverseDataSource)
+        public TestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityReducer entityReducer, BatchRunner runner)
         {
-            this.batchProcessBuilder = batchProcessBuilder;
             this.dataverseDataSource = dataverseDataSource;
+            this.entityReducer = entityReducer;
+            this.runner = runner;
+            this.memoryDS = memoryDS;
         }
-        
-        public async Task RunAsync()
+
+        public override async Task<IReadOnlyList<Contact>> OnBeforeMapAsync(IReadOnlyList<Contact> batch)
         {
-            var memoryDS = new MemoryDataSource<Contact>(new[]
-            {
-                new Contact { FirstName = "Corey", LastName = "Test" },
-                new Contact { FirstName = "Corey", LastName = "Test2" },
-            });
+            var firstNameValues = string.Join("</value><value>", batch.Select(b => b.FirstName).Distinct(StringComparer.OrdinalIgnoreCase));
+            var lastNameValues = string.Join("</value><value>", batch.Select(b => b.LastName).Distinct(StringComparer.OrdinalIgnoreCase));
 
-            var response = (WhoAmIResponse)await dataverseDataSource.CrmServiceClient.ExecuteAsync(new WhoAmIRequest());
+            var matches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression($@"
+                <fetch>
+                    <entity name='contact'>
+                        <attribute name='firstname' />
+                        <attribute name='lastname' />
+                        <filter>
+                            <condition attribute='firstname' operator='in'>
+                                <value>{firstNameValues}</value>
+                            </condition>
+                            <condition attribute='lastname' operator='in'>
+                                <value>{lastNameValues}</value>
+                            </condition>
+                        </filter>
+                    </entity>
+                </fetch>"));
 
-            var query = memoryDS.CreatePagedQuery();
+            entityReducer.SetPotentialMatches(matches.Entities);
 
-            var dataverseDS = new DataverseDataSink(this.dataverseDataSource);
-
-            var batchProcessor = batchProcessBuilder
-                .CreateProcessor<Contact, Entity>(query)
-                .UseMapper(Map)
-                .UseDataOperationEndpoint(dataverseDS)
-                .Build();
-
-            var result = await batchProcessor.ProcessBatchAsync(null);
+            return batch;
         }
 
-        private IEnumerable<DataOperation<Entity>> Map(Contact contact)
+        public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
+        {
+            return entityReducer.ReduceChanges(batch, entity => string.Concat(
+                    entity.GetAttributeValue<string>("firstname"),
+                    "|",
+                    entity.GetAttributeValue<string>("lastname")
+            ));
+        }
+
+        public override async Task RunAsync()
+        {
+            await runner.ProcessBatchAsync(this, null);
+        }
+
+        public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
+
+        public override IPagedQuery<Contact> GetSourceQuery()
+        {
+            return memoryDS.CreatePagedQuery();
+        }
+
+        public override IReadOnlyList<DataOperation<Entity>> MapRecord(Contact source)
         {
             var result = new Entity("contact")
             {
                 Attributes =
                 {
-                    {"firstname", contact.FirstName },
-                    {"lastname", contact.LastName },
+                    {"firstname", source.FirstName },
+                    {"lastname", source.LastName },
                 }
             };
 
-            yield return new DataOperation<Entity>("Create", result);
+            return new[] { new DataOperation<Entity>("Create", result) };
         }
+
     }
 
     internal class Contact
     {
-        internal string FirstName { get; set; }
-        internal string LastName { get; set; }
+        internal string? FirstName { get; set; }
+        internal string? LastName { get; set; }
     }
 }

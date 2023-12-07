@@ -33,7 +33,7 @@ public static class SproutExtensions
 	//	return runtime.GetDataSource<DataverseDataSource>();
 	//}
 
-	public static Entity GetDelta(this Entity updates, Entity original)
+	public static Entity CloneWithModifiedAttributes(this Entity updates, Entity original)
 	{
 		Entity delta = new Entity(original.LogicalName, original.Id);
 		foreach (var attribute in updates.Attributes)

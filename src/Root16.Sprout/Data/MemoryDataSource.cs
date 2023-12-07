@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Root16.Sprout.Data;
 
-public class MemoryDataSource<T> : IDataSource, IDataOperationEndpoint<T>
+public class MemoryDataSource<T> : IDataSource<T>
 {
 	public List<T> Records { get; }
 

@@ -11,46 +11,20 @@ using System.Linq;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Root16.Sprout.Data;
 
-public class DataverseDataSinkError
-{
-	public OrganizationServiceFault Fault { get; set; }
-	public OrganizationRequest Request { get; set; }
-}
-public class DataverseDataSink : IDataOperationEndpoint<Entity>
-{
-	private readonly DataverseDataSource dataSource;
-	public bool DryRun { get; set; }
-	public bool BypassCustomPluginExecution { get; set; }
-	public event EventHandler<DataverseDataSinkError>? OnError;
+public record DataverseDataSinkError(OrganizationServiceFault Fault, OrganizationRequest Request);
 
-	public DataverseDataSink(DataverseDataSource dataSource)
-	{
-		this.dataSource = dataSource;
-	}
-
-	private void ReportError(OrganizationServiceFault error, OrganizationRequest request)
-	{
-		OnError?.Invoke(this, new DataverseDataSinkError
-		{
-			Fault = error,
-			Request = request
-		});
-	}
-
-    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations)
-    {
-		return await dataSource.PerformOperationsAsync(operations, DryRun, BypassCustomPluginExecution, ReportError);
-    }
-}
-
-public class DataverseDataSource : IDataSource
+public class DataverseDataSource : IDataSource<Entity>
 {
 	private readonly ILogger<DataverseDataSource> logger;
+    public bool DryRun { get; set; }
+    public bool BypassCustomPluginExecution { get; set; }
+    public event EventHandler<DataverseDataSinkError>? OnError;
 
-	public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
+    public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
 	{
 		CrmServiceClient = crmServiceClient;
 		//TODO: check this
@@ -59,11 +33,6 @@ public class DataverseDataSource : IDataSource
 	}
 
 	public ServiceClient CrmServiceClient { get; }
-
-	public DataverseDataSink CreateDataSink()
-	{
-		return new DataverseDataSink(this);
-	}
 
 	public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> changes, bool dryRun, bool bypassCustomPluginExecution, Action<OrganizationServiceFault, OrganizationRequest> errorHandler)
 	{
@@ -177,4 +146,18 @@ public class DataverseDataSource : IDataSource
 
 		return request;
 	}
+
+    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations)
+    {
+        return await PerformOperationsAsync(operations, DryRun, BypassCustomPluginExecution, ReportError);
+    }
+
+    private void ReportError(OrganizationServiceFault error, OrganizationRequest request)
+    {
+        OnError?.Invoke(this, new DataverseDataSinkError
+        (
+            error,
+            request
+        ));
+    }
 }

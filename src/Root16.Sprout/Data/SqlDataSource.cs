@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using Root16.Sprout.Query;
+using System.Data;
+using Root16.Sprout.Processors;
 
 namespace Root16.Sprout.Data;
 
-public class SqlDataSource : IDataSource
+public class SqlDataSource : IDataSource<DataRow>
 {
 	private readonly string connectionString;
 	private readonly ILogger<SqlDataSource> logger;
@@ -46,4 +48,9 @@ public class SqlDataSource : IDataSource
 			}
 		}
 	}
+
+    public Task<IReadOnlyList<DataOperationResult<DataRow>>> PerformOperationsAsync(IEnumerable<DataOperation<DataRow>> operations)
+    {
+        throw new NotImplementedException();
+    }
 }
