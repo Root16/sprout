@@ -10,75 +10,40 @@ public class IntegrationProgress
 	public IntegrationProgress(string stepName, int? totalRecordCount)
 	{
 		StepName = stepName;
-		createCount = 0;
-		updateCount = 0;
-		errorCount = 0;
-		recordCount = 0;
-		skipCount = 0;
-		TotalRecordCount = totalRecordCount;
+        operationCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        TotalRecordCount = totalRecordCount;
 		StartTime = DateTime.Now;
 	}
 
-	private int createCount;
-	private int updateCount;
-	private int errorCount;
-	private int recordCount;
-	private int skipCount;
+	private readonly Dictionary<string,int> operationCounts;
 
 
 	public string StepName { get; private set; }
-	public int CreateCount { get { return createCount; } }
-	public int UpdateCount { get { return updateCount; } }
-	public int ErrorCount { get { return errorCount; } }
-	public int RecordCount { get { return recordCount; } }
-	public int SkipCount { get { return skipCount; } }
 	public int? TotalRecordCount { get; private set; }
+	public int ProcessedRecordCount { get; private set; }
 	public DateTime StartTime { get; private set; }
 	public TimeSpan RunningTime { get { return DateTime.Now - StartTime; } }
 	public TimeSpan? EstimatedRemainingTime
 	{
 		get
 		{
-			if ((SkipCount + RecordCount) == 0 || TotalRecordCount == 0 || TotalRecordCount == null)
+			if (ProcessedRecordCount == 0 || TotalRecordCount == 0 || TotalRecordCount == null)
 			{
 				return null;
 			}
 
-			var pctComplete = (SkipCount + RecordCount) / (double)TotalRecordCount;
+			var pctComplete = ProcessedRecordCount / (double)TotalRecordCount;
 			var runningTime = RunningTime;
 			return TimeSpan.FromMilliseconds(runningTime.TotalMilliseconds / pctComplete - runningTime.TotalMilliseconds);
 		}
 	}
 
-	internal void AddSkippedRecords(int skipCount)
+	public void AddOperations(int processedRecordCount, IEnumerable<string> operations)
 	{
-		Interlocked.Add(ref this.skipCount, skipCount);
-	}
-
-	public void AddResult(DataChangeType result)
-	{
-		Interlocked.Increment(ref this.recordCount);
-		switch (result)
+		ProcessedRecordCount += processedRecordCount;
+		foreach (var operationGroup in operations.GroupBy(o => o, StringComparer.OrdinalIgnoreCase))
 		{
-			case DataChangeType.Error:
-				Interlocked.Increment(ref errorCount);
-				break;
-			case DataChangeType.Create:
-				Interlocked.Increment(ref createCount);
-				break;
-			case DataChangeType.Update:
-				Interlocked.Increment(ref updateCount);
-				break;
-			default:
-				break;
-		}
-	}
-
-	public void AddResultRange(IEnumerable<DataChangeType> results)
-	{
-		foreach (var result in results)
-		{
-			AddResult(result);
+			operationCounts[operationGroup.Key] += operationGroup.Count();
 		}
 	}
 
@@ -89,11 +54,11 @@ public class IntegrationProgress
 
 		if (TotalRecordCount > 0)
 		{
-			message.Append($"{this.RecordCount + SkipCount}/{this.TotalRecordCount} ({Math.Floor(100.0 * (this.RecordCount + this.SkipCount) / this.TotalRecordCount.Value)}%) ");
+			message.Append($"{ProcessedRecordCount}/{this.TotalRecordCount} ({Math.Floor(100.0 * (ProcessedRecordCount) / this.TotalRecordCount.Value)}%) ");
 		}
 		else
 		{
-			message.Append($"{this.RecordCount + SkipCount} ");
+			message.Append($"{ProcessedRecordCount} ");
 		}
 
 		if (this.EstimatedRemainingTime != null)
@@ -121,7 +86,8 @@ public class IntegrationProgress
 			message.Append($"{values[values.Length - 1].Interval}{values[values.Length - 1].Label} remaining ");
 		}
 
-		message.Append($"({SkipCount} skipped, {this.CreateCount} created, {this.UpdateCount} updated, {this.ErrorCount} errors)");
+		message.Append(
+			string.Join(", ", operationCounts.Select(pair => $"{pair.Key}: {pair.Value}")));
 		return message.ToString();
 	}
 }
