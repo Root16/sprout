@@ -15,24 +15,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/cache@v1
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-    
     - uses: actions/checkout@v3
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
+        cache: true
         source-url: https://api.nuget.org/v3/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
     
     - name: Build solution and generate NuGet package
       run: dotnet pack -c Release -o out --version-suffix alpha src/Root16.Sprout
       
     - name: Push
-      run: dotnet nuget push out/*.nupkg --skip-duplicate --no-symbols
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      run: dotnet nuget push out/*.nupkg --skip-duplicate --no-symbols --source github --api-key NUGET_API_KEY
