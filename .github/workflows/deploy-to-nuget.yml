@@ -32,7 +32,7 @@ jobs:
         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
     
     - name: Build solution and generate NuGet package
-      run: dotnet pack -c Release -o out --version-prefix alpha src/Root16.Sprout
+      run: dotnet pack -c Release -o out --version-suffix alpha src/Root16.Sprout
       
     - name: Push
       run: dotnet nuget push src/Root16.Sprout/out/*.nupkg --skip-duplicate --no-symbols
