@@ -24,11 +24,11 @@ jobs:
       id: setvars
       run: |
         if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
-          echo "VERSION_SUFFIX=${{github.run_number}}" >> $GITHUB_STATE
+          echo "VERSION_SUFFIX=${{github.run_number}}" >> "$GITHUB_ENV"
         fi
 
         if [[ "${{github.base_ref}}" == "alpha" || "${{github.ref}}" == "refs/heads/alpha" ]]; then
-        echo "VERSION_SUFFIX=alpha.${{github.run_number}}" >> $GITHUB_STATE
+        echo "VERSION_SUFFIX=alpha.${{github.run_number}}" >> "$GITHUB_ENV"
         fi
 
     - name: Setup .NET
@@ -42,7 +42,7 @@ jobs:
         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
     
     - name: Build solution and generate NuGet package
-      run: dotnet pack -c Release -o out --version-suffix $VERSION_SUFFIX src/Root16.Sprout
+      run: dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" src/Root16.Sprout
       
     - name: Push
       env:
