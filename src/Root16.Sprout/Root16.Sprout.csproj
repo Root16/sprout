@@ -1,15 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<PackageProjectUrl>https://github.com/Root16/sprout</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Root16/sprout.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<Description>This package is used to create integrations and migrations between multiple systems.  It was original created to support optimized integration with Microsoft Dataverse and typically uses it as the source our destination for an integration.</Description>
+		<Copyright>© Root16, LLC. All rights reserved.</Copyright>
+		<Company>Root16</Company>
+		<Authors>Root16</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<DebugType>embedded</DebugType>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
-		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.14" />
+		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.16" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 </Project>
