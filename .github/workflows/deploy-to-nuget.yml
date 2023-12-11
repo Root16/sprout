@@ -23,11 +23,13 @@ jobs:
         dotnet-version: 6.0.x
         cache: true
         source-url: https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
     
     - name: Build solution and generate NuGet package
       run: dotnet pack -c Release -o out --version-suffix alpha src/Root16.Sprout
       
     - name: Push
       env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
       run: dotnet nuget push out/*.nupkg --skip-duplicate --no-symbols --source github --api-key NUGET_API_KEY
