@@ -33,4 +33,4 @@ jobs:
     - name: Push
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
-      run: dotnet nuget push out/*.nupkg --skip-duplicate --no-symbols --source github --api-key NUGET_API_KEY
+      run: dotnet nuget push out/*.nupkg --skip-duplicate --no-symbols --api-key NUGET_API_KEY
