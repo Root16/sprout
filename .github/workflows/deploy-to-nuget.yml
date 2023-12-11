@@ -35,4 +35,4 @@ jobs:
       run: dotnet pack -c Release -o out --version-suffix alpha src/Root16.Sprout
       
     - name: Push
-      run: dotnet nuget push src/Root16.Sprout/out/*.nupkg --skip-duplicate --no-symbols
+      run: dotnet nuget push out/*.nupkg --skip-duplicate --no-symbols
