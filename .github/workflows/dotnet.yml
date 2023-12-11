@@ -5,9 +5,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "alpha" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "alpha" ]
 
 jobs:
   build:
@@ -22,13 +22,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-    
     - uses: actions/checkout@v3
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore src
-    - name: Build
-      run: dotnet build --no-restore src
-    - name: Test
-      run: dotnet test --no-build --verbosity normal src
+        source-url: https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
+    
+    - name: Build solution and generate NuGet package
+      run: dotnet pack -c Release -o out --version-prefix alpha src/Root16.Sprout
+      
+    - name: Push
+      run: dotnet nuget push src/Root16.Sprout/out/*.nupkg --skip-duplicate --no-symbols
