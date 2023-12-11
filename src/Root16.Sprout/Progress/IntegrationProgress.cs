@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -43,7 +44,14 @@ public class IntegrationProgress
 		ProcessedRecordCount += processedRecordCount;
 		foreach (var operationGroup in operations.GroupBy(o => o, StringComparer.OrdinalIgnoreCase))
 		{
-			operationCounts[operationGroup.Key] += operationGroup.Count();
+			if (operationCounts.ContainsKey(operationGroup.Key))
+			{
+				operationCounts[operationGroup.Key] += operationGroup.Count();
+			}
+			else
+			{
+                operationCounts[operationGroup.Key] = operationGroup.Count();
+            }
 		}
 	}
 
