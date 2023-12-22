@@ -26,7 +26,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 
     private static void AddPaging(XDocument fetchDoc, int page, int pageSize, string? pagingCookie)
     {
-        fetchDoc.Root?.SetAttributeValue("page", page);
+        fetchDoc.Root?.SetAttributeValue("page", page+1);
         fetchDoc.Root?.SetAttributeValue("count", pageSize);
         if (pagingCookie != null)
         {
