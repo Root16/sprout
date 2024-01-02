@@ -7,7 +7,7 @@ public static class EntityExtensions
 {
 	public static Entity CloneWithModifiedAttributes(this Entity updates, Entity original)
 	{
-		Entity delta = new Entity(original.LogicalName, original.Id);
+        Entity delta = new(original.LogicalName, original.Id);
 		foreach (var attribute in updates.Attributes)
 		{
 			bool different = false;
@@ -60,28 +60,27 @@ public static class EntityExtensions
 			}
 			else if (updateValue is string || originalValue is string)
 			{
-				if ((string)updateValue == "" && originalValue == null)
+				if ((string)updateValue == "" && originalValue is null)
 				{
 					different = false;
 				}
-				else if (!Object.Equals(updateValue, originalValue))
+				else if (!Equals(updateValue, originalValue))
 				{
 					different = true;
 				}
 			}
 			else
 			{
-				if (updateValue is DateTime)
+				if (updateValue is DateTime dt)
 				{
-					var dt = (DateTime)updateValue;
 					updateValue = (new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Kind)).ToUniversalTime();
-					if (originalValue is DateTime)
+					if (originalValue is DateTime time)
 					{
-						originalValue = ((DateTime)originalValue).ToUniversalTime();
+						originalValue = time.ToUniversalTime();
 					}
 				}
 
-				if (!Object.Equals(updateValue, originalValue))
+				if (!Equals(updateValue, originalValue))
 				{
 					different = true;
 				}
@@ -98,7 +97,7 @@ public static class EntityExtensions
 
 	public static string FormatChanges(this Entity entity, Entity previousValues)
 	{
-		StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new();
 		sb.AppendLine($"updating ({entity.LogicalName}, {entity.Id}):");
 		foreach (var attribute in entity.Attributes)
 		{
@@ -111,32 +110,29 @@ public static class EntityExtensions
 
 	public static object DisplayAttributeValue(object attributeValue)
 	{
-		if (attributeValue == null)
+		if (attributeValue is null)
 		{
 			return "(null)";
 		}
-		else if (attributeValue is EntityReference)
-		{
-			var entityRef = (EntityReference)attributeValue;
-			return $"({entityRef.LogicalName}, {entityRef.Id})";
-		}
-		else if (attributeValue is Money)
-		{
-			var money = (Money)attributeValue;
-			return money.Value;
-		}
-		else if (attributeValue is OptionSetValue)
-		{
-			var optionSetValue = (OptionSetValue)attributeValue;
-			return optionSetValue.Value;
-		}
-		else if (attributeValue is string)
-		{
-			return $"'{attributeValue}'";
-		}
-		else
-		{
-			return attributeValue;
-		}
-	}
+		else if (attributeValue is EntityReference entityRef)
+        {
+            return $"({entityRef.LogicalName}, {entityRef.Id})";
+        }
+        else if (attributeValue is Money money)
+        { 
+            return money.Value;
+        }
+        else if (attributeValue is OptionSetValue optionSetValue)
+        {
+            return optionSetValue.Value;
+        }
+        else if (attributeValue is string)
+        {
+            return $"'{attributeValue}'";
+        }
+        else
+        {
+            return attributeValue;
+        }
+    }
 }

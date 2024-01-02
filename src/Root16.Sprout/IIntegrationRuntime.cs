@@ -2,8 +2,8 @@
 
 public interface IIntegrationRuntime
 {
-	Task RunAllStepsAsync();
-	Task RunStepAsync(string name);
+    Task<string> RunStepAsync<TStep>() where TStep : class, IIntegrationStep;
+	Task<string> RunStepAsync(string name);
 	IEnumerable<string> GetStepNames();
-    Task RunStepAsync<TStep>() where TStep : class, IIntegrationStep;
+    Task RunAllStepsAsync();
 }

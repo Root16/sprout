@@ -28,7 +28,7 @@ public class IntegrationProgress
 	{
 		get
 		{
-			if (ProcessedRecordCount == 0 || TotalRecordCount == 0 || TotalRecordCount == null)
+			if (ProcessedRecordCount == 0 || TotalRecordCount == 0 || TotalRecordCount is null)
 			{
 				return null;
 			}
@@ -57,7 +57,7 @@ public class IntegrationProgress
 
 	public override string ToString()
 	{
-		StringBuilder message = new StringBuilder();
+		StringBuilder message = new();
 		message.Append($"{this.StepName}: ");
 
 		if (TotalRecordCount > 0)
@@ -69,7 +69,7 @@ public class IntegrationProgress
 			message.Append($"{ProcessedRecordCount} ");
 		}
 
-		if (this.EstimatedRemainingTime != null)
+		if (this.EstimatedRemainingTime is not null)
 		{
 			var ts = this.EstimatedRemainingTime.Value;
 			var values = new[]
