@@ -53,18 +53,16 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
     {
         if (string.IsNullOrEmpty(totalRowCountCommandText)) return null;
 
-        using (var cmd = connection.CreateCommand())
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = totalRowCountCommandText;
+        cmd.Connection.Open();
+        try
         {
-            cmd.CommandText = totalRowCountCommandText;
-            cmd.Connection.Open();
-            try
-            {
-                return (int?)await cmd.ExecuteScalarAsync();
-            }
-            finally
-            {
-                cmd.Connection.Close();
-            }
+            return (int?)await cmd.ExecuteScalarAsync();
+        }
+        finally
+        {
+            cmd.Connection.Close();
         }
     }
 }

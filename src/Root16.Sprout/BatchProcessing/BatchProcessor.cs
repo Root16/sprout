@@ -13,8 +13,7 @@ public class BatchProcessor
     private readonly IProgressListener progressListener;
 
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step,
-        int? pageSize = null)
+        IBatchIntegrationStep<TInput, TOutput> step)
     {
         BatchState<TInput>? batchState = null;
         do
@@ -35,13 +34,13 @@ public class BatchProcessor
 
         // initialize state if needed
         var query = step.GetInputQuery();
-        if (queryState == null)
+        if (queryState is null)
         {
             var total = await query.GetTotalRecordCountAsync();
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
-        if (progress == null)
+        if (progress is null)
         {
             progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
         }

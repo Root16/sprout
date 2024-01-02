@@ -74,7 +74,7 @@ public class DataverseDataSource : IDataSource<Entity>
                 for (var i = 0; i < requests.Count; i++)
                 {
                     var response = responses.FirstOrDefault(r => r.RequestIndex == i);
-                    if (response?.Fault != null)
+                    if (response?.Fault is not null)
                     {
                         results.Add(ResultFromRequestType(requests[i], false));
                         logger.LogError(response.Fault.Message);

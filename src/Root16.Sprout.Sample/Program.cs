@@ -15,20 +15,16 @@ builder.Services.AddSprout();
 builder.Services.AddStep<TestStep>();
 builder.Services.AddDataverseDataSource("Dataverse");
 
-
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Contact>(new[]
-    {
-        new Contact { FirstName = "Corey", LastName = "Test" },
-        new Contact { FirstName = "Corey", LastName = "Test2" },
-        new Contact { FirstName = "Corey", LastName = "Test3" },
-    })
+    _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleData(8000))
 );
 
 var host = builder.Build();
 host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
-await runtime.RunStepAsync<TestStep>();
+var finishedStepName = await runtime.RunStepAsync<TestStep>();
 
-Console.WriteLine("Complete.");
+Console.WriteLine($"{finishedStepName} has completed!");
+
+Console.WriteLine("Sprout Sample Complete.");
