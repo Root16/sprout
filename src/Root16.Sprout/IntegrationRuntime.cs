@@ -104,6 +104,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         {
             yield return finishedStep;
             _finishedSteps.Add(finishedStep);
+            _queuedOrRunningSteps.Remove(finishedStep);
             //Get me all of the steps that are not finished, not running or queued, and all of the items in the dependentSteps list are in the finishedSteps list
             var nextSteps = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name) && !_queuedOrRunningSteps.Contains(x.Name) && x.DependentSteps.TrueForAll(x => _finishedSteps.Contains(x)));
             runningTasks.AddRange(nextSteps.Select(x => RunStepAsync(x)));
@@ -112,7 +113,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         progressListener.OnRunComplete();
     }
 
-    public async IAsyncEnumerable<string> RunAllStepsWithDependenciesSetAmountAtATime(int amount = 5)
+    public async IAsyncEnumerable<string> RunAllStepsWithDependenciesSetAmountAtATime(int amount = default)
     {
         //1) Get steps with no dependencies
         //2) Pass the list to extension method and wait for returned value
@@ -127,7 +128,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         {
             yield return finishedStep;
             _finishedSteps.Add(finishedStep);
-
+            _queuedOrRunningSteps.Remove(finishedStep);
             //Get all of the steps that are not finished, not running or queued, and all of the items in the dependentSteps list are in the finishedSteps list
             var nextSteps = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name) && !_queuedOrRunningSteps.Contains(x.Name) && x.DependentSteps.TrueForAll(x => _finishedSteps.Contains(x)));
             tasksToRun.AddRange(nextSteps.Select(x => CreateKeyValForRun(x)));
@@ -149,7 +150,7 @@ public class IntegrationRuntime : IIntegrationRuntime
 
         if (!string.IsNullOrEmpty(duplicateRegistrations))
         {
-            throw new InvalidDataException($"Steps can only be registered once! Please remove duplication registrations. The below registrations are duplicated:\n\t\t\t{duplicateRegistrations}");
+            throw new InvalidDataException($"Steps can only be registered once! Please remove duplication registrations. The below registrations are duplicated:\n\t{duplicateRegistrations}");
         }
     }
 }
