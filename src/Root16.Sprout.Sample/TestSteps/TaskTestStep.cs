@@ -1,22 +1,21 @@
-﻿using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
-using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
+﻿using Microsoft.Xrm.Sdk.Query;
+using Microsoft.Xrm.Sdk;
 using Root16.Sprout.BatchProcessing;
+using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.DataSources;
 using Root16.Sprout.Sample.Models;
-using Microsoft.Crm.Sdk.Messages;
 using System.Text;
 
-namespace Root16.Sprout.Sample;
+namespace Root16.Sprout.Sample.TestSteps;
 
-internal class AccountTestStep : BatchIntegrationStep<Account,Entity>
+internal class TaskTestStep : BatchIntegrationStep<TaskData, Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Account> memoryDS;
+    private MemoryDataSource<TaskData> memoryDS;
 
-    public AccountTestStep(MemoryDataSource<Account> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public TaskTestStep(MemoryDataSource<TaskData> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
@@ -26,17 +25,17 @@ internal class AccountTestStep : BatchIntegrationStep<Account,Entity>
         BatchSize = 50;
     }
 
-    public override async Task<IReadOnlyList<Account>> OnBeforeMapAsync(IReadOnlyList<Account> batch)
+    public override async Task<IReadOnlyList<TaskData>> OnBeforeMapAsync(IReadOnlyList<TaskData> batch)
     {
-        var accountNames = batch.Select(b => b.AccountName).Distinct(StringComparer.OrdinalIgnoreCase).Aggregate(new StringBuilder(), (current, x) => current.Append($"{x}</value><value>"));
+        var taskSubjects = batch.Select(b => b.TaskSubject).Distinct(StringComparer.OrdinalIgnoreCase).Aggregate(new StringBuilder(), (current, x) => current.Append($"{x}</value><value>"));
 
         var matches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression($@"
                 <fetch>
-                  <entity name=""account"">
-                    <attribute name=""name"" />
+                  <entity name=""task"">
+                    <attribute name=""subject"" />
                     <filter>
-                      <condition attribute=""name"" operator=""in"">
-                        <value>{accountNames}</value>
+                      <condition attribute=""subject"" operator=""in"">
+                        <value>{taskSubjects}</value>
                       </condition>
                     </filter>
                   </entity>
@@ -49,7 +48,7 @@ internal class AccountTestStep : BatchIntegrationStep<Account,Entity>
 
     public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
     {
-        return reducer.ReduceOperations(batch, entity => entity.GetAttributeValue<string>("name"));
+        return reducer.ReduceOperations(batch, entity => entity.GetAttributeValue<string>("subject"));
     }
 
     public override async Task RunAsync()
@@ -59,18 +58,18 @@ internal class AccountTestStep : BatchIntegrationStep<Account,Entity>
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
 
-    public override IPagedQuery<Account> GetInputQuery()
+    public override IPagedQuery<TaskData> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> MapRecord(Account source)
+    public override IReadOnlyList<DataOperation<Entity>> MapRecord(TaskData source)
     {
-        var result = new Entity("account")
+        var result = new Entity("task")
         {
             Attributes =
             {
-                {"name", source.AccountName }
+                {"subject", source.TaskSubject }
             }
         };
 
