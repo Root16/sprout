@@ -19,8 +19,8 @@ builder.Services.AddSprout();
 
 builder.Services.RegisterStep<ContactTestStep>();
 builder.Services.RegisterStep<TaskTestStep>();
-builder.Services.RegisterStep<LetterTestStep>(new List<string> { typeof(TaskTestStep).Name });
-builder.Services.RegisterStep<AccountTestStep>(new List<string> { typeof(ContactTestStep).Name });
+builder.Services.RegisterStep<LetterTestStep>(nameof(TaskTestStep));
+builder.Services.RegisterStep<AccountTestStep>(nameof(ContactTestStep));
 builder.Services.RegisterStep<EmailTestStep>();
 
 
@@ -28,7 +28,6 @@ builder.Services.AddDataverseDataSource("Dataverse");
 
 //Hide Logs Below Warning for Dataverse connections
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
-
 builder.Services.AddSingleton(
     _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleContacts(200))
     );
