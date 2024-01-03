@@ -1,12 +1,14 @@
-﻿namespace Root16.Sprout.Sample;
+﻿using Root16.Sprout.Sample.Models;
+
+namespace Root16.Sprout.Sample;
 
 internal class SampleData
 {
-    public static IEnumerable<CreateContact> GenerateCreateContactSampleData(int amount)
+    public static IEnumerable<Contact> GenerateSampleContacts(int amount = 10)
     {
         for (int i = 0; i < amount; i++)
         {
-            yield return new CreateContact
+            yield return new Contact
             {
                 FirstName = $"TestFirstName{i}",
                 LastName = $"TestLastName{i}"
@@ -14,15 +16,13 @@ internal class SampleData
         }
     }
 
-    public static IEnumerable<UpdateContact> GenerateUpdateContactSampleData(int amount, int startNumber)
+    public static IEnumerable<Account> GenerateSampleAccounts(int amount = 10)
     {
-        for (int i = startNumber; i < (amount + startNumber); i++)
+        for(int i = 0;i < amount; i++)
         {
-            yield return new UpdateContact
+            yield return new Account()
             {
-                FirstName = $"TestFirstName{i}",
-                LastName = $"TestLastName{i}",
-                EmailAddress = $"Test{i}@test.com"
+                AccountName = $"TestFirstName{i} TestLastName {i}"
             };
         }
     }
