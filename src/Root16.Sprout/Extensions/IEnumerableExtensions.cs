@@ -24,27 +24,29 @@ public static class IEnumerableExtensions
         }
     }
 
-    internal async static IAsyncEnumerable<TOutput> StreamFinishedTasksWithSpecificAmount<TOutput>(this List<KeyValuePair<StepRegistration,Func<StepRegistration,Task<TOutput>>>> tasksToRun, int amount = 5)
+    internal async static IAsyncEnumerable<TOutput> StreamFinishedTasksWithSpecificAmount<TOutput>(this List<KeyValuePair<StepRegistration,Func<StepRegistration,Task<TOutput>>>> tasksToRun, int amount = default)
     {
+        var runningTasks = new List<Task<TOutput>>();
+        var newTasks = new List<KeyValuePair<StepRegistration, Func<StepRegistration, Task<TOutput>>>>();
         //Start a specific amount of tasks and then remove them from the list of tasks to run
         var TasksToRun = tasksToRun.Take(amount).ToList();
         TasksToRun.ForEach((x) => tasksToRun.Remove(x));
-        var runningTasks = TasksToRun.Select(x => x.Value(x.Key)).ToList();
+        runningTasks = TasksToRun.Select(x => x.Value(x.Key)).ToList();
 
         while (runningTasks.Any())
         {
-            //When a task has finished when return the value, find another task to add, add that new task, and then remove the finished task from the list of running tasks
+            //When a task is finished return the value and then remove the task from running tasks and then find as many new tasks to start as the amount will allow. Start them and then remove the tasks from tasks to run.
             //Returning first allows the calling method to add more to the tasks before we do another check
             var finishedTask = await Task.WhenAny(runningTasks);
             var value = await finishedTask;
             yield return value;
+            runningTasks.Remove(finishedTask);
             if (tasksToRun.Any())
             {
-                var newTaskToRun = tasksToRun.FirstOrDefault();
-                runningTasks.Add(newTaskToRun.Value(newTaskToRun.Key));
-                tasksToRun.Remove(newTaskToRun);
+                newTasks = tasksToRun.Take(amount - (runningTasks.Count)).ToList();
+                runningTasks.AddRange(newTasks.Select(x => x.Value(x.Key)));
+                newTasks.ForEach(x => tasksToRun.Remove(x));
             }
-            runningTasks.Remove(finishedTask);
         }
     }
 }
