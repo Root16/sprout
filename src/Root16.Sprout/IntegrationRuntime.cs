@@ -97,6 +97,8 @@ public class IntegrationRuntime : IIntegrationRuntime
         //8) Add them to list of running steps
         //9) Add names to list of queuedOrRunning steps
         progressListener.OnRunStart();
+        _finishedSteps.Clear();
+        _queuedOrRunningSteps.Clear();
         var initialStepsToRun = stepRegistrations.Where(x => !x.DependentSteps.Any());
         var runningTasks = initialStepsToRun.Select(x => RunStepAsync(x)).ToList();
         _queuedOrRunningSteps.AddRange(initialStepsToRun.Select(x => x.Name));
@@ -121,6 +123,8 @@ public class IntegrationRuntime : IIntegrationRuntime
         //4) Get steps that are not running, or finished, and the dependent steps are all in the finished steps list
         //5) Add those steps to the list of steps to run
         if (amount == default) amount = 5;
+        _finishedSteps.Clear();
+        _queuedOrRunningSteps = new List<string>();
         progressListener.OnRunStart();
         // Get all of the Steps that aren't dependent on anything create a delegate func that will call RunStepAsync when its the steps turn.
         List<KeyValuePair<StepRegistration, Func<StepRegistration, Task<string>>>> tasksToRun = stepRegistrations.Where(x => !x.DependentSteps.Any()).Select(x => CreateKeyValForRun(x)).ToList();
@@ -134,9 +138,7 @@ public class IntegrationRuntime : IIntegrationRuntime
             tasksToRun.AddRange(nextSteps.Select(x => CreateKeyValForRun(x)));
         }
         progressListener.OnRunComplete();
-
         var stepsNotRun = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name)).Select(x => x.Name);
-
         Console.WriteLine($"Steps that were not run: {string.Join(", ", stepsNotRun)}");
     }
 
