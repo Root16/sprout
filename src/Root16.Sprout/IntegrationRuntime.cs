@@ -99,8 +99,8 @@ public class IntegrationRuntime : IIntegrationRuntime
         progressListener.OnRunStart();
         _finishedSteps.Clear();
         _queuedOrRunningSteps.Clear();
-        var initialStepsToRun = stepRegistrations.Where(x => !x.DependentSteps.Any());
-        var runningTasks = initialStepsToRun.Select(x => RunStepAsync(x)).ToList();
+        IEnumerable<StepRegistration> initialStepsToRun = stepRegistrations.Where(x => !x.DependentSteps.Any());
+        List<Task<string>> runningTasks = initialStepsToRun.Select(x => RunStepAsync(x)).ToList();
         _queuedOrRunningSteps.AddRange(initialStepsToRun.Select(x => x.Name));
         await foreach (var finishedStep in runningTasks.StreamFinishedTasksAllRunning())
         {
@@ -108,7 +108,7 @@ public class IntegrationRuntime : IIntegrationRuntime
             _finishedSteps.Add(finishedStep);
             _queuedOrRunningSteps.Remove(finishedStep);
             //Get me all of the steps that are not finished, not running or queued, and all of the items in the dependentSteps list are in the finishedSteps list
-            var nextSteps = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name) && !_queuedOrRunningSteps.Contains(x.Name) && x.DependentSteps.TrueForAll(x => _finishedSteps.Contains(x)));
+            IEnumerable<StepRegistration> nextSteps = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name) && !_queuedOrRunningSteps.Contains(x.Name) && x.DependentSteps.TrueForAll(x => _finishedSteps.Contains(x)));
             runningTasks.AddRange(nextSteps.Select(x => RunStepAsync(x)));
             _queuedOrRunningSteps.AddRange(nextSteps.Select(x => x.Name));
         }
@@ -134,11 +134,11 @@ public class IntegrationRuntime : IIntegrationRuntime
             _finishedSteps.Add(finishedStep);
             _queuedOrRunningSteps.Remove(finishedStep);
             //Get all of the steps that are not finished, not running or queued, and all of the items in the dependentSteps list are in the finishedSteps list
-            var nextSteps = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name) && !_queuedOrRunningSteps.Contains(x.Name) && x.DependentSteps.TrueForAll(x => _finishedSteps.Contains(x)));
+            IEnumerable<StepRegistration> nextSteps = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name) && !_queuedOrRunningSteps.Contains(x.Name) && x.DependentSteps.TrueForAll(x => _finishedSteps.Contains(x)));
             tasksToRun.AddRange(nextSteps.Select(x => CreateKeyValForRun(x)));
         }
         progressListener.OnRunComplete();
-        var stepsNotRun = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name)).Select(x => x.Name);
+        IEnumerable<string> stepsNotRun = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name)).Select(x => x.Name);
         Console.WriteLine($"Steps that were not run: {string.Join(", ", stepsNotRun)}");
     }
 
