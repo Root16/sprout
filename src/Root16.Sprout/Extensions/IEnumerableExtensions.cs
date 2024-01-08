@@ -26,10 +26,13 @@ public static class IEnumerableExtensions
 
     internal async static IAsyncEnumerable<TOutput> StreamFinishedTasksWithSpecificAmount<TOutput>(this List<KeyValuePair<StepRegistration,Func<StepRegistration,Task<TOutput>>>> functionsToRun, int maxConcurrentAmount = default)
     {
-        //Start a specific amount of tasks and then remove them from the list of tasks to run
+        //Get a list of functions and the list should be at most the maxConcurrentAmount
         var batchOfFunctionsToRun = functionsToRun.Take(maxConcurrentAmount).ToList();
-        batchOfFunctionsToRun.ForEach((x) => functionsToRun.Remove(x));
+        //Start them and add them to the the list of running functions
+        //x.Value is a function that takes a StepRegistration as input and x.Key is the step registration that is needed
         var runningFunctions = batchOfFunctionsToRun.Select(x => x.Value(x.Key)).ToList();
+        //Remove the functions from the list of functionToRun only after they have been started
+        batchOfFunctionsToRun.ForEach((x) => functionsToRun.Remove(x));
 
         while (runningFunctions.Any())
         {
