@@ -123,7 +123,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         if (amount == default) amount = 5;
         progressListener.OnRunStart();
         // Get all of the Steps that aren't dependent on anything create a delegate func that will call RunStepAsync when its the steps turn.
-        List<KeyValuePair<StepRegistration,Func<StepRegistration,Task<string>>>> tasksToRun = stepRegistrations.Where(x => !x.DependentSteps.Any()).Select(x => CreateKeyValForRun(x)).ToList();
+        List<KeyValuePair<StepRegistration, Func<StepRegistration, Task<string>>>> tasksToRun = stepRegistrations.Where(x => !x.DependentSteps.Any()).Select(x => CreateKeyValForRun(x)).ToList();
         await foreach (var finishedStep in tasksToRun.StreamFinishedTasksWithSpecificAmount(amount))
         {
             yield return finishedStep;
@@ -134,6 +134,10 @@ public class IntegrationRuntime : IIntegrationRuntime
             tasksToRun.AddRange(nextSteps.Select(x => CreateKeyValForRun(x)));
         }
         progressListener.OnRunComplete();
+
+        var stepsNotRun = stepRegistrations.Where(x => !_finishedSteps.Contains(x.Name)).Select(x => x.Name);
+
+        Console.WriteLine($"Steps that were not run: {string.Join(", ", stepsNotRun)}");
     }
 
     private KeyValuePair<StepRegistration,Func<StepRegistration,Task<string>>> CreateKeyValForRun(StepRegistration registration)
