@@ -9,5 +9,5 @@ public interface IIntegrationRuntime
     IAsyncEnumerable<string> RunAllStepsWithDependenciesOneAtATime();
     IAsyncEnumerable<string> RunAllStepsAtTheSameTime();
     IAsyncEnumerable<string> RunAllStepsWithDependenciesAtTheSameTime();
-    IAsyncEnumerable<string> RunAllStepsWithDependenciesSetAmountAtATime(int amount = 5);
+    IAsyncEnumerable<string> RunAllStepsWithDependenciesSetAmountAtATime(int amount = default);
 }
