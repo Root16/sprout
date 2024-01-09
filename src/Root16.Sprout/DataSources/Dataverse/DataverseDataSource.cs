@@ -23,12 +23,7 @@ public class DataverseDataSource : IDataSource<Entity>
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
-        var requests = new OrganizationRequestCollection();
-
         CleanUpOverriddenCreatedOn(operations);
-
-        var results = new List<DataOperationResult<Entity>>();
-
 
         IEnumerable<IGrouping<Guid?, DataOperation<Entity>>> groups;
         if (ImpersonateUsingAttribute != null)
@@ -50,15 +45,17 @@ public class DataverseDataSource : IDataSource<Entity>
             groups = operations.GroupBy(op => (Guid?)null).ToArray();
         }
 
-        foreach(var group in groups)
+        var results = new List<DataOperationResult<Entity>>();
+        foreach (var group in groups)
         {
             RemoveAttribute(group, ImpersonateUsingAttribute);
 
-            var ops = operations.Where(o =>
-                        (o.OperationType == "Create" || o.OperationType == "Update") &&
-                        o.Data.Attributes.Count > 0);
+            var requests = new OrganizationRequestCollection();
 
-            requests.AddRange(ops.Select(c => CreateOrganizationRequest(c, dataOperationFlags)).Where(r => r != null));
+            requests.AddRange(group
+                .Select(c => CreateOrganizationRequest(c, dataOperationFlags))
+                .Where(r => r != null)
+            );
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
             results.AddRange(await ExecuteMultipleAsync(requests, dryRun));
