@@ -15,5 +15,16 @@ public static class ServiceCollectionExtensions
         });
     }
 
-  
+    public static IServiceCollection AddDataverseDataSource(this IServiceCollection services, string connectionStringName, Action<DataverseDataSource> initializer)
+    {
+        return services.AddTransient(services =>
+        {
+            var factory = services.GetRequiredService<IDataverseDataSourceFactory>();
+            var result = factory.CreateDataSource(connectionStringName);
+            initializer(result);
+            return result;
+        });
+    }
+
+
 }
