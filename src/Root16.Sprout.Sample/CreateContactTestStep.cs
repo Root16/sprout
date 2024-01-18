@@ -6,23 +6,23 @@ using Root16.Sprout.BatchProcessing;
 
 namespace Root16.Sprout.Sample;
 
-internal class TestStep : BatchIntegrationStep<Contact,Entity>
+internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Contact> memoryDS;
+    private MemoryDataSource<CreateContact> memoryDS;
 
-    public TestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public CreateContactTestStep(MemoryDataSource<CreateContact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
-        DryRun = true;
+        DryRun = false;
     }
 
-    public override async Task<IReadOnlyList<Contact>> OnBeforeMapAsync(IReadOnlyList<Contact> batch)
+    public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
     {
         var firstNameValues = string.Join("</value><value>", batch.Select(b => b.FirstName).Distinct(StringComparer.OrdinalIgnoreCase));
         var lastNameValues = string.Join("</value><value>", batch.Select(b => b.LastName).Distinct(StringComparer.OrdinalIgnoreCase));
@@ -64,12 +64,12 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
 
-    public override IPagedQuery<Contact> GetInputQuery()
+    public override IPagedQuery<CreateContact> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> MapRecord(Contact source)
+    public override IReadOnlyList<DataOperation<Entity>> MapRecord(CreateContact source)
     {
         var result = new Entity("contact")
         {
@@ -80,7 +80,6 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return new[] { new DataOperation<Entity>(OperationType.Create, result) };
     }
-
 }

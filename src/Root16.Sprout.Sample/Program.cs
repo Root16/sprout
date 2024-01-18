@@ -12,19 +12,27 @@ builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddSprout();
 
-builder.Services.AddStep<TestStep>();
+builder.Services.AddStep<CreateContactTestStep>();
+builder.Services.AddStep<UpdateContactTestStep>();
 builder.Services.AddDataverseDataSource("Dataverse");
 
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleData(8000))
+    _ => new MemoryDataSource<CreateContact>(SampleData.GenerateCreateContactSampleData(amount: 250))
 );
+
+builder.Services.AddSingleton(
+    _ => new MemoryDataSource<UpdateContact>(SampleData.GenerateUpdateContactSampleData(amount: 250, startNumber: 225))
+);
+
 
 var host = builder.Build();
 host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
-var finishedStepName = await runtime.RunStepAsync<TestStep>();
+_ = await runtime.RunStepAsync<CreateContactTestStep>();
 
-Console.WriteLine($"{finishedStepName} has completed!");
+//Only the overlapping amount should be updated in this step as the data operation is "Update".
+//In the case above it's set so that only 25 of the possible 250 entities are update
+_ = await runtime.RunStepAsync<UpdateContactTestStep>();
 
 Console.WriteLine("Sprout Sample Complete.");
