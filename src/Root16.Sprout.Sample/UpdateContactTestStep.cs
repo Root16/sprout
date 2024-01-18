@@ -3,39 +3,26 @@ using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
-using Root16.Sprout.Sample.Models;
 
 namespace Root16.Sprout.Sample;
 
-<<<<<<<< HEAD:src/Root16.Sprout.Sample/TestSteps/ContactTestStep.cs
-internal class ContactTestStep : BatchIntegrationStep<Contact,Entity>
-========
-internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity>
->>>>>>>> AddUpdateOnlyOperation:src/Root16.Sprout.Sample/CreateContactTestStep.cs
+internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<CreateContact> memoryDS;
+    private MemoryDataSource<UpdateContact> memoryDS;
 
-<<<<<<<< HEAD:src/Root16.Sprout.Sample/TestSteps/ContactTestStep.cs
-    public ContactTestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
-========
-    public CreateContactTestStep(MemoryDataSource<CreateContact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
->>>>>>>> AddUpdateOnlyOperation:src/Root16.Sprout.Sample/CreateContactTestStep.cs
+    public UpdateContactTestStep(MemoryDataSource<UpdateContact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
         DryRun = false;
-<<<<<<<< HEAD:src/Root16.Sprout.Sample/TestSteps/ContactTestStep.cs
-        BatchSize = 50;
-========
->>>>>>>> AddUpdateOnlyOperation:src/Root16.Sprout.Sample/CreateContactTestStep.cs
     }
 
-    public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
+    public override async Task<IReadOnlyList<UpdateContact>> OnBeforeMapAsync(IReadOnlyList<UpdateContact> batch)
     {
         var firstNameValues = string.Join("</value><value>", batch.Select(b => b.FirstName).Distinct(StringComparer.OrdinalIgnoreCase));
         var lastNameValues = string.Join("</value><value>", batch.Select(b => b.LastName).Distinct(StringComparer.OrdinalIgnoreCase));
@@ -45,6 +32,7 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity
                     <entity name='contact'>
                         <attribute name='firstname' />
                         <attribute name='lastname' />
+                        <attribute name='emailaddress1' />
                         <filter>
                             <condition attribute='firstname' operator='in'>
                                 <value>{firstNameValues}</value>
@@ -77,12 +65,12 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
 
-    public override IPagedQuery<CreateContact> GetInputQuery()
+    public override IPagedQuery<UpdateContact> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> MapRecord(CreateContact source)
+    public override IReadOnlyList<DataOperation<Entity>> MapRecord(UpdateContact source)
     {
         var result = new Entity("contact")
         {
@@ -90,9 +78,10 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity
             {
                 {"firstname", source.FirstName },
                 {"lastname", source.LastName },
+                {"emailaddress1", source.EmailAddress }
             }
         };
 
-        return new[] { new DataOperation<Entity>(OperationType.Create, result) };
+        return new[] { new DataOperation<Entity>(OperationType.Update, result) };
     }
 }

@@ -5,11 +5,11 @@ namespace Root16.Sprout.Sample;
 
 internal class SampleData
 {
-    public static IEnumerable<Contact> GenerateSampleContacts(int amount = 10)
+    public static IEnumerable<CreateContact> GenerateCreateContactSampleData(int amount)
     {
         for (int i = 0; i < amount; i++)
         {
-            yield return new Contact
+            yield return new CreateContact
             {
                 FirstName = $"TestFirstName{i}",
                 LastName = $"TestLastName{i}"
@@ -57,6 +57,19 @@ internal class SampleData
             yield return new Email()
             {
                 EmailSubject = $"Email{i}"
+            };
+        }
+    }
+
+    public static IEnumerable<UpdateContact> GenerateUpdateContactSampleData(int amount, int startNumber)
+    {
+        for (int i = startNumber; i < (amount + startNumber); i++)
+        {
+            yield return new UpdateContact
+            {
+                FirstName = $"TestFirstName{i}",
+                LastName = $"TestLastName{i}",
+                EmailAddress = $"Test{i}@test.com"
             };
         }
     }

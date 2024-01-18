@@ -43,6 +43,14 @@ builder.Services.AddSingleton(
 builder.Services.AddSingleton(
     _ => new MemoryDataSource<Email>(SampleData.GenerateSampleEmails(200))
     );
+    _ => new MemoryDataSource<CreateContact>(SampleData.GenerateCreateContactSampleData(amount: 250))
+);
+
+builder.Services.AddSingleton(
+    _ => new MemoryDataSource<UpdateContact>(SampleData.GenerateUpdateContactSampleData(amount: 250, startNumber: 225))
+);
+
+
 var host = builder.Build();
 host.Start();
 
@@ -69,12 +77,10 @@ var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 //{
 //    Console.WriteLine($"Step Finished - {finishedStep}");
 //}
+_ = await runtime.RunStepAsync<CreateContactTestStep>();
 
-//Test - RunAllStepsWithDependenciesSetAmountAtATime
-// Contact and Task will run, then Email and Account and then letter. Takes into account dependencies, but then also still only runs 2 at a time
-await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesSetAmountAtATime(2))
-{
-    Console.WriteLine($"Step Finished - {finishedStep}");
-}
+//Only the overlapping amount should be updated in this step as the data operation is "Update".
+//In the case above it's set so that only 25 of the possible 250 entities are update
+_ = await runtime.RunStepAsync<UpdateContactTestStep>();
 
 Console.WriteLine("Sprout Sample Complete.");

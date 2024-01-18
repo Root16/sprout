@@ -61,7 +61,7 @@ public class BatchProcessor
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)
-        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? r.Operation.OperationType : "Error" ));
+        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? (r.Operation.OperationType?.ToString() ?? "Error") : "Error"));
         progressListener.OnProgressChange(progress);
 
 
