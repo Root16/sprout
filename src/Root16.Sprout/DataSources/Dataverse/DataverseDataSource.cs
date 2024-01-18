@@ -140,9 +140,9 @@ public class DataverseDataSource : IDataSource<Entity>
                     if (response?.Fault is not null)
                     {
                         results.Add(ResultFromRequestType(requests[i], false));
-                        if (response?.Fault?.InnerFault?.InnerFault?.Message is not null && response.Fault.InnerFault.InnerFault is OrganizationServiceFault)
+                        if (response?.Fault?.InnerFault?.InnerFault?.Message is not null && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
                         {
-                            logger.LogError(response.Fault.InnerFault.InnerFault.Message);
+                            logger.LogError(innermostFault.Message);
                         }
                         else
                         {
