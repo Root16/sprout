@@ -73,7 +73,7 @@ internal class LetterTestStep : BatchIntegrationStep<Letter, Entity>
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return new[] { new DataOperation<Entity>(OperationType.Create, result) };
     }
 
 }
