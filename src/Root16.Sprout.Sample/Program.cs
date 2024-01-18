@@ -22,7 +22,7 @@ builder.Services.RegisterStep<TaskTestStep>();
 builder.Services.RegisterStep<LetterTestStep>(nameof(TaskTestStep));
 builder.Services.RegisterStep<AccountTestStep>(nameof(CreateContactTestStep));
 builder.Services.RegisterStep<EmailTestStep>();
-builder.Services.RegisterStep<UpdateContactTestStep>(nameof(UpdateContactTestStep);
+builder.Services.RegisterStep<UpdateContactTestStep>(nameof(UpdateContactTestStep));
 
 builder.Services.AddDataverseDataSource("Dataverse");
 
