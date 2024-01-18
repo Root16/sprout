@@ -1,4 +1,4 @@
-﻿namespace Root16.Sprout.Sample
+﻿namespace Root16.Sprout.Sample.Models
 {
     internal class CreateContact
     {

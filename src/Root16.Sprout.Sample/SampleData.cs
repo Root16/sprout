@@ -17,6 +17,19 @@ internal class SampleData
         }
     }
 
+    public static IEnumerable<UpdateContact> GenerateUpdateContactSampleData(int amount, int startNumber)
+    {
+        for (int i = startNumber; i < (amount + startNumber); i++)
+        {
+            yield return new UpdateContact
+            {
+                FirstName = $"TestFirstName{i}",
+                LastName = $"TestLastName{i}",
+                EmailAddress = $"Test{i}@test.com"
+            };
+        }
+    }
+
     public static IEnumerable<Account> GenerateSampleAccounts(int amount = 10)
     {
         for(int i = 0;i < amount; i++)
@@ -57,19 +70,6 @@ internal class SampleData
             yield return new Email()
             {
                 EmailSubject = $"Email{i}"
-            };
-        }
-    }
-
-    public static IEnumerable<UpdateContact> GenerateUpdateContactSampleData(int amount, int startNumber)
-    {
-        for (int i = startNumber; i < (amount + startNumber); i++)
-        {
-            yield return new UpdateContact
-            {
-                FirstName = $"TestFirstName{i}",
-                LastName = $"TestLastName{i}",
-                EmailAddress = $"Test{i}@test.com"
             };
         }
     }

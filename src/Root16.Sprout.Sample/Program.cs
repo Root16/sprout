@@ -17,32 +17,30 @@ builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddSprout();
 
-builder.Services.RegisterStep<ContactTestStep>();
+builder.Services.RegisterStep<CreateContactTestStep>();
 builder.Services.RegisterStep<TaskTestStep>();
 builder.Services.RegisterStep<LetterTestStep>(nameof(TaskTestStep));
-builder.Services.RegisterStep<AccountTestStep>(nameof(ContactTestStep));
+builder.Services.RegisterStep<AccountTestStep>(nameof(CreateContactTestStep));
 builder.Services.RegisterStep<EmailTestStep>();
-
+builder.Services.RegisterStep<UpdateContactTestStep>(nameof(UpdateContactTestStep);
 
 builder.Services.AddDataverseDataSource("Dataverse");
 
 //Hide Logs Below Warning for Dataverse connections
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleContacts(200))
+    _ => new MemoryDataSource<Account>(SampleData.GenerateSampleAccounts(amount: 200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Account>(SampleData.GenerateSampleAccounts(200))
+    _ => new MemoryDataSource<TaskData>(SampleData.GenerateSampleTasks(amount: 200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<TaskData>(SampleData.GenerateSampleTasks(200))
+    _ => new MemoryDataSource<Letter>(SampleData.GenerateSampleLetters(amount: 200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Letter>(SampleData.GenerateSampleLetters(200))
+    _ => new MemoryDataSource<Email>(SampleData.GenerateSampleEmails(amount: 200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Email>(SampleData.GenerateSampleEmails(200))
-    );
     _ => new MemoryDataSource<CreateContact>(SampleData.GenerateCreateContactSampleData(amount: 250))
 );
 
@@ -65,22 +63,17 @@ var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 //}
 
 ////Test - RunAllStepsWithDependenciesOneAtATime
-////Contact Will Run, Then Task, Then Email, Then Account, Then Letter
+////CreateContact Will Run, Then Task, Then Email, Then Account, Then UpdateContact, and Then Letter
 //await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesOneAtATime())
 //{
 //    Console.WriteLine($"Step Finished - {finishedStep}");
 //}
 
-////Test - RunAllStepsWithDependenciesAtTheSameTime
-//// Contact, Task, and Email will run at the same time, then account, and then contact. Only waits for dependencies to hit
-//await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesAtTheSameTime())
-//{
-//    Console.WriteLine($"Step Finished - {finishedStep}");
-//}
-_ = await runtime.RunStepAsync<CreateContactTestStep>();
-
-//Only the overlapping amount should be updated in this step as the data operation is "Update".
-//In the case above it's set so that only 25 of the possible 250 entities are update
-_ = await runtime.RunStepAsync<UpdateContactTestStep>();
+//Test - RunAllStepsWithDependenciesAtTheSameTime
+// CreateContact, Task, and Email will run at the same time, then account, and then UpdateContact, and then Letter.
+await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesAtTheSameTime())
+{
+    Console.WriteLine($"Step Finished - {finishedStep}");
+}
 
 Console.WriteLine("Sprout Sample Complete.");
