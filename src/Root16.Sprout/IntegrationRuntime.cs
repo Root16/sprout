@@ -55,14 +55,14 @@ public class IntegrationRuntime : IIntegrationRuntime
 
         var waitingSteps = stepRegistrations.Select(reg => new DelayedStep(reg, RunStepAsync)).ToList();
 
-        var completedSteps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var completedStepNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var readySteps = new List<DelayedStep>();
 
         var runningSteps = new List<Task<string>>();
 
         while (readySteps.Any() || runningSteps.Any() || waitingSteps.Any())
         {
-            readySteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.All(preReq => completedSteps.Contains(preReq))));
+            readySteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.All(preReq => completedStepNames.Contains(preReq))));
             waitingSteps = waitingSteps.Except(readySteps).ToList();
 
             int available = maxDegreesOfParallelism - runningSteps.Count;
@@ -78,7 +78,7 @@ public class IntegrationRuntime : IIntegrationRuntime
             runningSteps.Remove(finishedFunction);
 
             var stepName = await finishedFunction;
-            completedSteps.Add(stepName);
+            completedStepNames.Add(stepName);
             completionHandler?.Invoke(stepName);
         }
         
