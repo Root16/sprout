@@ -26,7 +26,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 
     private static void AddPaging(XDocument fetchDoc, int page, int pageSize, string? pagingCookie)
     {
-        fetchDoc.Root?.SetAttributeValue("page", page+1);
+        fetchDoc.Root?.SetAttributeValue("page", page);
         fetchDoc.Root?.SetAttributeValue("count", pageSize);
         if (pagingCookie is not null)
         {
@@ -36,7 +36,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 
     public async Task<PagedQueryResult<Entity>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(AddPaging(fetchXml, pageNumber, pageSize, (string?)bookmark)));
+        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
 
         return new PagedQueryResult<Entity>
         (
