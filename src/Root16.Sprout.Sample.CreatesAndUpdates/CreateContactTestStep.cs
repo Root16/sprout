@@ -3,6 +3,7 @@ using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
+using Root16.Sprout.Sample.Models;
 
 namespace Root16.Sprout.Sample;
 
@@ -20,6 +21,7 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
         DryRun = false;
+        BatchSize = 50;
     }
 
     public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
