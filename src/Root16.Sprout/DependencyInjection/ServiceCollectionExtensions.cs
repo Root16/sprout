@@ -8,9 +8,9 @@ namespace Root16.Sprout.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, params string[] dependentStepNames) where TStep : class, IIntegrationStep
+    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
     {
-        services.AddSingleton(new StepRegistration(typeof(TStep), dependentStepNames.ToList()));
+        services.AddSingleton(new StepRegistration(typeof(TStep), prerequisiteStepNames.ToList()));
         services.AddTransient<TStep>();
 
         return services;

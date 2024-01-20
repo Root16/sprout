@@ -4,15 +4,15 @@ public class StepRegistration
 {
     public Type StepType { get; }
     public string Name { get; }
-    public List<string> DependentSteps { get; } = new List<string>();
+    public List<string> PrerequisteSteps { get; } = new List<string>();
 
-    public StepRegistration(Type stepType, List<string>? dependentSteps = null) 
+    public StepRegistration(Type stepType, List<string>? prerequisteSteps = null) 
     {
         StepType = stepType;
         Name = stepType.Name;
-        if(dependentSteps != null)
+        if(prerequisteSteps != null)
         {
-            DependentSteps = dependentSteps;
+            PrerequisteSteps = prerequisteSteps;
         }
     }
 }

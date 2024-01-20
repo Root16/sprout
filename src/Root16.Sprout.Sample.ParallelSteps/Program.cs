@@ -12,8 +12,6 @@ using Root16.Sprout.Sample.ParallelSteps.Models;
 using Root16.Sprout.Sample.ParallelSteps.TestSteps;
 using Root16.Sprout.Sample.TestSteps;
 
-
-// TODO: There's gotta be a better way to make a list of dependent items
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
 
@@ -50,33 +48,10 @@ host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 
-
-////Test - RunAllStepsAtTheSameTime
-////All Of The Steps Will Run At The Same Time. Dependency Is Not Taken Into Account
-//await foreach (var finishedStep in runtime.RunAllStepsAtTheSameTime())
-//{
-//    Console.WriteLine($"Step Finished - {finishedStep}");
-//}
-
-////Test - RunAllStepsWithDependenciesOneAtATime
-////Contact Will Run, Then Task, Then Email, Then Account, Then Letter
-//await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesOneAtATime())
-//{
-//    Console.WriteLine($"Step Finished - {finishedStep}");
-//}
-
-////Test - RunAllStepsWithDependenciesAtTheSameTime
-//// Contact, Task, and Email will run at the same time, then account, and then contact. Only waits for dependencies to hit
-//await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesAtTheSameTime())
-//{
-//    Console.WriteLine($"Step Finished - {finishedStep}");
-//}
-
-//Test - RunAllStepsWithDependenciesSetAmountAtATime
 // Contact and Task will run, then Email and Account and then letter. Takes into account dependencies, but then also still only runs 2 at a time
-await foreach (var finishedStep in runtime.RunAllStepsWithDependenciesSetAmountAtATime(2))
+await runtime.RunAllStepsAsync(2, finishedStep =>
 {
     Console.WriteLine($"Step Finished - {finishedStep}");
-}
+});
 
 Console.WriteLine("Sprout Sample Complete.");
