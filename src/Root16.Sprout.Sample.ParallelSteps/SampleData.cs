@@ -1,7 +1,7 @@
-﻿using Root16.Sprout.Sample.Models;
-using TaskData = Root16.Sprout.Sample.Models.TaskData;
+﻿using Root16.Sprout.Sample.ParallelSteps.Models;
+using TaskData = Root16.Sprout.Sample.ParallelSteps.Models.TaskData;
 
-namespace Root16.Sprout.Sample;
+namespace Root16.Sprout.Sample.ParallelSteps;
 
 internal class SampleData
 {
@@ -19,7 +19,7 @@ internal class SampleData
 
     public static IEnumerable<Account> GenerateSampleAccounts(int amount = 10)
     {
-        for(int i = 0;i < amount; i++)
+        for (int i = 0; i < amount; i++)
         {
             yield return new Account()
             {

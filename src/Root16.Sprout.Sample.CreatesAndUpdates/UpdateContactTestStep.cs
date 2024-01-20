@@ -3,9 +3,8 @@ using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
-using Root16.Sprout.Sample.Models;
 
-namespace Root16.Sprout.Sample.TestSteps;
+namespace Root16.Sprout.Sample.CreatesAndUpdates;
 
 internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entity>
 {

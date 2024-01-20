@@ -3,7 +3,7 @@ using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
-using Root16.Sprout.Sample.Models;
+using Root16.Sprout.Sample.ParallelSteps.Models;
 
 namespace Root16.Sprout.Sample;
 

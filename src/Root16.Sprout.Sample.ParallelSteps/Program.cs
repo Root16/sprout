@@ -7,7 +7,9 @@ using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Sample;
-using Root16.Sprout.Sample.Models;
+using Root16.Sprout.Sample.ParallelSteps;
+using Root16.Sprout.Sample.ParallelSteps.Models;
+using Root16.Sprout.Sample.ParallelSteps.TestSteps;
 using Root16.Sprout.Sample.TestSteps;
 
 

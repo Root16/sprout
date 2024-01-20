@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Root16.Sprout.Sample.Models;
+namespace Root16.Sprout.Sample.ParallelSteps.Models;
 
 internal class Account
 {

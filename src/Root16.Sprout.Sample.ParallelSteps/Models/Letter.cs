@@ -1,4 +1,4 @@
-﻿namespace Root16.Sprout.Sample.Models;
+﻿namespace Root16.Sprout.Sample.ParallelSteps.Models;
 
 internal class Letter
 {
