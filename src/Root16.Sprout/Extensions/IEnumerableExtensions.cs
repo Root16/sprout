@@ -14,15 +14,5 @@ public static class IEnumerableExtensions
         }
         return returnedValues;
     }
-
-    internal async static IAsyncEnumerable<T> AsTasksComplete<T>(this IList<Task<T>> runningFunctions)
-    {
-        while (runningFunctions.Any())
-        {
-            Task<T> finishedTask = await Task.WhenAny(runningFunctions);
-            runningFunctions.Remove(finishedTask);
-            yield return await finishedTask;
-        }
-    }
-    
+   
 }
