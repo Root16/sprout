@@ -69,7 +69,7 @@ public class DataverseDataSource : IDataSource<Entity>
     {
         foreach(var op in operations)
         {
-            if (op.OperationType.Equals(OperationType.Update) && op.Data.Contains("overriddencreatedon"))
+            if (op.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) && op.Data.Contains("overriddencreatedon"))
             {
                 op.Data.Attributes.Remove("overriddencreatedon");
             }
@@ -162,7 +162,7 @@ public class DataverseDataSource : IDataSource<Entity>
 
     private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
     {
-        return new DataOperationResult<Entity>(new DataOperation<Entity>((OperationType)Enum.Parse(typeof(OperationType), request.RequestName), (Entity)request.Parameters["Target"]), wasSuccessful);
+        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, (Entity)request.Parameters["Target"]), wasSuccessful);
     }
 
     public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
@@ -173,14 +173,14 @@ public class DataverseDataSource : IDataSource<Entity>
     protected OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
     {
         OrganizationRequest request;
-        if (change.OperationType.Equals(OperationType.Create) && change.Data.Attributes.Count > 0)
+        if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase) && change.Data.Attributes.Count > 0)
         {
             request = new CreateRequest
             {
                 Target = change.Data,
             };
         }
-        else if (change.OperationType.Equals(OperationType.Update) && change.Data.Attributes.Count > 0)
+        else if (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) && change.Data.Attributes.Count > 0)
         {
             request = new UpdateRequest
             {

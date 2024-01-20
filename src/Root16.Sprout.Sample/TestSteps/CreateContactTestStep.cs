@@ -82,6 +82,6 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact,Entity
             }
         };
 
-        return new[] { new DataOperation<Entity>(OperationType.Create, result) };
+        return new[] { new DataOperation<Entity>("Create", result) };
     }
 }

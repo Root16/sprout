@@ -83,6 +83,6 @@ internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entit
             }
         };
 
-        return new[] { new DataOperation<Entity>(OperationType.Update, result) };
+        return new[] { new DataOperation<Entity>("Update", result) };
     }
 }
