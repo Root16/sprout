@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout", "Root16.Spr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.ParallelSteps", "Root16.Sprout.Sample.ParallelSteps\Root16.Sprout.Sample.ParallelSteps.csproj", "{47345E65-F6CE-4D93-94D6-751515B31DCC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.CreatesAndUpdates", "Root16.Sprout.Sample.CreatesAndUpdates\Root16.Sprout.Sample.CreatesAndUpdates.csproj", "{258956BF-023D-46A4-BCC3-F3F3B339612C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{47345E65-F6CE-4D93-94D6-751515B31DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47345E65-F6CE-4D93-94D6-751515B31DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47345E65-F6CE-4D93-94D6-751515B31DCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{258956BF-023D-46A4-BCC3-F3F3B339612C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{258956BF-023D-46A4-BCC3-F3F3B339612C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{258956BF-023D-46A4-BCC3-F3F3B339612C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{258956BF-023D-46A4-BCC3-F3F3B339612C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
