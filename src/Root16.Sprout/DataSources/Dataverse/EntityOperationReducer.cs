@@ -40,7 +40,7 @@ public class EntityOperationReducer
         return ReduceOperations(changes, (e1, e2) => StringComparer.OrdinalIgnoreCase.Equals(keySelector(e1), keySelector(e2)));
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity,Entity,bool> entityEqualityComparer)
+    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, Entity, bool> entityEqualityComparer)
     {
         if (entities is null)
         {
@@ -48,7 +48,7 @@ public class EntityOperationReducer
         }
 
         var results = new List<DataOperation<Entity>>();
-        
+
         StringBuilder sb = new();
 
         foreach (var change in changes)
@@ -57,7 +57,7 @@ public class EntityOperationReducer
 
             var matches = entities.Where(e => entityEqualityComparer(e, change.Data)).ToList();
 
-            if (matches.Count > 0)
+            if (matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
                 if (matches.Count > 1)
                 {
@@ -77,7 +77,7 @@ public class EntityOperationReducer
                     }
                 }
             }
-            else
+            else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
             {
                 var delta = ReduceEntityChanges(change.Data, null);
 
@@ -97,6 +97,7 @@ public class EntityOperationReducer
                     }
                 }
             }
+
         }
 
         return results;

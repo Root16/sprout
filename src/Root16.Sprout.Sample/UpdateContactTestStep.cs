@@ -6,23 +6,23 @@ using Root16.Sprout.BatchProcessing;
 
 namespace Root16.Sprout.Sample;
 
-internal class TestStep : BatchIntegrationStep<Contact,Entity>
+internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Contact> memoryDS;
+    private MemoryDataSource<UpdateContact> memoryDS;
 
-    public TestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public UpdateContactTestStep(MemoryDataSource<UpdateContact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
-        DryRun = true;
+        DryRun = false;
     }
 
-    public override async Task<IReadOnlyList<Contact>> OnBeforeMapAsync(IReadOnlyList<Contact> batch)
+    public override async Task<IReadOnlyList<UpdateContact>> OnBeforeMapAsync(IReadOnlyList<UpdateContact> batch)
     {
         var firstNameValues = string.Join("</value><value>", batch.Select(b => b.FirstName).Distinct(StringComparer.OrdinalIgnoreCase));
         var lastNameValues = string.Join("</value><value>", batch.Select(b => b.LastName).Distinct(StringComparer.OrdinalIgnoreCase));
@@ -32,6 +32,7 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
                     <entity name='contact'>
                         <attribute name='firstname' />
                         <attribute name='lastname' />
+                        <attribute name='emailaddress1' />
                         <filter>
                             <condition attribute='firstname' operator='in'>
                                 <value>{firstNameValues}</value>
@@ -64,12 +65,12 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
 
-    public override IPagedQuery<Contact> GetInputQuery()
+    public override IPagedQuery<UpdateContact> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> MapRecord(Contact source)
+    public override IReadOnlyList<DataOperation<Entity>> MapRecord(UpdateContact source)
     {
         var result = new Entity("contact")
         {
@@ -77,10 +78,10 @@ internal class TestStep : BatchIntegrationStep<Contact,Entity>
             {
                 {"firstname", source.FirstName },
                 {"lastname", source.LastName },
+                {"emailaddress1", source.EmailAddress }
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return new[] { new DataOperation<Entity>("Update", result) };
     }
-
 }
