@@ -1,6 +1,4 @@
-﻿using Root16.Sprout.DependencyInjection;
-
-namespace Root16.Sprout;
+﻿namespace Root16.Sprout.DependencyInjection;
 
 internal delegate Task<string> AsyncStepRunner(StepRegistration stepRegistration);
 
