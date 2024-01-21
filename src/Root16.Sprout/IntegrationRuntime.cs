@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Progress;
-using Root16.Sprout.Extensions;
-using static Root16.Sprout.IntegrationRuntime;
 
 namespace Root16.Sprout;
 
@@ -19,6 +17,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         this.serviceScopeFactory = serviceScopeFactory;
         this.progressListener = progressListener;
         CheckRegistrations();
+        BuildDependencyTree();
     }
 
     public async Task<string> RunStepAsync(string name)
@@ -51,37 +50,26 @@ public class IntegrationRuntime : IIntegrationRuntime
 
     public async Task RunAllStepsAsync(int maxDegreesOfParallelism = 1, Action<string>? completionHandler = null)
     {
+        CheckStepDependencyTree();
         progressListener.OnRunStart();
-
         var waitingSteps = stepRegistrations.Select(reg => new DelayedStep(reg, RunStepAsync)).ToList();
-
         var completedStepNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var readySteps = new List<DelayedStep>();
-
+        var queuedSteps = new List<DelayedStep>();
         var runningSteps = new List<Task<string>>();
 
-        while (readySteps.Any() || runningSteps.Any() || waitingSteps.Any())
+        while (queuedSteps.Any() || runningSteps.Any() || waitingSteps.Any())
         {
-            readySteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.All(preReq => completedStepNames.Contains(preReq))));
-            waitingSteps = waitingSteps.Except(readySteps).ToList();
-
+            queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
+            waitingSteps = waitingSteps.Except(queuedSteps).ToList();
             int available = maxDegreesOfParallelism - runningSteps.Count;
-            runningSteps.AddRange(readySteps.Take(available).Select(x => x.StepRunner(x.StepRegistration)));
-            readySteps.RemoveRange(0, Math.Min(readySteps.Count, available));
-
-            if (!runningSteps.Any())
-            {
-                throw new InvalidOperationException($"Unreachable steps found: {string.Join(", ", waitingSteps.Select(s => s.StepRegistration.Name))}");
-            }
-
+            runningSteps.AddRange(queuedSteps.Take(available).Select(x => x.StepRunner(x.StepRegistration)));
+            queuedSteps.RemoveRange(0, Math.Min(queuedSteps.Count, available));
             var finishedFunction = await Task.WhenAny(runningSteps);
             runningSteps.Remove(finishedFunction);
-
             var stepName = await finishedFunction;
             completedStepNames.Add(stepName);
             completionHandler?.Invoke(stepName);
         }
-        
         progressListener.OnRunComplete();
     }
 
@@ -93,5 +81,62 @@ public class IntegrationRuntime : IIntegrationRuntime
         {
             throw new InvalidDataException($"Steps can only be registered once! Please remove duplication registrations. The below registrations are duplicated:\n\t{duplicateRegistrations}");
         }
+    }
+
+    private void BuildDependencyTree()
+    {
+        foreach (var stepReg in stepRegistrations)
+        {
+            var preRegSteps = stepReg.PrerequisteSteps;
+
+            foreach (var preRegStep in preRegSteps)
+            {
+                var stepToUpdate = stepRegistrations.FirstOrDefault(x => x.Name.Equals(preRegStep, StringComparison.OrdinalIgnoreCase));
+                stepToUpdate?.DependentSteps.Add(stepReg.Name);
+            }
+        }
+    }
+
+    private void CheckStepDependencyTree()
+    {
+        var stepsThatWontRun = CheckForStepsThatWillNotRun();
+
+        if (stepsThatWontRun.Any())
+        {
+            throw new InvalidDataException($"Unreachable steps found: {string.Join(", ", stepsThatWontRun)}");
+        }
+    }
+
+    private HashSet<string> CheckForStepsThatWillNotRun()
+    {
+        List<string> stepsThatWontRun = new();
+
+        // Steps That Are Dependent On Each Other
+        stepsThatWontRun.AddRange(stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name));
+        stepsThatWontRun.AddRange(GetAllStepsThatWontRun(stepsThatWontRun));
+        // Steps That have prereq steps that aren't registered
+        stepsThatWontRun.AddRange(stepRegistrations.Where(x => !x.PrerequisteSteps.TrueForAll(x => stepRegistrations.Select(x => x.Name).Contains(x))).Select(x => x.Name));
+
+        return stepsThatWontRun.ToHashSet();
+    }
+
+    // Recursively getting steps that wont run because they are dependent on steps that will not run
+    //TODO: I can easily make this a loop if we aren't fans of recursion
+    private IEnumerable<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
+    {
+        if (!stepsThatWontRun.Any())
+        {
+            return Enumerable.Empty<string>();
+        }
+        var steps = new List<string>();
+        var newStepsThatWontRun = stepRegistrations
+            .ExceptBy(stepsThatWontRun, x => x.Name)
+            .Where(x => x.PrerequisteSteps.Intersect(stepsThatWontRun).Any())
+            .Select(x => x.Name)
+            .ToList();
+
+        steps.AddRange(newStepsThatWontRun);
+        steps.AddRange(GetAllStepsThatWontRun(steps).ToList());
+        return steps;
     }
 }

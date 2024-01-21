@@ -23,11 +23,14 @@ builder.Services.RegisterStep<LetterTestStep>(nameof(TaskTestStep));
 builder.Services.RegisterStep<AccountTestStep>(nameof(ContactTestStep));
 builder.Services.RegisterStep<EmailTestStep>();
 
+builder.Services.RegisterStep<AccountInvalidDependencyTestStep>(nameof(ContactInvalidDependencyTestStep));
+builder.Services.RegisterStep<ContactInvalidDependencyTestStep>(nameof(AccountInvalidDependencyTestStep));
 
 builder.Services.AddDataverseDataSource("Dataverse");
 
 //Hide Logs Below Warning for Dataverse connections
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
+
 builder.Services.AddSingleton(
     _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleContacts(200))
     );
@@ -48,6 +51,7 @@ host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 
+//This will throw an error unless AccountInvalidDependencyTestStep, and ContactInvalidDependencyTestStep are both commented out
 // Contact and Task will run, then Email and Account and then letter. Takes into account dependencies, but then also still only runs 2 at a time
 await runtime.RunAllStepsAsync(2, finishedStep =>
 {
