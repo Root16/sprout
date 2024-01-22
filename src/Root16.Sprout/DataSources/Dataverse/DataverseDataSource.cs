@@ -26,7 +26,7 @@ public class DataverseDataSource : IDataSource<Entity>
         CleanUpOverriddenCreatedOn(operations);
 
         IEnumerable<IGrouping<Guid?, DataOperation<Entity>>> groups;
-        if (ImpersonateUsingAttribute != null)
+        if (ImpersonateUsingAttribute is not null)
         {
             groups = operations
                 .GroupBy(op =>
@@ -78,7 +78,7 @@ public class DataverseDataSource : IDataSource<Entity>
 
     private void RemoveAttribute(IEnumerable<DataOperation<Entity>> operations, string? attributeName)
     {
-        if (attributeName != null)
+        if (attributeName is not null)
         {
             foreach (var op in operations)
             {
