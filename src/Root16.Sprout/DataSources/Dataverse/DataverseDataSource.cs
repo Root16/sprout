@@ -91,72 +91,92 @@ public class DataverseDataSource : IDataSource<Entity>
     }
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> ExecuteMultipleAsync(
-        OrganizationRequestCollection requests,
+        OrganizationRequestCollection requestCollection,
         bool dryRun)
     {
         var results = new List<DataOperationResult<Entity>>();
 
-        if (requests.Count == 1)
+        if (requestCollection.Count == 1)
         {
             try
             {
                 if (!dryRun)
                 {
-                    var response = await CrmServiceClient.ExecuteAsync(requests[0]);
+                    var response = await CrmServiceClient.ExecuteAsync(requestCollection[0]);
                 }
-                results.Add(ResultFromRequestType(requests[0], true));
+                results.Add(ResultFromRequestType(requestCollection[0], true));
             }
             catch (FaultException<OrganizationServiceFault> e)
             {
                 logger.LogError(e.Message);
-                results.Add(ResultFromRequestType(requests[0], false));
+                results.Add(ResultFromRequestType(requestCollection[0], false));
             }
         }
-        else if (requests.Count > 1)
+        else if (requestCollection.Count > 1)
         {
-            var executeMultiple = new ExecuteMultipleRequest
-            {
-                Settings = new ExecuteMultipleSettings
-                {
-                    ContinueOnError = true,
-                },
-                Requests = requests
-            };
-
             if (dryRun)
             {
-                for (var i = 0; i < requests.Count; i++)
+                for (var i = 0; i < requestCollection.Count; i++)
                 {
-                    results.Add(ResultFromRequestType(requests[i], true));
+                    results.Add(ResultFromRequestType(requestCollection[i], true));
                 }
             }
             else
             {
-                var executeMultipleResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(executeMultiple);
-                var responses = executeMultipleResponse.Responses;
-                for (var i = 0; i < requests.Count; i++)
+                List<OrganizationRequestCollection> ListofRequestCollections = new List<OrganizationRequestCollection>();
+
+                foreach (var request in requestCollection.Chunk(1000))
                 {
-                    var response = responses.FirstOrDefault(r => r.RequestIndex == i);
-                    if (response?.Fault is not null)
+                    var orgRequestCollection = new OrganizationRequestCollection();
+                    orgRequestCollection.AddRange(request);
+                    ListofRequestCollections.Add(orgRequestCollection);
+                }
+
+                List<Task<OrganizationResponse>> requestTasks = new();
+
+                foreach (var requests in ListofRequestCollections)
+                {
+                    requestTasks.Add(CrmServiceClient.ExecuteAsync(new ExecuteMultipleRequest
                     {
-                        results.Add(ResultFromRequestType(requests[i], false));
-                        if (response?.Fault?.InnerFault?.InnerFault?.Message is not null && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
+                        Settings = new ExecuteMultipleSettings
                         {
-                            logger.LogError(innermostFault.Message);
+                            ContinueOnError = true,
+                        },
+                        Requests = requests
+                    }));
+                }
+
+                OrganizationResponse[] organizationResponses = await Task.WhenAll(requestTasks);
+                List<ExecuteMultipleResponse> executeMultipleResponses = organizationResponses.Select(x => (ExecuteMultipleResponse)x).ToList();
+
+                for (var i = 0; i < executeMultipleResponses.Count; i++)
+                {
+                    var responses = executeMultipleResponses[i].Responses;
+                    var matchingRequests = ListofRequestCollections[i];
+                    for (var k = 0; k < matchingRequests.Count; k++)
+                    {
+                        var response = responses.FirstOrDefault(r => r.RequestIndex == k);
+                        if (response?.Fault is not null)
+                        {
+                            results.Add(ResultFromRequestType(matchingRequests[k], false));
+                            if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
+                                && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
+                            {
+                                logger.LogError(innermostFault.Message);
+                            }
+                            else
+                            {
+                                logger.LogError(response.Fault.Message);
+                            }
                         }
                         else
                         {
-                            logger.LogError(response.Fault.Message);
+                            results.Add(ResultFromRequestType(matchingRequests[k], true));
                         }
-                    }
-                    else
-                    {
-                        results.Add(ResultFromRequestType(requests[i], true));
                     }
                 }
             }
         }
-
         return results;
     }
 
