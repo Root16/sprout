@@ -110,18 +110,12 @@ public class IntegrationRuntime : IIntegrationRuntime
     private HashSet<string> CheckForStepsThatWillNotRun()
     {
         List<string> stepsThatWontRun = new();
-
-        // Steps That Are Dependent On Each Other
         stepsThatWontRun.AddRange(stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name));
         stepsThatWontRun.AddRange(GetAllStepsThatWontRun(stepsThatWontRun));
-        // Steps That have prereq steps that aren't registered
         stepsThatWontRun.AddRange(stepRegistrations.Where(x => !x.PrerequisteSteps.TrueForAll(x => stepRegistrations.Select(x => x.Name).Contains(x))).Select(x => x.Name));
-
         return stepsThatWontRun.ToHashSet();
     }
 
-    // Recursively getting steps that wont run because they are dependent on steps that will not run
-    //TODO: I can easily make this a loop if we aren't fans of recursion
     private IEnumerable<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
     {
         if (!stepsThatWontRun.Any())

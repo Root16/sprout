@@ -18,11 +18,11 @@ builder.Services.RegisterStep<UpdateContactTestStep>();
 builder.Services.AddDataverseDataSource("Dataverse");
 
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<CreateContact>(SampleData.GenerateCreateContactSampleData(amount: 250))
+    _ => new MemoryDataSource<CreateContact>(SampleData.GenerateCreateContactSampleData(amount: 2000))
 );
 
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<UpdateContact>(SampleData.GenerateUpdateContactSampleData(amount: 250, startNumber: 225))
+    _ => new MemoryDataSource<UpdateContact>(SampleData.GenerateUpdateContactSampleData(amount: 250, startNumber: 1975))
 );
 
 

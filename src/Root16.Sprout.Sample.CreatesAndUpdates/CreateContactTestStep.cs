@@ -20,7 +20,7 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
         DryRun = false;
-        BatchSize = 50;
+        BatchSize = 2000;
     }
 
     public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
