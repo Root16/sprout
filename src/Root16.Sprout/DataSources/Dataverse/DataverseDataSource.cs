@@ -182,7 +182,16 @@ public class DataverseDataSource : IDataSource<Entity>
 
     private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
     {
-        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, (Entity)request.Parameters["Target"]), wasSuccessful);
+        Entity target;
+        if (request.Parameters["Target"] is EntityReference entityRef)
+        {
+            target = new Entity(entityRef.LogicalName, entityRef.Id);
+        }
+        else
+        {
+            target = (Entity)request.Parameters["Target"];
+        }
+        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, target), wasSuccessful);
     }
 
     public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
