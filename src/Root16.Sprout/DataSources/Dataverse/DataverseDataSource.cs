@@ -207,6 +207,13 @@ public class DataverseDataSource : IDataSource<Entity>
                 Target = change.Data,
             };
         }
+        else if (change.OperationType.Equals("Delete", StringComparison.OrdinalIgnoreCase))
+        {
+            request = new DeleteRequest
+            {
+                Target = change.Data.ToEntityReference(),
+            };
+        }
         else
         {
             return null;
