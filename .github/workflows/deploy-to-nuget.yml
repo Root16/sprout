@@ -32,7 +32,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
         cache: true
         cache-dependency-path: '**/packages.lock.json'
         source-url: https://api.nuget.org/v3/index.json
@@ -40,7 +40,10 @@ jobs:
         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
     
     - name: Build solution and generate NuGet package
-      run: dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" src/Root16.Sprout
+      run: |
+          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src\Root16.Sprout
+          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src\Root16.Sprout.Dataverse
+          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src\Root16.Sprout.SqlServer
       
     - name: Push
       env:
