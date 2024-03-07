@@ -1,7 +1,4 @@
-﻿using Azure.Identity;
-using Root16.Sprout.DependencyInjection;
-
-namespace Root16.Sprout.Extensions;
+﻿namespace Root16.Sprout.Extensions;
 
 public static class IEnumerableExtensions
 {

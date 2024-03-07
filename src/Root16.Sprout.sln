@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.Create
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Dataverse", "Root16.Sprout.Dataverse\Root16.Sprout.Dataverse.csproj", "{5DE864A9-B356-4920-BE17-181051EDFAA2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.SqlServer", "Root16.Sprout.SqlServer\Root16.Sprout.SqlServer.csproj", "{2D4771B9-310D-4829-AE16-219EFFC1A707}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{5DE864A9-B356-4920-BE17-181051EDFAA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DE864A9-B356-4920-BE17-181051EDFAA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DE864A9-B356-4920-BE17-181051EDFAA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
