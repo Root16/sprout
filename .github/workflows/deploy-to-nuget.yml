@@ -41,9 +41,9 @@ jobs:
     
     - name: Build solution and generate NuGet package
       run: |
-          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src\Root16.Sprout
-          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src\Root16.Sprout.Dataverse
-          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src\Root16.Sprout.SqlServer
+          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout
+          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.Dataverse
+          dotnet pack -c Release -o out --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.SqlServer
       
     - name: Push
       env:
