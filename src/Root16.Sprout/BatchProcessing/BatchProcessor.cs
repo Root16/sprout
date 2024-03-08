@@ -1,9 +1,15 @@
-﻿using Root16.Sprout.DataSources;
+﻿using Root16.Sprout.DataStores;
 using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchProcessor
+public interface IBatchProcessor
+{
+    Task ProcessAllBatchesAsync<TInput, TOutput, TDataStoreOptions>(IBatchIntegrationStep<TInput, TOutput, TDataStoreOptions> step) where TDataStoreOptions : class;
+    Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput, TDataStoreOptions>(IBatchIntegrationStep<TInput, TOutput, TDataStoreOptions> step, BatchState<TInput>? batchState, TDataStoreOptions? options = null) where TDataStoreOptions : class;
+}
+
+internal class BatchProcessor : IBatchProcessor
 {
     public BatchProcessor(IProgressListener progressListener)
     {
@@ -12,21 +18,21 @@ public class BatchProcessor
 
     private readonly IProgressListener progressListener;
 
-    public async Task ProcessAllBatchesAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step)
+    public async Task ProcessAllBatchesAsync<TInput, TOutput, TDataStoreOptions>(
+        IBatchIntegrationStep<TInput, TOutput, TDataStoreOptions> step) where TDataStoreOptions : class
     {
         BatchState<TInput>? batchState = null;
         do
         {
-            batchState = await ProcessBatchAsync(step, batchState);
+            batchState = await ProcessBatchAsync(step, batchState, step.Options);
         }
         while (batchState.QueryState?.MoreRecords == true);
 
     }
 
-    public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput,TOutput> step,
-        BatchState<TInput>? batchState)
+    public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput, TDataStoreOptions>(
+        IBatchIntegrationStep<TInput, TOutput, TDataStoreOptions> step,
+        BatchState<TInput>? batchState, TDataStoreOptions? options = null) where TDataStoreOptions : class
     {
 
         var queryState = batchState?.QueryState;
@@ -52,16 +58,16 @@ public class BatchProcessor
 
         batch = await step.OnBeforeMapAsync(batch);
 
-        IReadOnlyList<DataOperation<TOutput>> data = new List<DataOperation<TOutput>>(batch.SelectMany(step.MapRecord));
+        IReadOnlyList<TOutput> data = new List<TOutput>(batch.SelectMany(step.MapRecord));
 
         data = await step.OnAfterMapAsync(data);
 
         data = await step.OnBeforeDeliveryAsync(data);
-        var results = await step.OutputDataSource.PerformOperationsAsync(data, step.DryRun, step.DataOperationFlags);
+        var results = await step.OutputDataStore.PerformOperationsAsync(data, options);
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)
-        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? (r.Operation.OperationType?.ToString() ?? "Error") : "Error"));
+        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? step.OutputDataStore.GetOperationName(r.Operation) : "Error"));
         progressListener.OnProgressChange(progress);
 
 

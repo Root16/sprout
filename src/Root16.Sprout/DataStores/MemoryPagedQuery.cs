@@ -1,14 +1,13 @@
-﻿
-namespace Root16.Sprout.DataSources;
+﻿namespace Root16.Sprout.DataStores;
 
 public class MemoryPagedQuery<T> : IPagedQuery<T>
 {
-	private readonly List<T> data;
+    private readonly List<T> data;
 
-	public MemoryPagedQuery(IEnumerable<T> data)
-	{
-		this.data = data.ToList();
-	}
+    public MemoryPagedQuery(IEnumerable<T> data)
+    {
+        this.data = data.ToList();
+    }
 
     public Task<PagedQueryResult<T>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {

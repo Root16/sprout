@@ -1,4 +1,4 @@
-﻿namespace Root16.Sprout.DataSources;
+﻿namespace Root16.Sprout.DataStores;
 
 public record PagedQueryResult<T>
 (

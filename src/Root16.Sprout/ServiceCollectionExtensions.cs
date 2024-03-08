@@ -19,7 +19,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSprout(this IServiceCollection services)
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
-        services.TryAddTransient<BatchProcessor>();
+        services.TryAddTransient<IBatchProcessor, BatchProcessor>();
         services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
         return services;
     }

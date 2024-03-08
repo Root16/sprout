@@ -1,28 +1,28 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
 using System.Text;
 using Root16.Sprout.Sample.ParallelSteps.Models;
+using Root16.Sprout.DataStores;
+using Root16.Sprout.Dataverse.DataStores;
+using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Dataverse.BatchProcessing;
 
 namespace Root16.Sprout.Sample.TestSteps;
 
-internal class AccountInvalidDependencyTestStep : BatchIntegrationStep<Account, Entity>
+internal class AccountInvalidDependencyTestStep : DataverseBatchIntegrationStep<Account>
 {
-    private readonly DataverseDataSource dataverseDataSource;
+    private readonly DataverseDataStore dataverseDataSource;
     private readonly EntityOperationReducer reducer;
-    private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Account> memoryDS;
+    private readonly IBatchProcessor batchProcessor;
+    private MemoryDataStore<Account> memoryDS;
 
-    public AccountInvalidDependencyTestStep(MemoryDataSource<Account> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public AccountInvalidDependencyTestStep(MemoryDataStore<Account> memoryDS, DataverseDataStore dataverseDataSource, EntityOperationReducer reducer, IBatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
-        DryRun = false;
-        BatchSize = 50;
     }
 
     public override async Task<IReadOnlyList<Account>> OnBeforeMapAsync(IReadOnlyList<Account> batch)
@@ -46,24 +46,21 @@ internal class AccountInvalidDependencyTestStep : BatchIntegrationStep<Account, 
         return batch;
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
+    public override IReadOnlyList<OrganizationRequest> OnBeforeDelivery(IReadOnlyList<OrganizationRequest> batch)
     {
         return reducer.ReduceOperations(batch, entity => entity.GetAttributeValue<string>("name"));
     }
 
-    public override async Task RunAsync()
-    {
-        await batchProcessor.ProcessAllBatchesAsync(this);
-    }
+    public override IDataStore<OrganizationRequest,DataverseDataStoreOptions> OutputDataStore => dataverseDataSource;
 
-    public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
+    public override IBatchProcessor BatchProcessor => batchProcessor;
 
     public override IPagedQuery<Account> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> MapRecord(Account source)
+    public override IReadOnlyList<Entity> MapEntity(Account source)
     {
         var result = new Entity("account")
         {
@@ -73,7 +70,7 @@ internal class AccountInvalidDependencyTestStep : BatchIntegrationStep<Account, 
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return [result];
     }
 
 }

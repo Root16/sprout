@@ -2,16 +2,17 @@
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
+using Root16.Sprout.DataStores;
 using System.Xml.Linq;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.Dataverse.DataStores;
 
 public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 {
-    private readonly DataverseDataSource dataSource;
+    private readonly DataverseDataStore dataSource;
     private readonly string fetchXml;
 
-    public DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string fetchXml)
+    public DataverseFetchXmlPagedQuery(DataverseDataStore dataSource, string fetchXml)
     {
         this.dataSource = dataSource;
         this.fetchXml = fetchXml;

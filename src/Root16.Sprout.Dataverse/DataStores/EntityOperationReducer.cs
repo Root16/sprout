@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
 using System.Text;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.Dataverse.DataStores;
 
 public class EntityOperationReducer
 {
@@ -35,55 +36,70 @@ public class EntityOperationReducer
         return updates.CloneWithModifiedAttributes(original);
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, string> keySelector)
+    public IReadOnlyList<OrganizationRequest> ReduceOperations(IEnumerable<OrganizationRequest> changes, Func<Entity, string> keySelector)
     {
         return ReduceOperations(changes, (e1, e2) => StringComparer.OrdinalIgnoreCase.Equals(keySelector(e1), keySelector(e2)));
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, Entity, bool> entityEqualityComparer)
+    private Entity? GetEntity(OrganizationRequest organizationRequest)
+    {
+        if (organizationRequest is CreateRequest createRequest)
+        {
+            return createRequest.Target;
+        }
+        else if (organizationRequest is UpdateRequest updateRequest)
+        {
+            return updateRequest.Target;
+        }
+
+        return null;
+    }
+    public IReadOnlyList<OrganizationRequest> ReduceOperations(IEnumerable<OrganizationRequest> changes, Func<Entity, Entity, bool> entityEqualityComparer)
     {
         if (entities is null)
         {
             return changes.ToList();
         }
 
-        var results = new List<DataOperation<Entity>>();
+        var results = new List<OrganizationRequest>();
 
         StringBuilder sb = new();
 
         foreach (var change in changes)
         {
-            if (change is null) continue;
+            var entity = GetEntity(change);
 
-            var matches = entities.Where(e => entityEqualityComparer(e, change.Data)).ToList();
+            if (entity is null) continue;
 
-            if (matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
+            var matches = entities.Where(e => entityEqualityComparer(e, entity)).ToList();
+
+            if (matches.Any() && (change is UpdateRequest || change is CreateRequest))
             {
                 if (matches.Count > 1)
                 {
-                    results.Add(new DataOperation<Entity>("Error", change.Data));
+                    logger.LogError($"Multiple matches found for entity {entity.LogicalName}, {entity.Id}");
                     continue;
                 }
 
                 var match = matches[0];
-                change.Data.Id = match.Id;
-                var delta = ReduceEntityChanges(change.Data, match);
+                entity.Id = match.Id;
+                var delta = ReduceEntityChanges(entity, match);
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
-                    results.Add(new DataOperation<Entity>("Update", delta));
+                    results.Add(new UpdateRequest { Target = delta });
                     if (logger.IsEnabled(LogLevel.Debug))
                     {
                         logger.LogDebug(delta.FormatChanges(match));
                     }
                 }
             }
-            else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
+            else if (change is CreateRequest)
             {
-                var delta = ReduceEntityChanges(change.Data, null);
+                var delta = ReduceEntityChanges(entity, null);
 
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
-                    results.Add(new DataOperation<Entity>("Create", delta));
+                    results.Add(new CreateRequest { Target = delta });
 
                     if (logger.IsEnabled(LogLevel.Debug))
                     {

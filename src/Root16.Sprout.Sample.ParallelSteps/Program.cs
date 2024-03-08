@@ -4,7 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Root16.Sprout;
 using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Dataverse.DataStores;
+using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Sample;
 using Root16.Sprout.Sample.ParallelSteps;
 using Root16.Sprout.Sample.ParallelSteps.Models;
@@ -15,7 +16,6 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddSprout();
-builder.Services.AddSproutDataverse();
 
 builder.Services.RegisterStep<ContactTestStep>();
 builder.Services.RegisterStep<TaskTestStep>();
@@ -32,19 +32,19 @@ builder.Services.AddDataverseDataSource("Dataverse");
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
 
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleContacts(200))
+    _ => new MemoryDataStore<Contact>(SampleData.GenerateSampleContacts(200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Account>(SampleData.GenerateSampleAccounts(200))
+    _ => new MemoryDataStore<Account>(SampleData.GenerateSampleAccounts(200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<TaskData>(SampleData.GenerateSampleTasks(200))
+    _ => new MemoryDataStore<TaskData>(SampleData.GenerateSampleTasks(200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Letter>(SampleData.GenerateSampleLetters(200))
+    _ => new MemoryDataStore<Letter>(SampleData.GenerateSampleLetters(200))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Email>(SampleData.GenerateSampleEmails(200))
+    _ => new MemoryDataStore<Email>(SampleData.GenerateSampleEmails(200))
     );
 var host = builder.Build();
 host.Start();

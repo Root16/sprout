@@ -2,16 +2,24 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.DataStores;
 using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class DataverseDataSource : IDataSource<Entity>
+public class DataverseDataStoreOptions
 {
-    private readonly ILogger<DataverseDataSource> logger;
+    public bool DryRun { get; set; }
+    public bool BypassCustomPluginExecution { get; set; }
+    public bool SuppressCallbackRegistrationExpanderJob { get; set; }
+}
+
+public class DataverseDataStore : IDataStore<OrganizationRequest, DataverseDataStoreOptions>
+{
+    private readonly ILogger<DataverseDataStore> logger;
     public string? ImpersonateUsingAttribute { get; set; }
 
-    public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
+    public DataverseDataStore(ServiceClient crmServiceClient, ILogger<DataverseDataStore> logger)
     {
         CrmServiceClient = crmServiceClient;
         ServiceClient.MaxConnectionTimeout = TimeSpan.FromMinutes(11);
@@ -21,20 +29,24 @@ public class DataverseDataSource : IDataSource<Entity>
     public ServiceClient CrmServiceClient { get; }
 
 
-    public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
+    public async Task<IReadOnlyList<OperationResult<OrganizationRequest>>> PerformOperationsAsync(IEnumerable<OrganizationRequest> operations, DataverseDataStoreOptions? options = null)
     {
         CleanUpOverriddenCreatedOn(operations);
 
-        IEnumerable<IGrouping<Guid?, DataOperation<Entity>>> groups;
+        IEnumerable<IGrouping<Guid?, OrganizationRequest>> groups;
         if (ImpersonateUsingAttribute is not null)
         {
             groups = operations
                 .GroupBy(op =>
                 {
-                    var entityRef = op.Data.GetAttributeValue<EntityReference>(ImpersonateUsingAttribute);
-                    if (entityRef?.LogicalName == "systemuser")
+                    if (op.Parameters.TryGetValue<Entity>("Target", out var target))
                     {
-                        return entityRef?.Id;
+                        var entityRef = target.GetAttributeValue<EntityReference>(ImpersonateUsingAttribute);
+                        if (entityRef?.LogicalName == "systemuser")
+                        {
+                            return entityRef?.Id;
+                        }
+
                     }
                     return null;
                 })
@@ -45,7 +57,7 @@ public class DataverseDataSource : IDataSource<Entity>
             groups = operations.GroupBy(op => (Guid?)null).ToArray();
         }
 
-        var results = new List<DataOperationResult<Entity>>();
+        var results = new List<OperationResult<OrganizationRequest>>();
         foreach (var group in groups)
         {
             RemoveAttribute(group, ImpersonateUsingAttribute);
@@ -53,48 +65,47 @@ public class DataverseDataSource : IDataSource<Entity>
             var requests = new OrganizationRequestCollection();
 
             requests.AddRange(group
-                .Select(c => CreateOrganizationRequest(c, dataOperationFlags))
                 .Where(r => r is not null)
             );
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
-            results.AddRange(await ExecuteMultipleAsync(requests, dryRun));
+            results.AddRange(await ExecuteMultipleAsync(requests, options?.DryRun ?? false));
             CrmServiceClient.CallerId = Guid.Empty;
         }
 
         return results;
     }
 
-    private void CleanUpOverriddenCreatedOn(IEnumerable<DataOperation<Entity>> operations)
+    private void CleanUpOverriddenCreatedOn(IEnumerable<OrganizationRequest> operations)
     {
         foreach(var op in operations)
         {
-            if (op.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) && op.Data.Contains("overriddencreatedon"))
+            if (op is UpdateRequest updateRequest && updateRequest.Target.Contains("overriddencreatedon"))
             {
-                op.Data.Attributes.Remove("overriddencreatedon");
+                updateRequest.Target.Attributes.Remove("overriddencreatedon");
             }
         }
     }
 
-    private void RemoveAttribute(IEnumerable<DataOperation<Entity>> operations, string? attributeName)
+    private void RemoveAttribute(IEnumerable<OrganizationRequest> operations, string? attributeName)
     {
         if (attributeName is not null)
         {
             foreach (var op in operations)
             {
-                if (op.Data.Contains(attributeName))
+                if (op.Parameters.TryGetValue<Entity>("Target", out var target) && target.Contains(attributeName))
                 {
-                    op.Data.Attributes.Remove(attributeName);
+                    target.Attributes.Remove(attributeName);
                 }
             }
         }
     }
 
-    public async Task<IReadOnlyList<DataOperationResult<Entity>>> ExecuteMultipleAsync(
+    public async Task<IReadOnlyList<OperationResult<OrganizationRequest>>> ExecuteMultipleAsync(
         OrganizationRequestCollection requestCollection,
         bool dryRun)
     {
-        var results = new List<DataOperationResult<Entity>>();
+        var results = new List<OperationResult<OrganizationRequest>>();
 
         if (requestCollection.Count == 1)
         {
@@ -104,12 +115,12 @@ public class DataverseDataSource : IDataSource<Entity>
                 {
                     var response = await CrmServiceClient.ExecuteAsync(requestCollection[0]);
                 }
-                results.Add(ResultFromRequestType(requestCollection[0], true));
+                results.Add(new(requestCollection[0], true));
             }
             catch (FaultException<OrganizationServiceFault> e)
             {
                 logger.LogError(e.Message);
-                results.Add(ResultFromRequestType(requestCollection[0], false));
+                results.Add(new(requestCollection[0], false));
             }
         }
         else if (requestCollection.Count > 1)
@@ -118,7 +129,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 for (var i = 0; i < requestCollection.Count; i++)
                 {
-                    results.Add(ResultFromRequestType(requestCollection[i], true));
+                    results.Add(new(requestCollection[i], true));
                 }
             }
             else
@@ -158,7 +169,7 @@ public class DataverseDataSource : IDataSource<Entity>
                         var response = responses.FirstOrDefault(r => r.RequestIndex == k);
                         if (response?.Fault is not null)
                         {
-                            results.Add(ResultFromRequestType(matchingRequests[k], false));
+                            results.Add(new(matchingRequests[k], false));
                             if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
                                 && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
                             {
@@ -171,7 +182,7 @@ public class DataverseDataSource : IDataSource<Entity>
                         }
                         else
                         {
-                            results.Add(ResultFromRequestType(matchingRequests[k], true));
+                            results.Add(new(matchingRequests[k], true));
                         }
                     }
                 }
@@ -180,64 +191,25 @@ public class DataverseDataSource : IDataSource<Entity>
         return results;
     }
 
-    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
-    {
-        Entity target;
-        if (request.Parameters["Target"] is EntityReference entityRef)
-        {
-            target = new Entity(entityRef.LogicalName, entityRef.Id);
-        }
-        else
-        {
-            target = (Entity)request.Parameters["Target"];
-        }
-        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, target), wasSuccessful);
-    }
-
     public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
     {
         return new DataverseFetchXmlPagedQuery(this, fetchXml);
     }
 
-    protected OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
+    protected OrganizationRequest? AddOptionParameters(OrganizationRequest request, DataverseDataStoreOptions? options)
     {
-        OrganizationRequest request;
-        if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase) && change.Data.Attributes.Count > 0)
+        if (options?.BypassCustomPluginExecution == true)
         {
-            request = new CreateRequest
-            {
-                Target = change.Data,
-            };
-        }
-        else if (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) && change.Data.Attributes.Count > 0)
-        {
-            request = new UpdateRequest
-            {
-                Target = change.Data,
-            };
-        }
-        else if (change.OperationType.Equals("Delete", StringComparison.OrdinalIgnoreCase))
-        {
-            request = new DeleteRequest
-            {
-                Target = change.Data.ToEntityReference(),
-            };
-        }
-        else
-        {
-            return null;
+            request.Parameters.Add(nameof(DataverseDataStoreOptions.BypassCustomPluginExecution), true);
         }
 
-        if (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassCustomPluginExecution) == true)
+        if (options?.SuppressCallbackRegistrationExpanderJob == true)
         {
-            request.Parameters.Add(DataverseDataSourceFlags.BypassCustomPluginExecution, true);
-        }
-
-        if (dataOperationFlags.Contains(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob) == true)
-        {
-            request.Parameters.Add(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob, true);
+            request.Parameters.Add(nameof(DataverseDataStoreOptions.SuppressCallbackRegistrationExpanderJob), true);
         }
 
         return request;
     }
+
+    public string GetOperationName(OrganizationRequest operation) => operation.RequestName;
 }

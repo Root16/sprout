@@ -1,25 +1,30 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
+using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.DataStores;
+using Root16.Sprout.Dataverse.BatchProcessing;
+using Root16.Sprout.Dataverse.DataStores;
 
 namespace Root16.Sprout.Sample.CreatesAndUpdates;
 
-internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entity>
+internal class UpdateContactTestStep : DataverseBatchIntegrationStep<UpdateContact>
 {
-    private readonly DataverseDataSource dataverseDataSource;
+    private readonly DataverseDataStore dataverseDataSource;
     private readonly EntityOperationReducer reducer;
-    private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<UpdateContact> memoryDS;
+    private readonly IBatchProcessor batchProcessor;
+    private MemoryDataStore<UpdateContact> memoryDS;
 
-    public UpdateContactTestStep(MemoryDataSource<UpdateContact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public override IDataStore<OrganizationRequest, DataverseDataStoreOptions> OutputDataStore => dataverseDataSource;
+
+    public override IBatchProcessor BatchProcessor => batchProcessor;
+
+    public UpdateContactTestStep(MemoryDataStore<UpdateContact> memoryDS, DataverseDataStore dataverseDataSource, EntityOperationReducer reducer, IBatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
-        DryRun = false;
     }
 
     public override async Task<IReadOnlyList<UpdateContact>> OnBeforeMapAsync(IReadOnlyList<UpdateContact> batch)
@@ -49,7 +54,7 @@ internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entit
         return batch;
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
+    public override IReadOnlyList<OrganizationRequest> OnBeforeDelivery(IReadOnlyList<OrganizationRequest> batch)
     {
         return reducer.ReduceOperations(batch, entity => string.Concat(
                 entity.GetAttributeValue<string>("firstname"),
@@ -58,19 +63,12 @@ internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entit
         ));
     }
 
-    public override async Task RunAsync()
-    {
-        await batchProcessor.ProcessAllBatchesAsync(this);
-    }
-
-    public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
-
     public override IPagedQuery<UpdateContact> GetInputQuery()
     {
         return memoryDS.CreatePagedQuery();
     }
 
-    public override IReadOnlyList<DataOperation<Entity>> MapRecord(UpdateContact source)
+    public override IReadOnlyList<Entity> MapEntity(UpdateContact source)
     {
         var result = new Entity("contact")
         {
@@ -82,6 +80,6 @@ internal class UpdateContactTestStep : BatchIntegrationStep<UpdateContact, Entit
             }
         };
 
-        return new[] { new DataOperation<Entity>("Update", result) };
+        return [result];
     }
 }

@@ -1,21 +1,22 @@
-﻿using Root16.Sprout.DataSources;
+﻿using Root16.Sprout.DataStores;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
+public interface IBatchIntegrationStep<TInput, TOutput, TDataStoreOptions> : IIntegrationStep where TDataStoreOptions : class
 {
-    IDataSource<TOutput> OutputDataSource { get; }
+    IDataStore<TOutput,TDataStoreOptions> OutputDataStore { get; }
     IPagedQuery<TInput> GetInputQuery();
-	IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput input);
+	IReadOnlyList<TOutput> MapRecord(TInput input);
 
     int BatchSize { get; }
     bool DryRun { get; }
     IEnumerable<string> DataOperationFlags { get; }
+    TDataStoreOptions? Options { get; }
 
     Task<IReadOnlyList<TInput>> OnBeforeMapAsync(IReadOnlyList<TInput> batch);
-    Task<IReadOnlyList<DataOperation<TOutput>>> OnAfterMapAsync(IReadOnlyList<DataOperation<TOutput>> batch);
-    Task<IReadOnlyList<DataOperation<TOutput>>> OnBeforeDeliveryAsync(IReadOnlyList<DataOperation<TOutput>> batch);
-    Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<TOutput>> results);
+    Task<IReadOnlyList<TOutput>> OnAfterMapAsync(IReadOnlyList<TOutput> batch);
+    Task<IReadOnlyList<TOutput>> OnBeforeDeliveryAsync(IReadOnlyList<TOutput> batch);
+    Task OnAfterDeliveryAsync(IReadOnlyList<OperationResult<TOutput>> results);
 }
 
 

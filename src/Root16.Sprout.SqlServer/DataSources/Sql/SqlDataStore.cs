@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using Root16.Sprout.DataStores;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class SqlDataSource : IDataSource<DataRow>
+public class SqlDataStore
 {
     private readonly string connectionString;
-    private readonly ILogger<SqlDataSource> logger;
+    private readonly ILogger<SqlDataStore> logger;
     private readonly SqlConnection connection;
 
-    public SqlDataSource(string connectionString, ILogger<SqlDataSource> logger)
+    public SqlDataStore(string connectionString, ILogger<SqlDataStore> logger)
     {
         this.connectionString = connectionString;
         this.logger = logger;
@@ -43,9 +44,5 @@ public class SqlDataSource : IDataSource<DataRow>
             }
         }
     }
-
-    public Task<IReadOnlyList<DataOperationResult<DataRow>>> PerformOperationsAsync(IEnumerable<DataOperation<DataRow>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
-    {
-        throw new NotImplementedException();
-    }
 }
+

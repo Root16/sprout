@@ -1,20 +1,20 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.Sample.ParallelSteps.Models;
+using Root16.Sprout.DataStores;
+using Root16.Sprout.Dataverse.DataStores;
 
 namespace Root16.Sprout.Sample;
 
 internal class ContactInvalidDependencyTestStep : BatchIntegrationStep<Contact,Entity>
 {
-    private readonly DataverseDataSource dataverseDataSource;
+    private readonly DataverseDataStore dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Contact> memoryDS;
+    private MemoryDataStore<Contact> memoryDS;
 
-    public ContactInvalidDependencyTestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public ContactInvalidDependencyTestStep(MemoryDataStore<Contact> memoryDS, DataverseDataStore dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
@@ -64,7 +64,7 @@ internal class ContactInvalidDependencyTestStep : BatchIntegrationStep<Contact,E
         await batchProcessor.ProcessAllBatchesAsync(this);
     }
 
-    public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
+    public override IDataStore<Entity> OutputDataStore => dataverseDataSource;
 
     public override IPagedQuery<Contact> GetInputQuery()
     {

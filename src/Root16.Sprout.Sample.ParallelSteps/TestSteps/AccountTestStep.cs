@@ -1,21 +1,21 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
 using System.Text;
 using Root16.Sprout.Sample.ParallelSteps.Models;
+using Root16.Sprout.DataStores;
+using Root16.Sprout.Dataverse.DataStores;
 
 namespace Root16.Sprout.Sample.TestSteps;
 
 internal class AccountTestStep : BatchIntegrationStep<Account, Entity>
 {
-    private readonly DataverseDataSource dataverseDataSource;
+    private readonly DataverseDataStore dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Account> memoryDS;
+    private MemoryDataStore<Account> memoryDS;
 
-    public AccountTestStep(MemoryDataSource<Account> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public AccountTestStep(MemoryDataStore<Account> memoryDS, DataverseDataStore dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
@@ -56,7 +56,7 @@ internal class AccountTestStep : BatchIntegrationStep<Account, Entity>
         await batchProcessor.ProcessAllBatchesAsync(this);
     }
 
-    public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
+    public override IDataStore<Entity> OutputDataStore => dataverseDataSource;
 
     public override IPagedQuery<Account> GetInputQuery()
     {

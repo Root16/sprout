@@ -2,28 +2,27 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Root16.Sprout.DataSources.Dataverse;
 
-namespace Root16.Sprout.DependencyInjection;
+namespace Root16.Sprout.Dataverse.DataStores;
 
-public class DataverseDataSourceFactory : IDataverseDataSourceFactory
+public class DataverseDataStoreFactory : IDataverseDataStoreFactory
 {
     private readonly IServiceProvider serviceProvider;
 
-    public DataverseDataSourceFactory(IServiceProvider serviceProvider)
+    public DataverseDataStoreFactory(IServiceProvider serviceProvider)
     {
         this.serviceProvider = serviceProvider;
     }
 
-    public DataverseDataSource CreateDataSource(string connectionStringName)
+    public DataverseDataStore CreateDataSource(string connectionStringName)
     {
         var config = serviceProvider.GetRequiredService<IConfiguration>();
-        var logger = serviceProvider.GetRequiredService<ILogger<DataverseDataSource>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<DataverseDataStore>>();
         var serviceClient = new ServiceClient(
             config.GetConnectionString(connectionStringName),
             serviceProvider.GetRequiredService<ILogger<ServiceClient>>()
         );
-        var ds = new DataverseDataSource(serviceClient, logger);
+        var ds = new DataverseDataStore(serviceClient, logger);
         return ds;
     }
 }
