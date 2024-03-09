@@ -2,9 +2,9 @@
 
 public interface IProgressListener
 {
-	void OnRunStart();
-	void OnStepStart(string name);
-	void OnProgressChange(IntegrationProgress progress);
-	void OnStepComplete(string name);
-	void OnRunComplete();
+	Task OnRunStart(IList<string> stepNames);
+	Task OnStepStart(string name);
+	Task OnProgressChange(IntegrationProgress progress);
+	Task OnStepComplete(string name);
+	Task OnRunComplete();
 }

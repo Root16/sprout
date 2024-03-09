@@ -12,7 +12,7 @@ internal class ContactTestStep : BatchIntegrationStep<Contact,Entity>
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Contact> memoryDS;
+    private readonly MemoryDataSource<Contact> memoryDS;
 
     public ContactTestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {

@@ -16,6 +16,7 @@ builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddSprout();
 builder.Services.AddSproutDataverse();
+builder.Services.AddSpectreConsole();
 
 builder.Services.RegisterStep<ContactTestStep>();
 builder.Services.RegisterStep<TaskTestStep>();
@@ -23,8 +24,8 @@ builder.Services.RegisterStep<LetterTestStep>(nameof(TaskTestStep));
 builder.Services.RegisterStep<AccountTestStep>(nameof(ContactTestStep));
 builder.Services.RegisterStep<EmailTestStep>();
 
-builder.Services.RegisterStep<AccountInvalidDependencyTestStep>(nameof(ContactInvalidDependencyTestStep));
-builder.Services.RegisterStep<ContactInvalidDependencyTestStep>(nameof(AccountInvalidDependencyTestStep));
+//builder.Services.RegisterStep<AccountInvalidDependencyTestStep>(nameof(ContactInvalidDependencyTestStep));
+//builder.Services.RegisterStep<ContactInvalidDependencyTestStep>(nameof(AccountInvalidDependencyTestStep));
 
 builder.Services.AddDataverseDataSource("Dataverse");
 
@@ -32,19 +33,19 @@ builder.Services.AddDataverseDataSource("Dataverse");
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
 
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleContacts(200))
+    _ => new MemoryDataSource<Contact>(SampleData.GenerateSampleContacts(2000))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Account>(SampleData.GenerateSampleAccounts(200))
+    _ => new MemoryDataSource<Account>(SampleData.GenerateSampleAccounts(2000))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<TaskData>(SampleData.GenerateSampleTasks(200))
+    _ => new MemoryDataSource<TaskData>(SampleData.GenerateSampleTasks(2000))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Letter>(SampleData.GenerateSampleLetters(200))
+    _ => new MemoryDataSource<Letter>(SampleData.GenerateSampleLetters(2000))
     );
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<Email>(SampleData.GenerateSampleEmails(200))
+    _ => new MemoryDataSource<Email>(SampleData.GenerateSampleEmails(2000))
     );
 var host = builder.Build();
 host.Start();

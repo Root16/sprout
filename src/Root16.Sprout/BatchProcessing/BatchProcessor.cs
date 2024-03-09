@@ -3,14 +3,9 @@ using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchProcessor
+public class BatchProcessor(IProgressListener progressListener)
 {
-    public BatchProcessor(IProgressListener progressListener)
-    {
-        this.progressListener = progressListener;
-    }
-
-    private readonly IProgressListener progressListener;
+    private readonly IProgressListener progressListener = progressListener;
 
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput, TOutput> step)
@@ -40,10 +35,7 @@ public class BatchProcessor
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
-        if (progress is null)
-        {
-            progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
-        }
+        progress ??= new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
 
         // get batch of data (IPagedQuery)
         var result = await query.GetNextPageAsync(queryState.NextPageNumber, queryState.RecordsPerPage, queryState.Bookmark);
@@ -62,7 +54,7 @@ public class BatchProcessor
 
         // report progress (IProgressListener)
         progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? (r.Operation.OperationType?.ToString() ?? "Error") : "Error"));
-        progressListener.OnProgressChange(progress);
+        await progressListener.OnProgressChange(progress);
 
 
         // return state (more records, paging details) from IPagedQuery

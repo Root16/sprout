@@ -22,27 +22,29 @@ public class IntegrationRuntime : IIntegrationRuntime
 
     public async Task<string> RunStepAsync(string name)
     {
-        var reg = stepRegistrations.FirstOrDefault(step => step.Name == name);
-        if (reg is null) throw new InvalidOperationException($"Step named '{name}' is not registered.");
+        var reg = stepRegistrations.FirstOrDefault(step => step.Name == name) 
+            ?? throw new InvalidOperationException($"Step named '{name}' is not registered.");
         await RunStepAsync(reg);
         return reg.Name;
     }
 
     public async Task<string> RunStepAsync<TStep>() where TStep : class, IIntegrationStep
     {
-        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep));
-        if (reg is null) throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
+        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) 
+            ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
+        await progressListener.OnRunStart(new List<string>() { reg.Name });
         await RunStepAsync(reg);
+        await progressListener.OnRunComplete();
         return reg.Name;
     }
 
     private async Task<string> RunStepAsync(StepRegistration reg)
     {
-        progressListener.OnStepStart(reg.Name);
+        await progressListener.OnStepStart(reg.Name);
         using var scope = serviceScopeFactory.CreateScope();
         var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredService(reg.StepType);
         await step.RunAsync();
-        progressListener.OnStepComplete(reg.Name);
+        await progressListener.OnStepComplete(reg.Name);
         return reg.Name;
     }
 
@@ -51,26 +53,26 @@ public class IntegrationRuntime : IIntegrationRuntime
     public async Task RunAllStepsAsync(int maxDegreesOfParallelism = 1, Action<string>? completionHandler = null)
     {
         CheckStepDependencyTree();
-        progressListener.OnRunStart();
+        await progressListener.OnRunStart(GetStepNames().ToList());
         var waitingSteps = stepRegistrations.Select(reg => new DelayedStep(reg, RunStepAsync)).ToList();
         var completedStepNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var queuedSteps = new List<DelayedStep>();
         var runningSteps = new List<Task<string>>();
 
-        while (queuedSteps.Any() || runningSteps.Any() || waitingSteps.Any())
+        while (queuedSteps.Count != 0 || runningSteps.Count != 0 || waitingSteps.Count != 0)
         {
             queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
             waitingSteps = waitingSteps.Except(queuedSteps).ToList();
             int available = maxDegreesOfParallelism - runningSteps.Count;
             runningSteps.AddRange(queuedSteps.Take(available).Select(x => x.StepRunner(x.StepRegistration)));
             queuedSteps.RemoveRange(0, Math.Min(queuedSteps.Count, available));
-            var finishedFunction = await Task.WhenAny(runningSteps);
-            runningSteps.Remove(finishedFunction);
-            var stepName = await finishedFunction;
+            var finishedStep = await Task.WhenAny(runningSteps);
+            runningSteps.Remove(finishedStep);
+            var stepName = await finishedStep;
             completedStepNames.Add(stepName);
             completionHandler?.Invoke(stepName);
         }
-        progressListener.OnRunComplete();
+        await progressListener.OnRunComplete();
     }
 
     private void CheckRegistrations()
@@ -101,7 +103,7 @@ public class IntegrationRuntime : IIntegrationRuntime
     {
         var stepsThatWontRun = CheckForStepsThatWillNotRun();
 
-        if (stepsThatWontRun.Any())
+        if (stepsThatWontRun.Count != 0)
         {
             throw new InvalidDataException($"Unreachable steps found: {string.Join(", ", stepsThatWontRun)}");
         }
@@ -109,16 +111,18 @@ public class IntegrationRuntime : IIntegrationRuntime
 
     private HashSet<string> CheckForStepsThatWillNotRun()
     {
-        List<string> stepsThatWontRun = new();
-        stepsThatWontRun.AddRange(stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name));
+        List<string> stepsThatWontRun =
+        [
+            .. stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name),
+        ];
         stepsThatWontRun.AddRange(GetAllStepsThatWontRun(stepsThatWontRun));
         stepsThatWontRun.AddRange(stepRegistrations.Where(x => !x.PrerequisteSteps.TrueForAll(x => stepRegistrations.Select(x => x.Name).Contains(x))).Select(x => x.Name));
-        return stepsThatWontRun.ToHashSet();
+        return [.. stepsThatWontRun];
     }
 
     private IEnumerable<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
     {
-        if (!stepsThatWontRun.Any())
+        if (stepsThatWontRun.Count == 0)
         {
             return Enumerable.Empty<string>();
         }

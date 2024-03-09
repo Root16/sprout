@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Dataverse", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.SqlServer", "Root16.Sprout.SqlServer\Root16.Sprout.SqlServer.csproj", "{2D4771B9-310D-4829-AE16-219EFFC1A707}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.SpectreConsole", "Root16.Sprout.SpectreConsole\Root16.Sprout.SpectreConsole.csproj", "{36E01108-56FC-4F75-BAAD-2C6CAE835494}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.SpectreConsole", "Root16.Sprout.SpectreConsole\Root16.Sprout.SpectreConsole.csproj", "{2E8BDE9E-F146-48A9-9B04-7328DDA43A7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +41,10 @@ Global
 		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D4771B9-310D-4829-AE16-219EFFC1A707}.Release|Any CPU.Build.0 = Release|Any CPU
-		{36E01108-56FC-4F75-BAAD-2C6CAE835494}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{36E01108-56FC-4F75-BAAD-2C6CAE835494}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{36E01108-56FC-4F75-BAAD-2C6CAE835494}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{36E01108-56FC-4F75-BAAD-2C6CAE835494}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E8BDE9E-F146-48A9-9B04-7328DDA43A7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E8BDE9E-F146-48A9-9B04-7328DDA43A7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E8BDE9E-F146-48A9-9B04-7328DDA43A7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E8BDE9E-F146-48A9-9B04-7328DDA43A7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

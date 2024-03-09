@@ -1,8 +1,5 @@
 ﻿namespace Root16.Sprout.DependencyInjection;
 
-public class StepRegistrationDependencyList : List<Type>
+public class StepRegistrationDependencyList(params Type[] steps) : List<Type>(steps)
 {
-    public StepRegistrationDependencyList(params Type[] steps) : base(steps)
-    {
-    }
 }

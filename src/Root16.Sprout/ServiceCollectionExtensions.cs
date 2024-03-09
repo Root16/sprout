@@ -10,7 +10,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
     {
-        services.AddSingleton(new StepRegistration(typeof(TStep), prerequisiteStepNames.ToList()));
+        services.AddSingleton(new StepRegistration(typeof(TStep), [.. prerequisiteStepNames]));
         services.AddTransient<TStep>();
 
         return services;

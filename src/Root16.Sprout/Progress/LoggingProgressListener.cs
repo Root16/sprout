@@ -1,42 +1,39 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Root16.Sprout.Progress;
 
 
-public class LoggingProgressListener : IProgressListener
+public class LoggingProgressListener(ILogger<LoggingProgressListener> logger) : IProgressListener
 {
-	private readonly ILogger<LoggingProgressListener> logger;
+	private readonly ILogger<LoggingProgressListener> logger = logger;
 
-	public LoggingProgressListener(ILogger<LoggingProgressListener> logger)
-	{
-		this.logger = logger;
-	}
-
-	public void OnRunStart()
+    public Task OnRunStart(IList<string> stepNames)
 	{
 		logger.LogInformation($"Starting run...");
-	}
+        return Task.CompletedTask;
+    }
 
-	public void OnStepStart(string name)
+	public Task OnStepStart(string name)
 	{
 		logger.LogInformation($"Step {name} starting...");
-	}
+        return Task.CompletedTask;
+    }
 
-	public void OnProgressChange(IntegrationProgress progress)
+	public Task OnProgressChange(IntegrationProgress progress)
 	{
 		logger.LogDebug(progress.ToString());
-	}
+        return Task.CompletedTask;
+    }
 
-	public void OnStepComplete(string name)
+	public Task OnStepComplete(string name)
 	{
 		logger.LogInformation($"Step {name} complete.");
-	}
+        return Task.CompletedTask;
+    }
 
-	public void OnRunComplete()
+	public Task OnRunComplete()
 	{
 		logger.LogInformation($"Run complete.");
+		return Task.CompletedTask;
 	}
 }

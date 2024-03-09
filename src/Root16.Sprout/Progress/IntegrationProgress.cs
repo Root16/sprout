@@ -6,24 +6,16 @@ using System.Threading;
 
 namespace Root16.Sprout.Progress;
 
-public class IntegrationProgress
+public class IntegrationProgress(string stepName, int? totalRecordCount)
 {
-	public IntegrationProgress(string stepName, int? totalRecordCount)
-	{
-		StepName = stepName;
-        operationCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        TotalRecordCount = totalRecordCount;
-		StartTime = DateTime.Now;
-	}
-
-	private readonly Dictionary<string,int> operationCounts;
+    private readonly Dictionary<string, int> operationCounts = new(StringComparer.OrdinalIgnoreCase);
 
 
-	public string StepName { get; private set; }
-	public int? TotalRecordCount { get; private set; }
-	public int ProcessedRecordCount { get; private set; }
-	public DateTime StartTime { get; private set; }
-	public TimeSpan RunningTime { get { return DateTime.Now - StartTime; } }
+    public string StepName { get; private set; } = stepName;
+    public int? TotalRecordCount { get; private set; } = totalRecordCount;
+    public int ProcessedRecordCount { get; private set; }
+    public DateTime StartTime { get; private set; } = DateTime.Now;
+    public TimeSpan RunningTime { get { return DateTime.Now - StartTime; } }
 	public TimeSpan? EstimatedRemainingTime
 	{
 		get
@@ -91,7 +83,7 @@ public class IntegrationProgress
 				}
 			}
 
-			message.Append($"{values[values.Length - 1].Interval}{values[values.Length - 1].Label} remaining ");
+			message.Append($"{values[^1].Interval}{values[^1].Label} remaining ");
 		}
 
 		message.Append(
