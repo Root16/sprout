@@ -35,7 +35,7 @@ public static class EntityExtensions
 					different = true;
 				}
 			}
-			else if (updateValue is OptionSetValue || originalValue is OptionSetValue)
+            else if (updateValue is OptionSetValue || originalValue is OptionSetValue)
 			{
 				var originalOptionSetValue = (OptionSetValue)originalValue;
 				var updateOptionSetValue = (OptionSetValue)updateValue;
@@ -49,8 +49,8 @@ public static class EntityExtensions
 			{
 				var originalOptionSetValue = (OptionSetValueCollection)originalValue;
 				var updateOptionSetValue = (OptionSetValueCollection)updateValue;
-				var originalOptions = originalOptionSetValue?.Select(o => o.Value)?.ToArray() ?? Array.Empty<int>();
-				var updateOptions = updateOptionSetValue?.Select(o => o.Value)?.ToArray() ?? Array.Empty<int>();
+                var originalOptions = originalOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
+				var updateOptions = updateOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
 
 				if (originalOptions.Length != updateOptions.Length ||
 					originalOptions.Intersect(updateOptions).Count() != originalOptions.Length)

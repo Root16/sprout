@@ -66,8 +66,8 @@ public class SpectreConsoleProgressListener(ILogger<SpectreConsoleProgressListen
             ])
             .StartAsync(async ctx =>
             {
-                _progressTasks.AddRange(stepNames.Select(x => new KeyValuePair<string, ProgressTask>(x, ctx.AddTask(x, false))));
                 _progressTasks.Add(new KeyValuePair<string, ProgressTask>("migration", ctx.AddTask("Running Migration...", autoStart: true).IsIndeterminate()));
+                _progressTasks.AddRange(stepNames.Select(x => new KeyValuePair<string, ProgressTask>(x, ctx.AddTask(x, false))));
                 await Task.Run(() =>
                 {
                     while (!ctx.IsFinished)
