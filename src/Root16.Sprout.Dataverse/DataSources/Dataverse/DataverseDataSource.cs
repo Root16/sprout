@@ -2,6 +2,7 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Extensions;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -64,7 +65,7 @@ public class DataverseDataSource : IDataSource<Entity>
         return results;
     }
 
-    private void CleanUpOverriddenCreatedOn(IEnumerable<DataOperation<Entity>> operations)
+    private static void CleanUpOverriddenCreatedOn(IEnumerable<DataOperation<Entity>> operations)
     {
         foreach(var op in operations)
         {
@@ -75,7 +76,7 @@ public class DataverseDataSource : IDataSource<Entity>
         }
     }
 
-    private void RemoveAttribute(IEnumerable<DataOperation<Entity>> operations, string? attributeName)
+    private static void RemoveAttribute(IEnumerable<DataOperation<Entity>> operations, string? attributeName)
     {
         if (attributeName is not null)
         {
@@ -122,16 +123,16 @@ public class DataverseDataSource : IDataSource<Entity>
             }
             else
             {
-                List<OrganizationRequestCollection> ListofRequestCollections = new List<OrganizationRequestCollection>();
+                List<OrganizationRequestCollection> ListofRequestCollections = [];
 
-                foreach (var request in requestCollection.Chunk(1000))
+                foreach (var request in requestCollection.ChunkBy(1000))
                 {
                     var orgRequestCollection = new OrganizationRequestCollection();
                     orgRequestCollection.AddRange(request);
                     ListofRequestCollections.Add(orgRequestCollection);
                 }
 
-                List<Task<OrganizationResponse>> requestTasks = new();
+                List<Task<OrganizationResponse>> requestTasks = [];
 
                 foreach (var requests in ListofRequestCollections)
                 {
@@ -165,7 +166,7 @@ public class DataverseDataSource : IDataSource<Entity>
                             }
                             else
                             {
-                                logger.LogError(response.Fault.Message);
+                                logger.LogError(response?.Fault.Message);
                             }
                         }
                         else
@@ -198,7 +199,7 @@ public class DataverseDataSource : IDataSource<Entity>
         return new DataverseFetchXmlPagedQuery(this, fetchXml);
     }
 
-    protected OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
+    protected static OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
     {
         OrganizationRequest request;
         if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase) && change.Data.Attributes.Count > 0)
