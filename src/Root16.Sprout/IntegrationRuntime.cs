@@ -7,7 +7,7 @@ namespace Root16.Sprout;
 
 public class IntegrationRuntime : IIntegrationRuntime
 {
-    private readonly IEnumerable<StepRegistration> stepRegistrations = new List<StepRegistration>();
+    private readonly IEnumerable<StepRegistration> stepRegistrations = [];
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IProgressListener progressListener;
 
@@ -22,16 +22,14 @@ public class IntegrationRuntime : IIntegrationRuntime
 
     public async Task<string> RunStepAsync(string name)
     {
-        var reg = stepRegistrations.FirstOrDefault(step => step.Name == name);
-        if (reg is null) throw new InvalidOperationException($"Step named '{name}' is not registered.");
+        var reg = stepRegistrations.FirstOrDefault(step => step.Name == name) ?? throw new InvalidOperationException($"Step named '{name}' is not registered.");
         await RunStepAsync(reg);
         return reg.Name;
     }
 
     public async Task<string> RunStepAsync<TStep>() where TStep : class, IIntegrationStep
     {
-        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep));
-        if (reg is null) throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
+        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
         await RunStepAsync(reg);
         return reg.Name;
     }
@@ -109,18 +107,20 @@ public class IntegrationRuntime : IIntegrationRuntime
 
     private HashSet<string> CheckForStepsThatWillNotRun()
     {
-        List<string> stepsThatWontRun = new();
-        stepsThatWontRun.AddRange(stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name));
+        List<string> stepsThatWontRun =
+        [
+            .. stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name),
+        ];
         stepsThatWontRun.AddRange(GetAllStepsThatWontRun(stepsThatWontRun));
         stepsThatWontRun.AddRange(stepRegistrations.Where(x => !x.PrerequisteSteps.TrueForAll(x => stepRegistrations.Select(x => x.Name).Contains(x))).Select(x => x.Name));
-        return stepsThatWontRun.ToHashSet();
+        return [.. stepsThatWontRun];
     }
 
     private IEnumerable<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
     {
         if (!stepsThatWontRun.Any())
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
         var steps = new List<string>();
         var newStepsThatWontRun = stepRegistrations
