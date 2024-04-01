@@ -124,7 +124,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         }
         var steps = new List<string>();
         var newStepsThatWontRun = stepRegistrations
-            .ExceptBy(stepsThatWontRun, x => x.Name)
+            .Where(x => !stepsThatWontRun.Contains(x.Name))
             .Where(x => x.PrerequisteSteps.Intersect(stepsThatWontRun).Any())
             .Select(x => x.Name)
             .ToList();

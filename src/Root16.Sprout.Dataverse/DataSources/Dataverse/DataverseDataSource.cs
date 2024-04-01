@@ -2,7 +2,6 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -106,7 +105,7 @@ public class DataverseDataSource : IDataSource<Entity>
                 }
                 results.Add(ResultFromRequestType(requestCollection[0], true));
             }
-            catch (FaultException<OrganizationServiceFault> e)
+            catch (Exception e)
             {
                 logger.LogError(e.Message);
                 results.Add(ResultFromRequestType(requestCollection[0], false));
