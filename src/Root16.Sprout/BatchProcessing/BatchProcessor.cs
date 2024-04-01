@@ -13,36 +13,42 @@ public class BatchProcessor
     private readonly IProgressListener progressListener;
 
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step,
-        int? pageSize = null)
+        IBatchIntegrationStep<TInput, TOutput> step)
     {
-        PagedQueryState<TInput>? queryState = null;
+        BatchState<TInput>? batchState = null;
         do
         {
-            queryState = await ProcessBatchAsync(step, queryState);
+            batchState = await ProcessBatchAsync(step, batchState);
         }
-        while (queryState.MoreRecords);
+        while (batchState.QueryState?.MoreRecords == true);
 
     }
 
-    public async Task<PagedQueryState<TInput>> ProcessBatchAsync<TInput, TOutput>(
+    public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput,TOutput> step,
-        PagedQueryState<TInput>? queryState)
+        BatchState<TInput>? batchState)
     {
+
+        var queryState = batchState?.QueryState;
+        var progress = batchState?.Progress;
+
         // initialize state if needed
         var query = step.GetInputQuery();
-        if (queryState == null)
+        if (queryState is null)
         {
             var total = await query.GetTotalRecordCountAsync();
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
-        // get batch of data (IPagedQuery)
-        var progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
+        if (progress is null)
+        {
+            progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
+        }
 
+        // get batch of data (IPagedQuery)
         var result = await query.GetNextPageAsync(queryState.NextPageNumber, queryState.RecordsPerPage, queryState.Bookmark);
         var batch = result.Records;
-        var proccessedCount = queryState.RecordsProcessed + batch.Count;
+        var proccessedCount = batch.Count;
 
         batch = await step.OnBeforeMapAsync(batch);
 
@@ -55,19 +61,25 @@ public class BatchProcessor
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)
-        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? "Error" : r.Operation.OperationType));
+        progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? (r.Operation.OperationType?.ToString() ?? "Error") : "Error"));
         progressListener.OnProgressChange(progress);
 
 
         // return state (more records, paging details) from IPagedQuery
 
-        return new PagedQueryState<TInput>(
-            queryState.NextPageNumber + 1,
-            queryState.RecordsPerPage,
-            proccessedCount,
-            queryState.TotalRecordCount,
-            result.MoreRecords,
-            queryState.Bookmark);
+        return new BatchState<TInput>
+        (
+            new PagedQueryState<TInput>
+            (
+                queryState.NextPageNumber + 1,
+                queryState.RecordsPerPage,
+                proccessedCount,
+                queryState.TotalRecordCount,
+                result.MoreRecords,
+                queryState.Bookmark
+            ),
+            progress
+        );
     }
 }
 

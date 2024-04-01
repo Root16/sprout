@@ -21,7 +21,7 @@ public class EntityOperationReducer
 
     private Entity ReduceEntityChanges(Entity updates, Entity? original)
     {
-        if (original == null)
+        if (original is null)
         {
             if (updates.Attributes.ContainsKey("createdon"))
             {
@@ -40,24 +40,24 @@ public class EntityOperationReducer
         return ReduceOperations(changes, (e1, e2) => StringComparer.OrdinalIgnoreCase.Equals(keySelector(e1), keySelector(e2)));
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity,Entity,bool> entityEqualityComparer)
+    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, Entity, bool> entityEqualityComparer)
     {
-        if (entities == null)
+        if (entities is null)
         {
             return changes.ToList();
         }
 
         var results = new List<DataOperation<Entity>>();
-        
+
         StringBuilder sb = new();
 
         foreach (var change in changes)
         {
-            if (change == null) continue;
+            if (change is null) continue;
 
             var matches = entities.Where(e => entityEqualityComparer(e, change.Data)).ToList();
 
-            if (matches.Count > 0)
+            if (matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
                 if (matches.Count > 1)
                 {
@@ -68,7 +68,7 @@ public class EntityOperationReducer
                 var match = matches[0];
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
-                if (delta != null && delta.Attributes.Count > 0)
+                if (delta is not null && delta.Attributes.Count > 0)
                 {
                     results.Add(new DataOperation<Entity>("Update", delta));
                     if (logger.IsEnabled(LogLevel.Debug))
@@ -77,11 +77,11 @@ public class EntityOperationReducer
                     }
                 }
             }
-            else
+            else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
             {
                 var delta = ReduceEntityChanges(change.Data, null);
 
-                if (delta != null && delta.Attributes.Count > 0)
+                if (delta is not null && delta.Attributes.Count > 0)
                 {
                     results.Add(new DataOperation<Entity>("Create", delta));
 
@@ -97,6 +97,7 @@ public class EntityOperationReducer
                     }
                 }
             }
+
         }
 
         return results;

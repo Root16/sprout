@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -27,7 +28,7 @@ public class IntegrationProgress
 	{
 		get
 		{
-			if (ProcessedRecordCount == 0 || TotalRecordCount == 0 || TotalRecordCount == null)
+			if (ProcessedRecordCount == 0 || TotalRecordCount == 0 || TotalRecordCount is null)
 			{
 				return null;
 			}
@@ -43,13 +44,20 @@ public class IntegrationProgress
 		ProcessedRecordCount += processedRecordCount;
 		foreach (var operationGroup in operations.GroupBy(o => o, StringComparer.OrdinalIgnoreCase))
 		{
-			operationCounts[operationGroup.Key] += operationGroup.Count();
+			if (operationCounts.ContainsKey(operationGroup.Key))
+			{
+				operationCounts[operationGroup.Key] += operationGroup.Count();
+			}
+			else
+			{
+                operationCounts[operationGroup.Key] = operationGroup.Count();
+            }
 		}
 	}
 
 	public override string ToString()
 	{
-		StringBuilder message = new StringBuilder();
+		StringBuilder message = new();
 		message.Append($"{this.StepName}: ");
 
 		if (TotalRecordCount > 0)
@@ -61,7 +69,7 @@ public class IntegrationProgress
 			message.Append($"{ProcessedRecordCount} ");
 		}
 
-		if (this.EstimatedRemainingTime != null)
+		if (this.EstimatedRemainingTime is not null)
 		{
 			var ts = this.EstimatedRemainingTime.Value;
 			var values = new[]

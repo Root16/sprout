@@ -3,23 +3,25 @@ using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
+using Root16.Sprout.Sample.ParallelSteps.Models;
 
 namespace Root16.Sprout.Sample;
 
-internal class TestStep : BatchIntegrationStep<Contact,Entity>
+internal class ContactInvalidDependencyTestStep : BatchIntegrationStep<Contact,Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
     private MemoryDataSource<Contact> memoryDS;
 
-    public TestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
+    public ContactInvalidDependencyTestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
         this.dataverseDataSource = dataverseDataSource;
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
-        DryRun = true;
+        DryRun = false;
+        BatchSize = 50;
     }
 
     public override async Task<IReadOnlyList<Contact>> OnBeforeMapAsync(IReadOnlyList<Contact> batch)

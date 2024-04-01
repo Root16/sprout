@@ -28,7 +28,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
     {
         fetchDoc.Root?.SetAttributeValue("page", page);
         fetchDoc.Root?.SetAttributeValue("count", pageSize);
-        if (pagingCookie != null)
+        if (pagingCookie is not null)
         {
             fetchDoc.Root?.SetAttributeValue("paging-cookie", pagingCookie);
         }
@@ -36,7 +36,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 
     public async Task<PagedQueryResult<Entity>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(AddPaging(fetchXml, pageNumber, pageSize, (string?)bookmark)));
+        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
 
         return new PagedQueryResult<Entity>
         (
@@ -49,7 +49,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
     public Task<int?> GetTotalRecordCountAsync()
     {
         var fetchDoc = XDocument.Parse(fetchXml);
-        if (fetchDoc.Root == null)
+        if (fetchDoc.Root is null)
         {
             return Task.FromResult<int?>(null);
         }
@@ -60,13 +60,13 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
         }
 
         var entityElem = fetchDoc.Root?.Element("entity");
-        if (entityElem == null)
+        if (entityElem is null)
         {
             return Task.FromResult<int?>(null);
         }
 
         var attributeElements = fetchDoc.Root?.Descendants().Where(e => e.Name == "attribute").ToArray();
-        if (attributeElements == null)
+        if (attributeElements is null)
         {
             return Task.FromResult<int?>(null);
         }
