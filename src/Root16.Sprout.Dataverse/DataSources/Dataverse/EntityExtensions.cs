@@ -49,7 +49,7 @@ public static class EntityExtensions
 			{
 				var originalOptionSetValue = (OptionSetValueCollection)originalValue;
 				var updateOptionSetValue = (OptionSetValueCollection)updateValue;
-                var originalOptions = originalOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
+				var originalOptions = originalOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
 				var updateOptions = updateOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
 
 				if (originalOptions.Length != updateOptions.Length ||

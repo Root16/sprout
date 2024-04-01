@@ -7,7 +7,7 @@ namespace Root16.Sprout;
 
 public class IntegrationRuntime : IIntegrationRuntime
 {
-    private readonly IEnumerable<StepRegistration> stepRegistrations = new List<StepRegistration>();
+    private readonly IEnumerable<StepRegistration> stepRegistrations = [];
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IProgressListener progressListener;
 
@@ -22,19 +22,15 @@ public class IntegrationRuntime : IIntegrationRuntime
 
     public async Task<string> RunStepAsync(string name)
     {
-        var reg = stepRegistrations.FirstOrDefault(step => step.Name == name) 
-            ?? throw new InvalidOperationException($"Step named '{name}' is not registered.");
+        var reg = stepRegistrations.FirstOrDefault(step => step.Name == name) ?? throw new InvalidOperationException($"Step named '{name}' is not registered.");
         await RunStepAsync(reg);
         return reg.Name;
     }
 
     public async Task<string> RunStepAsync<TStep>() where TStep : class, IIntegrationStep
     {
-        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) 
-            ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
-        await progressListener.OnRunStart(new List<string>() { reg.Name });
+        var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
         await RunStepAsync(reg);
-        await progressListener.OnRunComplete();
         return reg.Name;
     }
 
@@ -124,11 +120,11 @@ public class IntegrationRuntime : IIntegrationRuntime
     {
         if (stepsThatWontRun.Count == 0)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
         var steps = new List<string>();
         var newStepsThatWontRun = stepRegistrations
-            .ExceptBy(stepsThatWontRun, x => x.Name)
+            .Where(x => !stepsThatWontRun.Contains(x.Name))
             .Where(x => x.PrerequisteSteps.Intersect(stepsThatWontRun).Any())
             .Select(x => x.Name)
             .ToList();
