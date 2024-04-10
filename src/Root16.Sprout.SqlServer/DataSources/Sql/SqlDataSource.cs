@@ -5,18 +5,10 @@ using Azure;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class SqlDataSource : IDataSource<DataRow>, IDataSource<IDbCommand>
+public class SqlDataSource(string connectionString, ILogger<SqlDataSource> logger) : IDataSource<DataRow>, IDataSource<IDbCommand>
 {
-    private readonly string connectionString;
-    private readonly ILogger<SqlDataSource> logger;
-    private readonly SqlConnection connection;
-
-    public SqlDataSource(string connectionString, ILogger<SqlDataSource> logger)
-    {
-        this.connectionString = connectionString;
-        this.logger = logger;
-        connection = new SqlConnection(connectionString);
-    }
+    private readonly ILogger<SqlDataSource> logger = logger;
+    private readonly SqlConnection connection = new(connectionString);
 
     public SqlPagedQuery CreatePagedQuery(string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
     {

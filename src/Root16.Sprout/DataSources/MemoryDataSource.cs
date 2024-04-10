@@ -10,12 +10,12 @@ public class MemoryDataSource<T> : IDataSource<T>
 	}
 	public MemoryDataSource()
 	{
-		Records = new List<T>();
+		Records = [];
 	}
 
 	public IPagedQuery<T> CreatePagedQuery()
 	{
-		return new MemoryPagedQuery<T>(Records.ToArray());
+        return new MemoryPagedQuery<T>([.. Records]);
 	}
 
     public Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)

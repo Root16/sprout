@@ -3,20 +3,12 @@ using System.Data;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class SqlPagedQuery : IPagedQuery<DataRow>
+public class SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
 {
-    private readonly SqlConnection connection;
-    private readonly string commandText;
-    private readonly string? totalRowCountCommandText;
-    private readonly bool addPaging;
-
-    public SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
-    {
-        this.connection = connection;
-        this.commandText = commandText;
-        this.totalRowCountCommandText = totalRowCountCommandText;
-        this.addPaging = addPaging;
-    }
+    private readonly SqlConnection connection = connection;
+    private readonly string commandText = commandText;
+    private readonly string? totalRowCountCommandText = totalRowCountCommandText;
+    private readonly bool addPaging = addPaging;
 
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
@@ -37,7 +29,7 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
         var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
         try
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
             table.Load(reader);
 
             var rows = new List<DataRow>(table.Rows.Cast<DataRow>());

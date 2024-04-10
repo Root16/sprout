@@ -9,16 +9,12 @@ namespace Root16.Sprout.Sample.SqlServer
 {
     public class SampleSQLStep : BatchIntegrationStep<DataRow, IDbCommand>
     {
-        private readonly DataverseDataSource? _targetDataverseDataSource;
-        private readonly EntityOperationReducer _reducer;
         private readonly SqlDataSource _sqlDataSource;
         private readonly BatchProcessor _batchProcessor;
 
-        public SampleSQLStep(IDataverseDataSourceFactory factory, BatchProcessor batchProcessor, EntityOperationReducer reducer, SqlDataSource sqlDataSource)
+        public SampleSQLStep(BatchProcessor batchProcessor, SqlDataSource sqlDataSource)
         {
-            _targetDataverseDataSource = null;
             _batchProcessor = batchProcessor;
-            _reducer = reducer;
             _sqlDataSource = sqlDataSource;
             BatchSize = 50;
         }
@@ -33,7 +29,7 @@ namespace Root16.Sprout.Sample.SqlServer
 
         public override IReadOnlyList<DataOperation<IDbCommand>> MapRecord(DataRow source)
         {
-            List<DataOperation<IDbCommand>> operations = new();
+            List<DataOperation<IDbCommand>> operations = [];
 
             for (int i = 0; i < 25; i++)
             {
@@ -42,7 +38,7 @@ namespace Root16.Sprout.Sample.SqlServer
                     CommandText = "INSERT INTO [dbo].[Persons] ([PersonID],[LastName],[FirstName],[Address],[City]) VALUES (@PersonId,@LastName,@FirstName,@Address,@City)",
                     CommandType = CommandType.Text
                 };
-                command.Parameters.Add(new SqlParameter("@PersonId", "ItsATest"));
+                command.Parameters.Add(new SqlParameter("@PersonId", 5));
                 command.Parameters.Add(new SqlParameter("@LastName", "Tester"));
                 command.Parameters.Add(new SqlParameter("@FirstName", "Tester"));
                 command.Parameters.Add(new SqlParameter("@Address", "Tester"));

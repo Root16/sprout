@@ -125,7 +125,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 List<OrganizationRequestCollection> ListofRequestCollections = [];
 
-                foreach (var request in requestCollection.ChunkBy(1000))
+                foreach (var request in requestCollection.Chunk(1000))
                 {
                     var orgRequestCollection = new OrganizationRequestCollection();
                     orgRequestCollection.AddRange(request);
