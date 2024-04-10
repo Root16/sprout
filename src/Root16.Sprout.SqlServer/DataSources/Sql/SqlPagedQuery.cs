@@ -3,49 +3,46 @@ using System.Data;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class SqlPagedQuery : IPagedQuery<DataRow>
+public class SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
 {
-    private readonly SqlConnection connection;
-    private readonly string commandText;
-    private readonly string? totalRowCountCommandText;
-    private readonly bool addPaging;
-
-    public SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
-    {
-        this.connection = connection;
-        this.commandText = commandText;
-        this.totalRowCountCommandText = totalRowCountCommandText;
-        this.addPaging = addPaging;
-    }
+    private readonly SqlConnection connection = connection;
+    private readonly string commandText = commandText;
+    private readonly string? totalRowCountCommandText = totalRowCountCommandText;
+    private readonly bool addPaging = addPaging;
 
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        using (var command = connection.CreateCommand())
+        using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        if (addPaging)
         {
-            command.CommandText = commandText;
-            if (addPaging)
+            if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
             {
                 command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
             }
-            command.Connection.Open();
-            var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
-            try
+            else
             {
-                DataTable table = new DataTable();
-                table.Load(reader);
+                command.CommandText += $" ORDER BY (SELECT NULL) OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            }
+        }
+        command.Connection.Open();
+        var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+        try
+        {
+            DataTable table = new();
+            table.Load(reader);
 
-                var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
-                return new PagedQueryResult<DataRow>
-                (
-                    rows,
-                    table.Rows.Count == pageSize,
-                    null
-                );
-            }
-            finally
-            {
-                command.Connection.Close();
-            }
+            var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
+            return new PagedQueryResult<DataRow>
+            (
+                rows,
+                table.Rows.Count == pageSize,
+                null
+            );
+        }
+        finally
+        {
+            command.Connection.Close();
         }
     }
 

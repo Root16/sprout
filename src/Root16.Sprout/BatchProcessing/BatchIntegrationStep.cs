@@ -12,7 +12,7 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
     public bool DryRun { get; set; }
     public int BatchSize { get; set; }
     
-    private HashSet<string> dataOperationFlags = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> dataOperationFlags = new(StringComparer.OrdinalIgnoreCase);
     public IEnumerable<string> DataOperationFlags { get { return dataOperationFlags; } }
 
 

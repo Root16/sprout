@@ -12,7 +12,7 @@ internal class ContactInvalidDependencyTestStep : BatchIntegrationStep<Contact,E
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Contact> memoryDS;
+    private readonly MemoryDataSource<Contact> memoryDS;
 
     public ContactInvalidDependencyTestStep(MemoryDataSource<Contact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
@@ -82,7 +82,7 @@ internal class ContactInvalidDependencyTestStep : BatchIntegrationStep<Contact,E
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return [new DataOperation<Entity>("Create", result)];
     }
 
 }

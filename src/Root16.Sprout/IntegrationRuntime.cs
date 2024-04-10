@@ -55,7 +55,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         var queuedSteps = new List<DelayedStep>();
         var runningSteps = new List<Task<string>>();
 
-        while (queuedSteps.Any() || runningSteps.Any() || waitingSteps.Any())
+        while (queuedSteps.Count != 0 || runningSteps.Count != 0 || waitingSteps.Count != 0)
         {
             queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
             waitingSteps = waitingSteps.Except(queuedSteps).ToList();
@@ -99,7 +99,7 @@ public class IntegrationRuntime : IIntegrationRuntime
     {
         var stepsThatWontRun = CheckForStepsThatWillNotRun();
 
-        if (stepsThatWontRun.Any())
+        if (stepsThatWontRun.Count != 0)
         {
             throw new InvalidDataException($"Unreachable steps found: {string.Join(", ", stepsThatWontRun)}");
         }
@@ -116,9 +116,9 @@ public class IntegrationRuntime : IIntegrationRuntime
         return [.. stepsThatWontRun];
     }
 
-    private IEnumerable<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
+    private List<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
     {
-        if (!stepsThatWontRun.Any())
+        if (stepsThatWontRun.Count == 0)
         {
             return [];
         }
@@ -130,7 +130,7 @@ public class IntegrationRuntime : IIntegrationRuntime
             .ToList();
 
         steps.AddRange(newStepsThatWontRun);
-        steps.AddRange(GetAllStepsThatWontRun(steps).ToList());
+        steps.AddRange([.. GetAllStepsThatWontRun(steps)]);
         return steps;
     }
 }

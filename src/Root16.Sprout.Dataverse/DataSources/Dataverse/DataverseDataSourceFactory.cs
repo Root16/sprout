@@ -6,14 +6,9 @@ using Root16.Sprout.DataSources.Dataverse;
 
 namespace Root16.Sprout.DependencyInjection;
 
-public class DataverseDataSourceFactory : IDataverseDataSourceFactory
+public class DataverseDataSourceFactory(IServiceProvider serviceProvider) : IDataverseDataSourceFactory
 {
-    private readonly IServiceProvider serviceProvider;
-
-    public DataverseDataSourceFactory(IServiceProvider serviceProvider)
-    {
-        this.serviceProvider = serviceProvider;
-    }
+    private readonly IServiceProvider serviceProvider = serviceProvider;
 
     public DataverseDataSource CreateDataSource(string connectionStringName)
     {
