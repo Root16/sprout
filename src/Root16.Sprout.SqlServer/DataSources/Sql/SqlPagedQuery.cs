@@ -20,32 +20,37 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
 
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        using (var command = connection.CreateCommand())
+        using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        if (addPaging)
         {
-            command.CommandText = commandText;
-            if (addPaging)
+            if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
             {
                 command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
             }
-            command.Connection.Open();
-            var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
-            try
+            else
             {
-                DataTable table = new DataTable();
-                table.Load(reader);
+                command.CommandText += $" ORDER BY (SELECT NULL) OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            }
+        }
+        command.Connection.Open();
+        var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+        try
+        {
+            DataTable table = new DataTable();
+            table.Load(reader);
 
-                var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
-                return new PagedQueryResult<DataRow>
-                (
-                    rows,
-                    table.Rows.Count == pageSize,
-                    null
-                );
-            }
-            finally
-            {
-                command.Connection.Close();
-            }
+            var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
+            return new PagedQueryResult<DataRow>
+            (
+                rows,
+                table.Rows.Count == pageSize,
+                null
+            );
+        }
+        finally
+        {
+            command.Connection.Close();
         }
     }
 
