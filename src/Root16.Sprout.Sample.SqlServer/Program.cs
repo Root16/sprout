@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Root16.Sprout;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.DataSources.Sql;
 using Root16.Sprout.Sample.SqlServer;
 using System.Diagnostics;
 

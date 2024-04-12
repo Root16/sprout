@@ -1,8 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
-using Microsoft.Xrm.Sdk;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.DataSources.Sql;
 using System.Data;
 
 namespace Root16.Sprout.Sample.SqlServer

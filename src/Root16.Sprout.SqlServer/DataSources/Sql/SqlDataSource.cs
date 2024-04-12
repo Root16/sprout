@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using Azure;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
 public class SqlDataSource(string connectionString, ILogger<SqlDataSource> logger) : IDataSource<DataRow>, IDataSource<IDbCommand>
 {
