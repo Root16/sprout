@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
 public class SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
 {

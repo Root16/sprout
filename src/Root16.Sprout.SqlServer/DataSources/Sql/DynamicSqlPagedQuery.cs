@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
 public class DynamicSqlPagedQuery(SqlConnection connection, Func<int, int, string> commandGenerator, string? totalRowCountCommandText = null) : IPagedQuery<DataRow>
 {

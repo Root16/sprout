@@ -1,14 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using Azure;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
 public class SqlDataSource(string connectionString, ILogger<SqlDataSource> logger) : IDataSource<DataRow>, IDataSource<IDbCommand>
 {
     private readonly ILogger<SqlDataSource> logger = logger;
-    private readonly SqlConnection connection = new(connectionString);
+    public readonly SqlConnection connection = new(connectionString);
 
     public SqlPagedQuery CreatePagedQuery(string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
     {
