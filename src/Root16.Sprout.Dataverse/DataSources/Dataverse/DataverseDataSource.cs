@@ -2,7 +2,8 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using Root16.Sprout.Extensions;
+using System.Collections.Concurrent;
+using System.Net;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -15,6 +16,12 @@ public class DataverseDataSource : IDataSource<Entity>
     {
         CrmServiceClient = crmServiceClient;
         ServiceClient.MaxConnectionTimeout = TimeSpan.FromMinutes(11);
+        CrmServiceClient.EnableAffinityCookie = false;
+        // TODO: Is there a better place to do this?
+        ThreadPool.SetMinThreads(100, 100);
+        ServicePointManager.DefaultConnectionLimit = 65000;
+        ServicePointManager.Expect100Continue = false;
+        ServicePointManager.UseNagleAlgorithm = false;
         this.logger = logger;
     }
 
@@ -123,42 +130,30 @@ public class DataverseDataSource : IDataSource<Entity>
             }
             else
             {
-                List<OrganizationRequestCollection> ListofRequestCollections = [];
+                ConcurrentBag<DataOperationResult<Entity>> parallelResults = [];
 
-                foreach (var request in requestCollection.Chunk(1000))
+                ParallelOptions parallelOptions = new() { MaxDegreeOfParallelism = CrmServiceClient.RecommendedDegreesOfParallelism };
+
+                await Parallel.ForEachAsync(requestCollection.Chunk(10), parallelOptions, async (batch, token) =>
                 {
-                    var orgRequestCollection = new OrganizationRequestCollection();
-                    orgRequestCollection.AddRange(request);
-                    ListofRequestCollections.Add(orgRequestCollection);
-                }
-
-                List<Task<OrganizationResponse>> requestTasks = [];
-
-                foreach (var requests in ListofRequestCollections)
-                {
-                    requestTasks.Add(CrmServiceClient.ExecuteAsync(new ExecuteMultipleRequest
+                    ExecuteMultipleRequest request = new()
                     {
                         Settings = new ExecuteMultipleSettings
                         {
                             ContinueOnError = true,
                         },
-                        Requests = requests
-                    }));
-                }
+                        Requests = []
+                    };
+                    request.Requests.AddRange(batch);
 
-                OrganizationResponse[] organizationResponses = await Task.WhenAll(requestTasks);
-                List<ExecuteMultipleResponse> executeMultipleResponses = organizationResponses.Select(x => (ExecuteMultipleResponse)x).ToList();
+                    ExecuteMultipleResponse batchResponse = await CrmServiceClient.ExecuteAsync(request, token) as ExecuteMultipleResponse;
 
-                for (var i = 0; i < executeMultipleResponses.Count; i++)
-                {
-                    var responses = executeMultipleResponses[i].Responses;
-                    var matchingRequests = ListofRequestCollections[i];
-                    for (var k = 0; k < matchingRequests.Count; k++)
+                    for (var k = 0; k < batch.Length; k++)
                     {
-                        var response = responses.FirstOrDefault(r => r.RequestIndex == k);
+                        var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
                         if (response?.Fault is not null)
                         {
-                            results.Add(ResultFromRequestType(matchingRequests[k], false));
+                            parallelResults.Add(ResultFromRequestType(batch[k], false));
                             if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
                                 && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
                             {
@@ -171,10 +166,12 @@ public class DataverseDataSource : IDataSource<Entity>
                         }
                         else
                         {
-                            results.Add(ResultFromRequestType(matchingRequests[k], true));
+                            parallelResults.Add(ResultFromRequestType(batch[k], true));
                         }
                     }
-                }
+                });
+
+                results.AddRange(parallelResults);
             }
         }
         return results;
