@@ -22,8 +22,8 @@ builder.Services.AddScoped<SqlDataSource>((serviceProvider) =>
 {
     var connectionString = "Server=localhost\\MSSQLSERVER01;Database=master;Integrated Security=True;Trusted_Connection=True;TrustServerCertificate=true;";
     Debugger.Break();
-    var logger = serviceProvider.GetRequiredService<ILogger<SqlDataSource>>();
-    var dataSource = new SqlDataSource(connectionString, logger);
+    var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+    var dataSource = new SqlDataSource(connectionString, loggerFactory);
 
     return dataSource;
 });

@@ -12,6 +12,8 @@ public class DataverseDataSource : IDataSource<Entity>
     private readonly ILogger<DataverseDataSource> logger;
     public string? ImpersonateUsingAttribute { get; set; }
 
+    const int MaxRetries = 10;
+
     public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
@@ -109,7 +111,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 if (!dryRun)
                 {
-                    var response = await CrmServiceClient.ExecuteAsync(requestCollection[0]);
+                    var response = await TryExecuteRequestAsync(requestCollection[0]);
                 }
                 results.Add(ResultFromRequestType(requestCollection[0], true));
             }
@@ -136,37 +138,45 @@ public class DataverseDataSource : IDataSource<Entity>
 
                 await Parallel.ForEachAsync(requestCollection.Chunk(10), parallelOptions, async (batch, token) =>
                 {
-                    ExecuteMultipleRequest request = new()
+                    if (batch.Count() == 1)
                     {
-                        Settings = new ExecuteMultipleSettings
-                        {
-                            ContinueOnError = true,
-                        },
-                        Requests = []
-                    };
-                    request.Requests.AddRange(batch);
-
-                    ExecuteMultipleResponse batchResponse = await CrmServiceClient.ExecuteAsync(request, token) as ExecuteMultipleResponse;
-
-                    for (var k = 0; k < batch.Length; k++)
+                        var response = await TryExecuteRequestAsync(batch.Single());
+                        results.Add(ResultFromRequestType(batch.Single(), true));
+                    }
+                    else
                     {
-                        var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
-                        if (response?.Fault is not null)
+                        ExecuteMultipleRequest request = new()
                         {
-                            parallelResults.Add(ResultFromRequestType(batch[k], false));
-                            if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
-                                && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
+                            Settings = new ExecuteMultipleSettings
                             {
-                                logger.LogError(innermostFault.Message);
+                                ContinueOnError = true,
+                            },
+                            Requests = []
+                        };
+                        request.Requests.AddRange(batch);
+
+                        ExecuteMultipleResponse batchResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(request, token);
+
+                        for (var k = 0; k < batch.Length; k++)
+                        {
+                            var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
+                            if (response?.Fault is not null)
+                            {
+                                parallelResults.Add(ResultFromRequestType(batch[k], false));
+                                if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
+                                    && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
+                                {
+                                    logger.LogError(innermostFault.Message);
+                                }
+                                else
+                                {
+                                    logger.LogError(response?.Fault.Message);
+                                }
                             }
                             else
                             {
-                                logger.LogError(response?.Fault.Message);
+                                parallelResults.Add(ResultFromRequestType(batch[k], true));
                             }
-                        }
-                        else
-                        {
-                            parallelResults.Add(ResultFromRequestType(batch[k], true));
                         }
                     }
                 });
@@ -236,5 +246,29 @@ public class DataverseDataSource : IDataSource<Entity>
         }
 
         return request;
+    }
+
+    private Task<OrganizationResponse> TryExecuteRequestAsync(OrganizationRequest request, CancellationToken token = default)
+        => TryExecuteRequestAsync<OrganizationResponse>(request, token);
+
+    private async Task<T> TryExecuteRequestAsync<T>(OrganizationRequest request, CancellationToken token = default)
+        where T : OrganizationResponse
+    {
+        var retryCount = 0;
+        Exception lastException;
+        do
+        {
+            try
+            {
+                return (T)await CrmServiceClient.ExecuteAsync(request, token);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                lastException = ex;
+            }
+        } while (retryCount++ < MaxRetries);
+        
+        throw lastException;
     }
 }

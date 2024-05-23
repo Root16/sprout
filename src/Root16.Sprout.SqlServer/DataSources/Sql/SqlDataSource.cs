@@ -4,19 +4,20 @@ using System.Data;
 
 namespace Root16.Sprout.DataSources.Sql;
 
-public class SqlDataSource(string connectionString, ILogger<SqlDataSource> logger) : IDataSource<DataRow>, IDataSource<IDbCommand>
+public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory) : IDataSource<DataRow>, IDataSource<IDbCommand>
 {
-    private readonly ILogger<SqlDataSource> logger = logger;
+    private readonly ILoggerFactory loggerFactory = loggerFactory;
+    private readonly ILogger<SqlDataSource> logger = loggerFactory.CreateLogger<SqlDataSource>();
     public readonly SqlConnection connection = new(connectionString);
 
     public SqlPagedQuery CreatePagedQuery(string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
     {
-        return new SqlPagedQuery(connection, commandText, totalRowCountCommandText, addPaging);
+        return new SqlPagedQuery(loggerFactory.CreateLogger<SqlPagedQuery>(), connection, commandText, totalRowCountCommandText, addPaging);
     }
 
     public DynamicSqlPagedQuery CreatePagedQuery(Func<int, int, string> commandGenerator, string? totalRowCountCommandText = null)
     {
-        return new DynamicSqlPagedQuery(connection, commandGenerator, totalRowCountCommandText);
+        return new DynamicSqlPagedQuery(loggerFactory.CreateLogger<DynamicSqlPagedQuery>(), connection, commandGenerator, totalRowCountCommandText);
     }
 
     public void ExecuteNonQuery(string commandText)
