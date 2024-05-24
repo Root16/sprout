@@ -255,7 +255,7 @@ public class DataverseDataSource : IDataSource<Entity>
         where T : OrganizationResponse
     {
         var retryCount = 0;
-        Exception lastException;
+        Exception? lastException = null;
         do
         {
             try
@@ -264,7 +264,10 @@ public class DataverseDataSource : IDataSource<Entity>
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError(ex, ex.Message);
+                }
                 lastException = ex;
             }
         } while (retryCount++ < MaxRetries);

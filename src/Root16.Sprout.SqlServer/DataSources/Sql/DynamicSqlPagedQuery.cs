@@ -60,7 +60,7 @@ public class DynamicSqlPagedQuery(ILogger<DynamicSqlPagedQuery> logger, SqlConne
     private async Task<T> TryAsync<T>(Func<Task<T>> sqlRequest)
     {
         var retryCount = 0;
-        Exception lastException;
+        Exception? lastException = null;
         do
         {
             try
@@ -69,7 +69,10 @@ public class DynamicSqlPagedQuery(ILogger<DynamicSqlPagedQuery> logger, SqlConne
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError(ex, ex.Message);
+                }
                 lastException = ex;
             }
         } while (retryCount++ < MaxRetries);
