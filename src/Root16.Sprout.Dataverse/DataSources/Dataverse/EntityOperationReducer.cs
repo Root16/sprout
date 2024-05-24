@@ -4,15 +4,10 @@ using System.Text;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class EntityOperationReducer
+public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
 {
     private IEnumerable<Entity>? entities;
-    private readonly ILogger<EntityOperationReducer> logger;
-
-    public EntityOperationReducer(ILogger<EntityOperationReducer> logger)
-    {
-        this.logger = logger;
-    }
+    private readonly ILogger<EntityOperationReducer> logger = logger;
 
     public void SetPotentialMatches(IEnumerable<Entity> entities)
     {
