@@ -138,45 +138,37 @@ public class DataverseDataSource : IDataSource<Entity>
 
                 await Parallel.ForEachAsync(requestCollection.Chunk(10), parallelOptions, async (batch, token) =>
                 {
-                    if (batch.Count() == 1)
+                    ExecuteMultipleRequest request = new()
                     {
-                        var response = await TryExecuteRequestAsync(batch.Single());
-                        results.Add(ResultFromRequestType(batch.Single(), true));
-                    }
-                    else
+                        Settings = new ExecuteMultipleSettings
+                        {
+                            ContinueOnError = true,
+                        },
+                        Requests = []
+                    };
+                    request.Requests.AddRange(batch);
+
+                    ExecuteMultipleResponse batchResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(request, token);
+
+                    for (var k = 0; k < batch.Length; k++)
                     {
-                        ExecuteMultipleRequest request = new()
+                        var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
+                        if (response?.Fault is not null)
                         {
-                            Settings = new ExecuteMultipleSettings
+                            parallelResults.Add(ResultFromRequestType(batch[k], false));
+                            if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
+                                && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
                             {
-                                ContinueOnError = true,
-                            },
-                            Requests = []
-                        };
-                        request.Requests.AddRange(batch);
-
-                        ExecuteMultipleResponse batchResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(request, token);
-
-                        for (var k = 0; k < batch.Length; k++)
-                        {
-                            var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
-                            if (response?.Fault is not null)
-                            {
-                                parallelResults.Add(ResultFromRequestType(batch[k], false));
-                                if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
-                                    && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
-                                {
-                                    logger.LogError(innermostFault.Message);
-                                }
-                                else
-                                {
-                                    logger.LogError(response?.Fault.Message);
-                                }
+                                logger.LogError(innermostFault.Message);
                             }
                             else
                             {
-                                parallelResults.Add(ResultFromRequestType(batch[k], true));
+                                logger.LogError(response?.Fault.Message);
                             }
+                        }
+                        else
+                        {
+                            parallelResults.Add(ResultFromRequestType(batch[k], true));
                         }
                     }
                 });
