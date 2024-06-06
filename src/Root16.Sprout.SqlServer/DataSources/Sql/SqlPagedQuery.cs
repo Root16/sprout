@@ -1,14 +1,18 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace Root16.Sprout.DataSources.Sql;
 
-public class SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
+public class SqlPagedQuery(ILogger<SqlPagedQuery> logger, SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
 {
+    private readonly ILogger<SqlPagedQuery> logger = logger;
     private readonly SqlConnection connection = connection;
     private readonly string commandText = commandText;
     private readonly string? totalRowCountCommandText = totalRowCountCommandText;
     private readonly bool addPaging = addPaging;
+
+    const int MaxRetries = 10;
 
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
@@ -26,7 +30,7 @@ public class SqlPagedQuery(SqlConnection connection, string commandText, string?
             }
         }
         command.Connection.Open();
-        var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+        var reader = await TryAsync(() => command.ExecuteReaderAsync(CommandBehavior.CloseConnection));
         try
         {
             DataTable table = new();
@@ -55,11 +59,36 @@ public class SqlPagedQuery(SqlConnection connection, string commandText, string?
         cmd.Connection.Open();
         try
         {
-            return (int?)await cmd.ExecuteScalarAsync();
+            return await TryAsync(async () => (int?)await cmd.ExecuteScalarAsync());
         }
         finally
         {
             cmd.Connection.Close();
         }
     }
+
+
+    private async Task<T> TryAsync<T>(Func<Task<T>> sqlRequest)
+    {
+        var retryCount = 0;
+        Exception? lastException = null;
+        do
+        {
+            try
+            {
+                return await sqlRequest();
+            }
+            catch (Exception ex)
+            {
+                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                lastException = ex;
+            }
+        } while (retryCount++ < MaxRetries);
+
+        throw lastException;
+    }
+
 }
