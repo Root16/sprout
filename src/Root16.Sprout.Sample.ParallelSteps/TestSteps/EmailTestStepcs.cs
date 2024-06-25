@@ -13,7 +13,7 @@ internal class EmailTestStep : BatchIntegrationStep<Email, Entity>
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Email> memoryDS;
+    private readonly MemoryDataSource<Email> memoryDS;
 
     public EmailTestStep(MemoryDataSource<Email> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
@@ -51,9 +51,9 @@ internal class EmailTestStep : BatchIntegrationStep<Email, Entity>
         return reducer.ReduceOperations(batch, entity => entity.GetAttributeValue<string>("subject"));
     }
 
-    public override async Task RunAsync()
+    public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessAllBatchesAsync(this);
+        await batchProcessor.ProcessAllBatchesAsync(this, stepName);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
@@ -73,7 +73,7 @@ internal class EmailTestStep : BatchIntegrationStep<Email, Entity>
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return [new DataOperation<Entity>("Create", result)];
     }
 
 }

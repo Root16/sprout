@@ -8,19 +8,19 @@ public class BatchProcessor(IProgressListener progressListener)
     private readonly IProgressListener progressListener = progressListener;
 
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step)
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName)
     {
         BatchState<TInput>? batchState = null;
         do
         {
-            batchState = await ProcessBatchAsync(step, batchState);
+            batchState = await ProcessBatchAsync(step, stepName, batchState);
         }
         while (batchState.QueryState?.MoreRecords == true);
 
     }
 
     public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput,TOutput> step,
+        IBatchIntegrationStep<TInput,TOutput> step, string stepName,
         BatchState<TInput>? batchState)
     {
 
@@ -35,7 +35,7 @@ public class BatchProcessor(IProgressListener progressListener)
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
-        progress ??= new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
+        progress ??= new IntegrationProgress(stepName, queryState.TotalRecordCount);
 
         // get batch of data (IPagedQuery)
         var result = await query.GetNextPageAsync(queryState.NextPageNumber, queryState.RecordsPerPage, queryState.Bookmark);

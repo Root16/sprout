@@ -2,6 +2,6 @@
 
 public interface IIntegrationStep
 {
-	Task RunAsync();
+	Task RunAsync(string stepName);
 }
 

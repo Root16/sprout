@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Progress;
 
@@ -10,10 +11,12 @@ public class IntegrationRuntime : IIntegrationRuntime
     private readonly IEnumerable<StepRegistration> stepRegistrations = [];
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IProgressListener progressListener;
+    private readonly IEnumerable<IIntegrationStep> _steps;
 
-    public IntegrationRuntime(IEnumerable<StepRegistration> stepRegistrations, IServiceScopeFactory serviceScopeFactory, IProgressListener progressListener)
+    public IntegrationRuntime(IEnumerable<StepRegistration> stepRegistrations, IEnumerable<IIntegrationStep> steps, IServiceScopeFactory serviceScopeFactory, IProgressListener progressListener)
     {
         this.stepRegistrations = stepRegistrations;
+        _steps = steps;
         this.serviceScopeFactory = serviceScopeFactory;
         this.progressListener = progressListener;
         CheckRegistrations();
@@ -38,8 +41,8 @@ public class IntegrationRuntime : IIntegrationRuntime
     {
         progressListener.OnStepStart(reg.Name);
         using var scope = serviceScopeFactory.CreateScope();
-        var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredService(reg.StepType);
-        await step.RunAsync();
+        var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
+        await step.RunAsync(reg.Name);
         progressListener.OnStepComplete(reg.Name);
         return reg.Name;
     }
