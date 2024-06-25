@@ -59,9 +59,9 @@ internal class ContactInvalidDependencyTestStep : BatchIntegrationStep<Contact,E
         ));
     }
 
-    public override async Task RunAsync()
+    public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessAllBatchesAsync(this);
+        await batchProcessor.ProcessAllBatchesAsync(this, stepName);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;

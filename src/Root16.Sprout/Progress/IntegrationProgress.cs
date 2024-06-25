@@ -91,7 +91,7 @@ public class IntegrationProgress
 				}
 			}
 
-			message.Append($"{values[values.Length - 1].Interval}{values[values.Length - 1].Label} remaining ");
+			message.Append($"{values[^1].Interval}{values[^1].Label} remaining ");
 		}
 
 		message.Append(
