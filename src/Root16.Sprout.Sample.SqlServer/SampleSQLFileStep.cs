@@ -6,12 +6,12 @@ using System.Data;
 
 namespace Root16.Sprout.Sample.SqlServer
 {
-    public class SampleSQLStep : BatchIntegrationStep<DataRow, IDbCommand>
+    public class SampleSQLFileStep : BatchIntegrationStep<DataRow, IDbCommand>
     {
         private readonly SqlDataSource _sqlDataSource;
         private readonly BatchProcessor _batchProcessor;
 
-        public SampleSQLStep(BatchProcessor batchProcessor, SqlDataSource sqlDataSource)
+        public SampleSQLFileStep(BatchProcessor batchProcessor, SqlDataSource sqlDataSource)
         {
             _batchProcessor = batchProcessor;
             _sqlDataSource = sqlDataSource;
@@ -23,7 +23,7 @@ namespace Root16.Sprout.Sample.SqlServer
         //Todo: Add 
         public override IPagedQuery<DataRow> GetInputQuery()
         {
-            return _sqlDataSource.CreatePagedQuery("SELECT [PersonID],[LastName],[FirstName],[Address],[City] FROM [master].[dbo].[Persons]");
+            return _sqlDataSource.CreatePagedQueryFromFile(@"..\..\..\SQLFiles\query.sql", @"SELECT count(*) as Count FROM [master].[dbo].[Persons];");
         }
 
         public override IReadOnlyList<DataOperation<IDbCommand>> MapRecord(DataRow source)
@@ -37,11 +37,11 @@ namespace Root16.Sprout.Sample.SqlServer
                     CommandText = "INSERT INTO [dbo].[MorePersons] ([PersonID],[LastName],[FirstName],[Address],[City]) VALUES (@PersonId,@LastName,@FirstName,@Address,@City)",
                     CommandType = CommandType.Text
                 };
-                command.Parameters.Add(new SqlParameter("@PersonId", 9));
+                command.Parameters.Add(new SqlParameter("@PersonId", 12));
                 command.Parameters.Add(new SqlParameter("@LastName", "Tester"));
                 command.Parameters.Add(new SqlParameter("@FirstName", "Tester"));
                 command.Parameters.Add(new SqlParameter("@Address", "Tester"));
-                command.Parameters.Add(new SqlParameter("@City", "Tester"));
+                command.Parameters.Add(new SqlParameter("@City", "SingularFile"));
 
                 operations.Add(new DataOperation<IDbCommand>("Insert", command));
             }

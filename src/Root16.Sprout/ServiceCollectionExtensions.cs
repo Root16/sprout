@@ -16,31 +16,23 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, string StepName, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
-    {
-        services.AddSingleton(new StepRegistration(typeof(TStep), StepName, [.. prerequisiteStepNames]));
-        services.AddKeyedTransient<TStep>(StepName);
-
-        return services;
-    }
-
-    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, Func<IServiceProvider, TStep> implementationFactory, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
+    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, Func<IServiceProvider, object?, TStep> keyedImplementationFactory, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
     {
         services.AddSingleton(new StepRegistration(typeof(TStep), [.. prerequisiteStepNames]));
         services.AddKeyedTransient<TStep>(typeof(TStep).Name, (serviceProvider, myKey) =>
         {
-            return implementationFactory(serviceProvider);
+            return keyedImplementationFactory(serviceProvider, myKey);
         });
 
         return services;
     }
 
-    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, string StepName, Func<IServiceProvider, TStep> implementationFactory, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
+    public static IServiceCollection RegisterStep<TStep>(this IServiceCollection services, string StepName, Func<IServiceProvider, object?, TStep> keyedImplementationFactory, params string[] prerequisiteStepNames) where TStep : class, IIntegrationStep
     {
         services.AddSingleton(new StepRegistration(typeof(TStep), StepName, [.. prerequisiteStepNames]));
         services.AddKeyedTransient<TStep>(StepName, (serviceProvider, myKey) =>
         {
-            return implementationFactory(serviceProvider);
+            return keyedImplementationFactory(serviceProvider, myKey);
         });
 
         return services;

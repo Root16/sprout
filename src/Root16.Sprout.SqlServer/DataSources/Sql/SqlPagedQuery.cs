@@ -17,9 +17,14 @@ public class SqlPagedQuery(ILogger<SqlPagedQuery> logger, SqlConnection connecti
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = commandText;
+        command.CommandText = commandText.Trim();
         if (addPaging)
         {
+            if (command.CommandText.EndsWith(";"))
+            {
+                command.CommandText = command.CommandText.Remove(command.CommandText.Length - 1);
+            }
+
             if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
             {
                 command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";

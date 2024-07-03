@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Root16.Sprout\Root16.Sprout.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="SQLFiles\" />
+  </ItemGroup>
+
 </Project>

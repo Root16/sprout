@@ -18,7 +18,7 @@ namespace Root16.Sprout.Sample.SqlServer
             _keyName = keyName;
             _batchProcessor = batchProcessor;
             _sqlDataSource = provider.GetRequiredKeyedService<SqlDataSource>(keyName);
-            BatchSize = 5000;
+            BatchSize = 1;
         }
 
         public override IDataSource<IDbCommand> OutputDataSource => _sqlDataSource;
@@ -32,11 +32,11 @@ namespace Root16.Sprout.Sample.SqlServer
         {
             List<DataOperation<IDbCommand>> operations = [];
 
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 2; i++)
             {
                 var command = new SqlCommand
                 {
-                    CommandText = "INSERT INTO [dbo].[Persons] ([PersonID],[LastName],[FirstName],[Address],[City]) VALUES (@PersonId,@LastName,@FirstName,@Address,@City)",
+                    CommandText = "INSERT INTO [dbo].[MorePersons] ([PersonID],[LastName],[FirstName],[Address],[City]) VALUES (@PersonId,@LastName,@FirstName,@Address,@City)",
                     CommandType = CommandType.Text
                 };
                 command.Parameters.Add(new SqlParameter("@PersonId", 5));
