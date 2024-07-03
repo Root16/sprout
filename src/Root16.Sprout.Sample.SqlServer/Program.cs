@@ -16,14 +16,16 @@ builder.Services.AddSprout();
 builder.Services.AddSproutDataverse();
 
 builder.Services.RegisterStep<SampleSQLStep>();
+builder.Services.RegisterStep<SampleSQLFileStep>();
+builder.Services.RegisterStep<SampleSQLFilesStep>();
 
-builder.Services.RegisterStep<GenericSampleSQLStep>("SecondSQLDataSourceStep", (serviceProvider) =>
+builder.Services.RegisterStep<GenericSampleSQLStep>("SecondSQLDataSourceStep", (serviceProvider, myKey) =>
 {
-    return new GenericSampleSQLStep("secondSQLDataSource", serviceProvider, serviceProvider.GetRequiredService<BatchProcessor>());
+    return new GenericSampleSQLStep(myKey as string, serviceProvider, serviceProvider.GetRequiredService<BatchProcessor>());
 });
-builder.Services.RegisterStep<GenericSampleSQLStep>("ThirdSQLDataSourceStep", (serviceProvider) =>
+builder.Services.RegisterStep<GenericSampleSQLStep>("ThirdSQLDataSourceStep", (serviceProvider, myKey) =>
 {
-    return new GenericSampleSQLStep("thirdSQLDataSource", serviceProvider, serviceProvider.GetRequiredService<BatchProcessor>());
+    return new GenericSampleSQLStep(myKey as string, serviceProvider, serviceProvider.GetRequiredService<BatchProcessor>());
 });
 
 //Hide Logs Below Warning for Dataverse connections
@@ -38,7 +40,7 @@ builder.Services.AddKeyedScoped<SqlDataSource>(null, (serviceProvider, key) =>
     return dataSource;
 });
 
-builder.Services.AddKeyedScoped<SqlDataSource>("secondSQLDataSource", (serviceProvider, key) =>
+builder.Services.AddKeyedScoped<SqlDataSource>("SecondSQLDataSourceStep", (serviceProvider, key) =>
 {
     var connectionString = "Server=localhost\\MSSQLSERVER01;Database=master;Integrated Security=True;Trusted_Connection=True;TrustServerCertificate=true;";
     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -47,7 +49,7 @@ builder.Services.AddKeyedScoped<SqlDataSource>("secondSQLDataSource", (servicePr
     return dataSource;
 });
 
-builder.Services.AddKeyedScoped<SqlDataSource>("thirdSQLDataSource", (serviceProvider, key) =>
+builder.Services.AddKeyedScoped<SqlDataSource>("ThirdSQLDataSourceStep", (serviceProvider, key) =>
 {
     var connectionString = "Server=localhost\\MSSQLSERVER01;Database=master;Integrated Security=True;Trusted_Connection=True;TrustServerCertificate=true;";
     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
