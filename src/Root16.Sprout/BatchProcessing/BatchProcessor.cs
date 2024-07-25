@@ -10,6 +10,8 @@ public class BatchProcessor(IProgressListener progressListener)
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput, TOutput> step, string stepName)
     {
+        step.OnStepStart();
+
         BatchState<TInput>? batchState = null;
         do
         {
@@ -17,6 +19,7 @@ public class BatchProcessor(IProgressListener progressListener)
         }
         while (batchState.QueryState?.MoreRecords == true);
 
+        step.OnStepFinished();
     }
 
     public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(

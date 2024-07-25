@@ -16,6 +16,9 @@ public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
     Task<IReadOnlyList<DataOperation<TOutput>>> OnAfterMapAsync(IReadOnlyList<DataOperation<TOutput>> batch);
     Task<IReadOnlyList<DataOperation<TOutput>>> OnBeforeDeliveryAsync(IReadOnlyList<DataOperation<TOutput>> batch);
     Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<TOutput>> results);
+    void OnStepStart();
+    void OnStepFinished();
+    void OnStepError();
 }
 
 

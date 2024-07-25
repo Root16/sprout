@@ -35,7 +35,9 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
     public virtual IReadOnlyList<DataOperation<TOutput>> OnAfterMap(IReadOnlyList<DataOperation<TOutput>> batch) => batch;
     public virtual IReadOnlyList<DataOperation<TOutput>> OnBeforeDelivery(IReadOnlyList<DataOperation<TOutput>> batch) => batch;
     public virtual IReadOnlyList<TInput> OnBeforeMap(IReadOnlyList<TInput> batch) => batch;
-
     public abstract Task RunAsync(string stepName);
+    public virtual void OnStepStart() { }
+    public virtual void OnStepFinished() { }
+	public virtual void OnStepError() { }
 }
 
