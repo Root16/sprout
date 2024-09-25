@@ -31,7 +31,7 @@ public class SqlPagedQuery(ILogger<SqlPagedQuery> logger, SqlConnection connecti
             }
             else
             {
-                command.CommandText += $" ORDER BY (SELECT NULL) OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+                command.CommandText += $" ORDER BY 1 OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
             }
         }
         command.Connection.Open();
