@@ -101,16 +101,4 @@ public static partial class DataRowExtensions
             entity[attribute.ToLower()] = row.GetValue<DateTime?>(attribute);
         return entity;
     }
-
-    ///// <summary>
-    ///// Set Entity's optionset attribute values from the datarow's corresponding column. Datarow field and entity field types must match. Datarow field name or alias and entity field name must be the same. 
-    ///// </summary>
-    ///// <returns>Microsoft.Xrm.Sdk.Entity</returns>
-    //public static Entity MapOptionSets(this DataRow row, Entity entity, IOptionSetMapper optionSetMapper, params string[] attributes)
-    //{
-    //    if (string.IsNullOrWhiteSpace(entity.LogicalName)) return entity;
-    //    foreach (var attribute in attributes)
-    //        entity[attribute.ToLower()] = optionSetMapper.MapOptionSetByLabel(entity.LogicalName, attribute, row.GetValue<string>(attribute)?.Trim());
-    //    return entity;
-    //}
 }
