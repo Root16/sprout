@@ -87,7 +87,11 @@ public static partial class DataRowExtensions
     public static Entity MapMonies(this DataRow row, Entity entity, params string[] attributes)
     {
         foreach (var attribute in attributes)
-            entity[attribute.ToLower()] = new Money(row.GetValue<decimal>(attribute));
+        {
+            var rowVal = row.GetValue(attribute) ?? 0m;
+            if (rowVal is decimal d) entity[attribute.ToLower()] = new Money(d);
+            else if (rowVal is int i) entity[attribute.ToLower()] = new Money(i);
+        }
         return entity;
     }
 
