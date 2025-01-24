@@ -2,9 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Root16.Sprout.DataSources.Dataverse;
 
-namespace Root16.Sprout.DependencyInjection;
+namespace Root16.Sprout.DataSources.Dataverse;
 
 public class DataverseDataSourceFactory(IServiceProvider serviceProvider) : IDataverseDataSourceFactory
 {

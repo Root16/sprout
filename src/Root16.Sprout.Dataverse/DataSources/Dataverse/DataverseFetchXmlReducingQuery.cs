@@ -6,36 +6,39 @@ using System.Xml.Linq;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string fetchXml) : IPagedQuery<Entity>
+public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, string fetchXml, string? primaryAttribute = null) : IPagedQuery<Entity>
 {
     private readonly DataverseDataSource dataSource = dataSource;
     private readonly string fetchXml = fetchXml;
-
-    private static string AddPaging(string fetchXml, int page, int pageSize, string? pagingCookie)
+    private readonly string? primaryAttribute = primaryAttribute;
+    private static string AddPaging(string fetchXml, int? page, int? pageSize, string? pagingCookie)
     {
         var fetchDoc = XDocument.Parse(fetchXml);
         AddPaging(fetchDoc, page, pageSize, pagingCookie);
         return fetchDoc.ToString(SaveOptions.DisableFormatting);
     }
 
-    private static void AddPaging(XDocument fetchDoc, int page, int pageSize, string? pagingCookie)
+    private static void AddPaging(XDocument fetchDoc, int? page, int? pageSize, string? pagingCookie)
     {
-        fetchDoc.Root?.SetAttributeValue("page", page);
-        fetchDoc.Root?.SetAttributeValue("count", pageSize);
+        if (page is not null)
+            fetchDoc.Root?.SetAttributeValue("page", page);
+        if (pageSize is not null)
+            fetchDoc.Root?.SetAttributeValue("count", pageSize);
         if (pagingCookie is not null)
         {
             fetchDoc.Root?.SetAttributeValue("paging-cookie", pagingCookie);
         }
     }
 
+    // results should be 'different' everytime cause reducing
     public async Task<PagedQueryResult<Entity>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
+        var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(fetchXml)); 
 
         return new PagedQueryResult<Entity>
         (
-            results.Entities,
-            results.MoreRecords,
+            [.. results.Entities.Take(pageSize)],
+            results.MoreRecords || results.Entities.Count > pageSize,
             results.PagingCookie
         );
     }
@@ -72,7 +75,7 @@ public class DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string 
 
         var entityMetadata = dataSource.CrmServiceClient.GetEntityMetadata(entityElem.Attribute("name")?.Value, EntityFilters.Entity);
         var primaryAttribute = entityMetadata.PrimaryIdAttribute;
-        entityElem.Add(new XElement("attribute", new XAttribute("name", primaryAttribute)));
+        entityElem.Add(new XElement("attribute", new XAttribute("name", !string.IsNullOrWhiteSpace(this.primaryAttribute) ? this.primaryAttribute : primaryAttribute)));
 
         int page = 1;
 

@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Root16.Sprout.DataSources.Dataverse;
-using Root16.Sprout.DependencyInjection;
 
 namespace Root16.Sprout;
 
@@ -13,6 +13,8 @@ public static class DataverseServiceExtensions
         services.TryAddTransient<DataverseDataSource>();
         services.TryAddTransient<EntityOperationReducer>();
         services.TryAddSingleton<IDataverseDataSourceFactory, DataverseDataSourceFactory>();
+        services.TryAddSingleton<IMemoryCache, MemoryCache>();
+        services.TryAddSingleton<IOptionSetMapper, OptionSetMapper>();
         return services;
     }
 
