@@ -25,7 +25,16 @@ namespace Root16.Sprout.Sample.SqlServer
         {
             return _sqlDataSource.CreatePagedQuery("SELECT [PersonID],[LastName],[FirstName],[Address],[City] FROM [master].[dbo].[Persons]");
         }
+        public override async Task<IReadOnlyList<DataRow>> OnBeforeMapAsync(IReadOnlyList<DataRow> batch)
+		{
+            var standardQuery = await _sqlDataSource.ExecuteQueryAsync("SELECT TOP 20 [PersonID],[LastName],[FirstName],[Address],[City] FROM [master].[dbo].[Persons]");
 
+            var pagedQuery = await _sqlDataSource.ExecuteQueryWithPagingAsync("SELECT [PersonID],[LastName],[FirstName],[Address],[City] FROM [master].[dbo].[Persons]");
+
+            var pagedQueryWithBatchSize = await _sqlDataSource.ExecuteQueryWithPagingAsync("SELECT [PersonID],[LastName],[FirstName],[Address],[City] FROM [master].[dbo].[Persons]", batchSize: 3);
+
+            return await base.OnBeforeMapAsync(batch);
+		}
         public override IReadOnlyList<DataOperation<IDbCommand>> MapRecord(DataRow source)
         {
             List<DataOperation<IDbCommand>> operations = [];

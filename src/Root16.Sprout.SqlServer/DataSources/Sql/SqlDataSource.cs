@@ -50,7 +50,73 @@ public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory
             command.Connection.Close();
         }
     }
+    public async Task<IReadOnlyList<DataRow>> ExecuteQueryAsync(string commandText)
+	{
+		var records = new List<DataRow>();
 
+		var query = new SqlPagedQuery(
+            loggerFactory.CreateLogger<SqlPagedQuery>(), 
+            connection, 
+            commandText, 
+			null, //not relevant for this method
+            addPaging: false);
+
+        var result = await query.GetNextPageAsync(
+                0,
+                -1, //Not needed when addPaging was set to false
+				null);
+
+		var batch = result.Records;
+
+	    records.AddRange(batch);
+
+		return records;
+	}
+	public async Task<IReadOnlyList<DataRow>> ExecuteQueryWithPagingAsync(string commandText, int batchSize = 200)
+	{
+		var records = new List<DataRow>();
+
+		var query = new SqlPagedQuery(
+            loggerFactory.CreateLogger<SqlPagedQuery>(), 
+            connection, 
+            commandText, 
+			null, //not relevant for this method
+            addPaging: true);
+
+		PagedQueryState<DataRow> queryState = new(
+            0, 
+            batchSize, 
+            0, 
+			null, //not relevant for this method
+            true, 
+            null);
+
+		while (queryState.MoreRecords)
+		{
+			var result = await query.GetNextPageAsync(
+				queryState.NextPageNumber,
+				queryState.RecordsPerPage,
+				queryState.Bookmark);
+
+			var batch = result.Records;
+
+			var proccessedCount = batch.Count;
+
+			queryState = new
+			(
+				queryState.NextPageNumber + 1,
+				queryState.RecordsPerPage,
+				proccessedCount,
+				null, //Not relevant for this method
+				result.MoreRecords,
+				queryState.Bookmark
+			);
+
+			records.AddRange(batch);
+		}
+
+		return records;
+	}
     public async Task<IReadOnlyList<DataOperationResult<IDbCommand>>> PerformOperationsAsync(IEnumerable<DataOperation<IDbCommand>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
         if (dryRun)
