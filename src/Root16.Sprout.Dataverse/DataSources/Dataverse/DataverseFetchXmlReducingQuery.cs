@@ -6,11 +6,11 @@ using System.Xml.Linq;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, string fetchXml, string? primaryAttribute = null) : IPagedQuery<Entity>
+public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, string fetchXml, string? countByAttribute = null) : IPagedQuery<Entity>
 {
     private readonly DataverseDataSource dataSource = dataSource;
     private readonly string fetchXml = fetchXml;
-    private readonly string? primaryAttribute = primaryAttribute;
+    private readonly string? countByAttribute = countByAttribute;
     private static string AddPaging(string fetchXml, int? page, int? pageSize, string? pagingCookie)
     {
         var fetchDoc = XDocument.Parse(fetchXml);
@@ -73,9 +73,13 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
             attr.Remove();
         }
 
-        var entityMetadata = dataSource.CrmServiceClient.GetEntityMetadata(entityElem.Attribute("name")?.Value, EntityFilters.Entity);
-        var primaryAttribute = entityMetadata.PrimaryIdAttribute;
-        entityElem.Add(new XElement("attribute", new XAttribute("name", !string.IsNullOrWhiteSpace(this.primaryAttribute) ? this.primaryAttribute : primaryAttribute)));
+        string? primaryAttribute = this.countByAttribute;
+        if (string.IsNullOrWhiteSpace(primaryAttribute))
+        {
+            var entityMetadata = dataSource.CrmServiceClient.GetEntityMetadata(entityElem.Attribute("name")?.Value, EntityFilters.Entity);
+            primaryAttribute = entityMetadata.PrimaryIdAttribute;
+        }
+        entityElem.Add(new XElement("attribute", new XAttribute("name", primaryAttribute)));
 
         int page = 1;
 

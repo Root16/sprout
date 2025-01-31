@@ -199,9 +199,9 @@ public class DataverseDataSource : IDataSource<Entity>
         return new DataverseFetchXmlPagedQuery(this, fetchXml);
     }
 
-    public IPagedQuery<Entity> CreateFetchXmlReducingQuery(string fetchXml, string? primaryAttribute = null)
+    public IPagedQuery<Entity> CreateFetchXmlReducingQuery(string fetchXml, string? countByAttribute = null)
     {
-        return new DataverseFetchXmlReducingQuery(this, fetchXml, primaryAttribute);
+        return new DataverseFetchXmlReducingQuery(this, fetchXml, countByAttribute);
     }
 
     protected static OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
