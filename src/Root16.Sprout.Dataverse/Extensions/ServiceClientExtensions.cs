@@ -15,8 +15,33 @@ public static class ServiceClientExtensions
         {
             try
             {
-                Thread.Sleep(retryAfter);
+                await Task.Delay(retryAfter);
                 return await serviceClient.RetrieveMultipleAsync(query);
+            }
+            catch (FaultException<OrganizationServiceFault>) { throw; }
+            catch (CommunicationException)
+            {
+                if (retry > retryCount) throw;
+                retry++;
+                var retrypause = serviceClient.RetryPauseTime;
+                if (retrypause.TotalSeconds > 0)
+                    retryAfter = serviceClient.RetryPauseTime;
+                else retryAfter = TimeSpan.FromSeconds(5 * retryCount);
+            }
+        } while (retry < retryCount);
+        throw new Exception($"{nameof(RetrieveMultipleWithRetryAsync)} : {serviceClient.LastException.Message}");
+    }
+
+    public static async Task<EntityCollection> RetrieveMultipleWithRetryAsync(this ServiceClient serviceClient, QueryBase query, int retryCount, CancellationToken cancellationToken)
+    {
+        var retryAfter = TimeSpan.FromSeconds(0);
+        var retry = 0;
+        do
+        {
+            try
+            {
+                await Task.Delay(retryAfter, cancellationToken);
+                return await serviceClient.RetrieveMultipleAsync(query, cancellationToken);
             }
             catch (FaultException<OrganizationServiceFault>) { throw; }
             catch (CommunicationException)
