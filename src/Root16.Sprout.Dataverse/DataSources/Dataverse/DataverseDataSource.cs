@@ -4,6 +4,7 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using System.Collections.Concurrent;
 using System.Net;
+using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -198,6 +199,11 @@ public class DataverseDataSource : IDataSource<Entity>
         return new DataverseFetchXmlPagedQuery(this, fetchXml);
     }
 
+    public IPagedQuery<Entity> CreateFetchXmlReducingQuery(string fetchXml, string? countByAttribute = null)
+    {
+        return new DataverseFetchXmlReducingQuery(this, fetchXml, countByAttribute);
+    }
+
     protected static OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
     {
         OrganizationRequest request;
@@ -254,6 +260,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 return (T)await CrmServiceClient.ExecuteAsync(request, token);
             }
+            catch (FaultException<OrganizationServiceFault>) { throw; }
             catch (Exception ex)
             {
                 if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
