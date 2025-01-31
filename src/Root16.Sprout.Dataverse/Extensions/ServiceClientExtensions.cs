@@ -32,7 +32,7 @@ public static class ServiceClientExtensions
         throw new Exception($"{nameof(RetrieveMultipleWithRetryAsync)} : {serviceClient.LastException.Message}");
     }
 
-    public static async Task<EntityCollection> RetrieveMultipleWithRetryAsync(this ServiceClient serviceClient, QueryBase query, int retryCount, CancellationToken cancellationToken)
+    public static async Task<EntityCollection> RetrieveMultipleWithRetryAsync(this ServiceClient serviceClient, QueryBase query, int retryCount, CancellationToken cancellationToken = default)
     {
         var retryAfter = TimeSpan.FromSeconds(0);
         var retry = 0;
