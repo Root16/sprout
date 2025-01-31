@@ -54,22 +54,21 @@ public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory
 	{
 		var records = new List<DataRow>();
 
-		await using var command = connection.CreateCommand();
-		command.CommandText = commandText;
+		var query = new SqlPagedQuery(
+            loggerFactory.CreateLogger<SqlPagedQuery>(), 
+            connection, 
+            commandText, 
+			null, //not relevant for this method
+            addPaging: false);
 
-		await command.Connection.OpenAsync();
-		try
-		{
-			await using var reader = await command.ExecuteReaderAsync();
-			var table = new DataTable();
-			table.Load(reader); 
+        var result = await query.GetNextPageAsync(
+                0,
+                -1, //Not needed when addPaging was set to false
+				null);
 
-			records.AddRange(table.Rows.Cast<DataRow>());
-		}
-		finally
-		{
-			await command.Connection.CloseAsync();
-		}
+		var batch = result.Records;
+
+	    records.AddRange(batch);
 
 		return records;
 	}
@@ -102,8 +101,6 @@ public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory
 			var batch = result.Records;
 
 			var proccessedCount = batch.Count;
-
-			logger.LogInformation($"{nameof(proccessedCount)}: {proccessedCount}");
 
 			queryState = new
 			(
