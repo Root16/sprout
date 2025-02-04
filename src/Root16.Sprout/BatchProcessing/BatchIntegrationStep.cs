@@ -11,7 +11,8 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
 
     public bool DryRun { get; set; }
     public int BatchSize { get; set; }
-    
+    public TimeSpan? BatchDelay { get; set; }
+
     private readonly HashSet<string> dataOperationFlags = new(StringComparer.OrdinalIgnoreCase);
     public IEnumerable<string> DataOperationFlags { get { return dataOperationFlags; } }
 

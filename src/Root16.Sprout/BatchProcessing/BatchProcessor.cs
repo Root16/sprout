@@ -3,9 +3,10 @@ using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchProcessor(IProgressListener progressListener)
+public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDelay = default)
 {
     private readonly IProgressListener progressListener = progressListener;
+    private readonly TimeSpan defaultBatchDelay = batchDelay;
 
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput, TOutput> step, string stepName)
@@ -13,8 +14,10 @@ public class BatchProcessor(IProgressListener progressListener)
         step.OnStepStart();
 
         BatchState<TInput>? batchState = null;
+        TimeSpan batchDelay = step.BatchDelay ?? this.defaultBatchDelay;
         do
         {
+            if (batchState is not null && batchDelay.Ticks > 0) await Task.Delay(batchDelay);
             batchState = await ProcessBatchAsync(step, stepName, batchState);
         }
         while (batchState.QueryState?.MoreRecords == true);
@@ -23,7 +26,7 @@ public class BatchProcessor(IProgressListener progressListener)
     }
 
     public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput,TOutput> step, string stepName,
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName,
         BatchState<TInput>? batchState)
     {
 
