@@ -46,7 +46,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddSprout(this IServiceCollection services, TimeSpan defaultBatchDelay)
+    public static IServiceCollection AddSproutWithBatchDelay(this IServiceCollection services, TimeSpan defaultBatchDelay)
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
         services.TryAddTransient<BatchProcessor>((serviceProvider) =>
