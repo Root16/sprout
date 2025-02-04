@@ -289,8 +289,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -1154,6 +1154,13 @@
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
         }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
+        }
       }
     },
     "net7.0": {
@@ -1440,8 +1447,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -2301,6 +2308,13 @@
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
         }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
+        }
       }
     },
     "net8.0": {
@@ -2587,8 +2601,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -3455,6 +3469,13 @@
           "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
+        }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
         }
       }
     }
