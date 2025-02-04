@@ -45,4 +45,15 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
         return services;
     }
+
+    public static IServiceCollection AddSproutWithBatchDelay(this IServiceCollection services, TimeSpan defaultBatchDelay)
+    {
+        services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
+        services.TryAddTransient<BatchProcessor>((serviceProvider) =>
+        {
+            return new (serviceProvider.GetRequiredService<IProgressListener>(), defaultBatchDelay);
+        });
+        services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
+        return services;
+    }
 }

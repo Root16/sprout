@@ -9,6 +9,7 @@ public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
 	IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput input);
 
     int BatchSize { get; }
+    TimeSpan? BatchDelay { get; }
     bool DryRun { get; }
     IEnumerable<string> DataOperationFlags { get; }
 
