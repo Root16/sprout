@@ -23,36 +23,26 @@ public class IntegrationRuntime : IIntegrationRuntime
         BuildDependencyTree();
     }
 
-    public async Task<string> RunStepAsync(string name)
+    public async Task<string> RunStepAsync(string name, Action<IIntegrationStep>? stepConfigurator = null)
     {
         var reg = stepRegistrations.FirstOrDefault(step => step.Name == name) ?? throw new InvalidOperationException($"Step named '{name}' is not registered.");
-        await RunStepAsync(reg);
+        await RunStepAsync(reg, stepConfigurator);
         return reg.Name;
     }
 
-    public async Task<string> RunStepAsync<TStep>(Action<TStep>? configurator = null) where TStep : class, IIntegrationStep
+    public async Task<string> RunStepAsync<TStep>(Action<IIntegrationStep>? stepConfigurator = null) where TStep : class, IIntegrationStep
     {
         var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
-        await RunStepAsync(reg, configurator);
+        await RunStepAsync(reg, stepConfigurator);
         return reg.Name;
     }
 
-    private async Task<string> RunStepAsync<TStep>(StepRegistration reg, Action<TStep>? configurator = null) where TStep : class, IIntegrationStep
+    private async Task<string> RunStepAsync(StepRegistration reg, Action<IIntegrationStep>? stepConfigurator = null)
     {
         progressListener.OnStepStart(reg.Name);
         using var scope = serviceScopeFactory.CreateScope();
         var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
-        configurator?.Invoke((TStep)step);
-        await step.RunAsync(reg.Name);
-        progressListener.OnStepComplete(reg.Name);
-        return reg.Name;
-    }
-
-    private async Task<string> RunStepAsync(StepRegistration reg)
-    {
-        progressListener.OnStepStart(reg.Name);
-        using var scope = serviceScopeFactory.CreateScope();
-        var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
+        stepConfigurator?.Invoke(step);
         await step.RunAsync(reg.Name);
         progressListener.OnStepComplete(reg.Name);
         return reg.Name;
