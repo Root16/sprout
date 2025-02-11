@@ -30,10 +30,21 @@ public class IntegrationRuntime : IIntegrationRuntime
         return reg.Name;
     }
 
-    public async Task<string> RunStepAsync<TStep>() where TStep : class, IIntegrationStep
+    public async Task<string> RunStepAsync<TStep>(Action<TStep>? configurator = null) where TStep : class, IIntegrationStep
     {
         var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
-        await RunStepAsync(reg);
+        await RunStepAsync(reg, configurator);
+        return reg.Name;
+    }
+
+    private async Task<string> RunStepAsync<TStep>(StepRegistration reg, Action<TStep>? configurator = null) where TStep : class, IIntegrationStep
+    {
+        progressListener.OnStepStart(reg.Name);
+        using var scope = serviceScopeFactory.CreateScope();
+        var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
+        configurator?.Invoke((TStep)step);
+        await step.RunAsync(reg.Name);
+        progressListener.OnStepComplete(reg.Name);
         return reg.Name;
     }
 
