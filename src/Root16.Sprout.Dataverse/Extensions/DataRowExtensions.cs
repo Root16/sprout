@@ -1,39 +1,11 @@
 ﻿using Microsoft.Xrm.Sdk;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Extensions;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Sql;
+namespace Root16.Sprout.DataSources.Dataverse;
 
 public static partial class DataRowExtensions
 {
-    public static object GetValue(this DataRow row, string column)
-    {
-        return row.Table.Columns.Contains(column) ? row[column] : null!;
-    }
-
-    public static TOut GetValue<TOut>(this DataRow row, string column)
-    {
-        if (row.Table.Columns.Contains(column) && row[column] != null && row[column] is not DBNull)
-        {
-            return (TOut)row[column];
-        }
-
-        return default!;
-    }
-    
-    public static bool TryGetValue<TOut>(this DataRow row, string column, out TOut value)
-    {
-        if (row.Table.Columns.Contains(column) && row[column] != null && row[column] is not DBNull)
-        {
-            value = (TOut)row[column];
-            return true;
-        }
-
-        value = default(TOut)!;
-        return false;
-    }
-
-
     /// <summary>
     /// Set Entity's string attribute values from the datarow's corresponding column. Datarow field and entity field types must match. Datarow field name or alias and entity field name must be the same. 
     /// </summary>

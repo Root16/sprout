@@ -27,7 +27,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Root16.Sprout.Dataverse\Root16.Sprout.Dataverse.csproj" />
 		<ProjectReference Include="..\Root16.Sprout\Root16.Sprout.csproj" />
 	</ItemGroup>
 

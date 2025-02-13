@@ -1154,13 +1154,6 @@
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
         }
-      },
-      "root16.sprout.dataverse": {
-        "type": "Project",
-        "dependencies": {
-          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
-          "Root16.Sprout": "[1.0.0, )"
-        }
       }
     },
     "net7.0": {
@@ -2307,13 +2300,6 @@
           "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
-        }
-      },
-      "root16.sprout.dataverse": {
-        "type": "Project",
-        "dependencies": {
-          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
-          "Root16.Sprout": "[1.0.0, )"
         }
       }
     },
@@ -3469,13 +3455,6 @@
           "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
-        }
-      },
-      "root16.sprout.dataverse": {
-        "type": "Project",
-        "dependencies": {
-          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
-          "Root16.Sprout": "[1.0.0, )"
         }
       }
     }
