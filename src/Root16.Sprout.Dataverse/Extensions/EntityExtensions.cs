@@ -25,6 +25,67 @@ public static class EntityExtensions
                     different = true;
                 }
             }
+            else if (updateValue is EntityReferenceCollection || originalValue is EntityReferenceCollection)
+            {
+                var originalCollection = (EntityReferenceCollection)originalValue;
+                var updateCollection = (EntityReferenceCollection)updateValue;
+
+                var groupedOriginalCollection = originalCollection.GroupBy(o => o.LogicalName).OrderBy(g => g.Key).ToList();
+                var groupedUpdateCollection = updateCollection.GroupBy(o => o.LogicalName).OrderBy(g => g.Key).ToList();
+
+                // Check If Same Amount Of Groups
+                if (groupedOriginalCollection.Count != groupedUpdateCollection.Count)
+                {
+                    different = true;
+                }
+                else
+                {
+                    var originalTypes = groupedOriginalCollection.Select(g => g.Key).Distinct();
+                    var updateTypes = groupedUpdateCollection.Select(g => g.Key).Distinct();
+
+                    // Check if the distinct record types are the same
+                    if (!originalTypes.SequenceEqual(updateTypes))
+                    {
+                        different = true;
+                    }
+                    else
+                    {
+                        // Loop through each group and check if they have the same amount of records
+                        foreach (var originalGroup in groupedOriginalCollection)
+                        {
+                            var updateGroup = groupedUpdateCollection.FirstOrDefault(g => g.Key == originalGroup.Key);
+                            if (updateGroup == null || originalGroup.Count() != updateGroup.Count())
+                            {
+                                different = true;
+                                break;
+                            }
+
+                            var originalIds = new HashSet<Guid>(originalGroup.Select(o => o.Id));
+                            var updateIds = new HashSet<Guid>(updateGroup.Select(u => u.Id));
+
+                            if (!originalIds.SetEquals(updateIds))
+                            {
+                                different = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (updateValue is EntityCollection || originalValue is EntityCollection)
+            {
+                var originalCollection = (EntityCollection)originalValue;
+                var updateCollection = (EntityCollection)updateValue;
+
+                var originalPartyIds = new HashSet<Guid>(originalCollection.Entities.Select(e => e.GetAttributeValue<EntityReference>("partyid").Id));
+                var updatePartyIds = new HashSet<Guid>(updateCollection.Entities.Select(e => e.GetAttributeValue<EntityReference>("partyid").Id));
+
+                if (!originalPartyIds.SetEquals(updatePartyIds))
+                {
+                    different = true;
+                }
+
+            }
             else if (updateValue is Money || originalValue is Money)
             {
                 var originalMoney = (Money)originalValue;
@@ -69,7 +130,7 @@ public static class EntityExtensions
                     different = true;
                 }
             }
-            else
+            else if (updateValue is DateTime || originalValue is DateTime)
             {
                 if (updateValue is DateTime dt)
                 {
