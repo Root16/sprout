@@ -1,6 +1,4 @@
-﻿using Microsoft.Xrm.Sdk;
-
-namespace Root16.Sprout.Extensions;
+﻿namespace Root16.Sprout.Extensions;
 
 public static class IEnumerableExtensions
 {

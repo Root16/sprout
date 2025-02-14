@@ -1,38 +1,11 @@
 ﻿using Microsoft.Xrm.Sdk;
+using Root16.Sprout.Extensions;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Sql;
+namespace Root16.Sprout.DataSources.Dataverse;
 
 public static partial class DataRowExtensions
 {
-    public static object GetValue(this DataRow row, string column)
-    {
-        return row.Table.Columns.Contains(column) ? row[column] : null!;
-    }
-
-    public static TOut GetValue<TOut>(this DataRow row, string column)
-    {
-        if (row.Table.Columns.Contains(column) && row[column] != null && row[column] is not DBNull)
-        {
-            return (TOut)row[column];
-        }
-
-        return default!;
-    }
-    
-    public static bool TryGetValue<TOut>(this DataRow row, string column, out TOut value)
-    {
-        if (row.Table.Columns.Contains(column) && row[column] != null && row[column] is not DBNull)
-        {
-            value = (TOut)row[column];
-            return true;
-        }
-
-        value = default(TOut)!;
-        return false;
-    }
-
-
     /// <summary>
     /// Set Entity's string attribute values from the datarow's corresponding column. Datarow field and entity field types must match. Datarow field name or alias and entity field name must be the same. 
     /// </summary>
@@ -48,7 +21,7 @@ public static partial class DataRowExtensions
     /// Set Entity's boolean attribute values from the datarow's corresponding column. Datarow field and entity field types must match. Datarow field name or alias and entity field name must be the same. 
     /// </summary>
     /// <returns>Microsoft.Xrm.Sdk.Entity</returns>
-    public static Entity MapBooleans<T>(this DataRow row, Entity entity, params string[] attributes)
+    public static Entity MapBooleans(this DataRow row, Entity entity, params string[] attributes)
     {
         foreach (var attribute in attributes)
             entity[attribute.ToLower()] = row.GetValue<bool?>(attribute);
@@ -103,6 +76,18 @@ public static partial class DataRowExtensions
     {
         foreach (var attribute in attributes)
             entity[attribute.ToLower()] = row.GetValue<DateTime?>(attribute);
+        return entity;
+    }
+
+    /// <summary>
+    /// Set Entity's optionset attribute values from the datarow's corresponding column. Datarow field and entity field types must match. Datarow field name or alias and entity field name must be the same. 
+    /// </summary>
+    /// <returns>Microsoft.Xrm.Sdk.Entity</returns>
+    public static Entity MapOptionSets(this DataRow row, Entity entity, IOptionSetMapper optionSetMapper, params string[] attributes)
+    {
+        if (string.IsNullOrWhiteSpace(entity.LogicalName)) return entity;
+        foreach (var attribute in attributes)
+            entity[attribute.ToLower()] = optionSetMapper.MapOptionSetByLabel(entity.LogicalName, attribute, row.GetValue<string>(attribute)?.Trim()!);
         return entity;
     }
 }
