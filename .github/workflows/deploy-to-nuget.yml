@@ -22,7 +22,7 @@ jobs:
       id: setvars
       run: |
         if [[ "${{github.base_ref}}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
-          echo "VERSION_SUFFIX=" >> "$GITHUB_ENV"
+          echo "VERSION_SUFFIX=${{github.run_number}}" >> "$GITHUB_ENV"
         fi
 
         if [[ "${{github.base_ref}}" == "alpha" || "${{github.ref}}" == "refs/heads/alpha" ]]; then
