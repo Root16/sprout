@@ -13,7 +13,7 @@ internal class AccountInvalidDependencyTestStep : BatchIntegrationStep<Account, 
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<Account> memoryDS;
+    private readonly MemoryDataSource<Account> memoryDS;
 
     public AccountInvalidDependencyTestStep(MemoryDataSource<Account> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
@@ -51,9 +51,9 @@ internal class AccountInvalidDependencyTestStep : BatchIntegrationStep<Account, 
         return reducer.ReduceOperations(batch, entity => entity.GetAttributeValue<string>("name"));
     }
 
-    public override async Task RunAsync()
+    public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessAllBatchesAsync(this);
+        await batchProcessor.ProcessAllBatchesAsync(this, stepName);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
@@ -73,7 +73,7 @@ internal class AccountInvalidDependencyTestStep : BatchIntegrationStep<Account, 
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return [new DataOperation<Entity>("Create", result)];
     }
 
 }

@@ -3,29 +3,30 @@ using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchProcessor
+public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDelay = default)
 {
-    public BatchProcessor(IProgressListener progressListener)
-    {
-        this.progressListener = progressListener;
-    }
-
-    private readonly IProgressListener progressListener;
+    private readonly IProgressListener progressListener = progressListener;
+    private readonly TimeSpan defaultBatchDelay = batchDelay;
 
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step)
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName)
     {
+        step.OnStepStart();
+
         BatchState<TInput>? batchState = null;
+        TimeSpan batchDelay = step.BatchDelay ?? this.defaultBatchDelay;
         do
         {
-            batchState = await ProcessBatchAsync(step, batchState);
+            if (batchState is not null && batchDelay.Ticks > 0) await Task.Delay(batchDelay);
+            batchState = await ProcessBatchAsync(step, stepName, batchState);
         }
         while (batchState.QueryState?.MoreRecords == true);
 
+        step.OnStepFinished();
     }
 
     public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput,TOutput> step,
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName,
         BatchState<TInput>? batchState)
     {
 
@@ -40,10 +41,7 @@ public class BatchProcessor
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
-        if (progress is null)
-        {
-            progress = new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
-        }
+        progress ??= new IntegrationProgress(stepName, queryState.TotalRecordCount);
 
         // get batch of data (IPagedQuery)
         var result = await query.GetNextPageAsync(queryState.NextPageNumber, queryState.RecordsPerPage, queryState.Bookmark);

@@ -1,51 +1,57 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
-public class SqlPagedQuery : IPagedQuery<DataRow>
+public class SqlPagedQuery(ILogger<SqlPagedQuery> logger, SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
 {
-    private readonly SqlConnection connection;
-    private readonly string commandText;
-    private readonly string? totalRowCountCommandText;
-    private readonly bool addPaging;
+    private readonly ILogger<SqlPagedQuery> logger = logger;
+    private readonly SqlConnection connection = connection;
+    private readonly string commandText = commandText;
+    private readonly string? totalRowCountCommandText = totalRowCountCommandText;
+    private readonly bool addPaging = addPaging;
 
-    public SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
-    {
-        this.connection = connection;
-        this.commandText = commandText;
-        this.totalRowCountCommandText = totalRowCountCommandText;
-        this.addPaging = addPaging;
-    }
+    const int MaxRetries = 10;
 
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        using (var command = connection.CreateCommand())
+        using var command = connection.CreateCommand();
+        command.CommandText = commandText.Trim();
+        if (addPaging)
         {
-            command.CommandText = commandText;
-            if (addPaging)
+            if (command.CommandText.EndsWith(";"))
+            {
+                command.CommandText = command.CommandText.Remove(command.CommandText.Length - 1);
+            }
+
+            if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
             {
                 command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
             }
-            command.Connection.Open();
-            var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
-            try
+            else
             {
-                DataTable table = new DataTable();
-                table.Load(reader);
+                command.CommandText += $" ORDER BY 1 OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            }
+        }
+        command.Connection.Open();
+        var reader = await TryAsync(() => command.ExecuteReaderAsync(CommandBehavior.CloseConnection));
+        try
+        {
+            DataTable table = new();
+            table.Load(reader);
 
-                var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
-                return new PagedQueryResult<DataRow>
-                (
-                    rows,
-                    table.Rows.Count == pageSize,
-                    null
-                );
-            }
-            finally
-            {
-                command.Connection.Close();
-            }
+            var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
+            return new PagedQueryResult<DataRow>
+            (
+                rows,
+                table.Rows.Count == pageSize,
+                null
+            );
+        }
+        finally
+        {
+            command.Connection.Close();
         }
     }
 
@@ -58,11 +64,36 @@ public class SqlPagedQuery : IPagedQuery<DataRow>
         cmd.Connection.Open();
         try
         {
-            return (int?)await cmd.ExecuteScalarAsync();
+            return await TryAsync(async () => (int?)await cmd.ExecuteScalarAsync());
         }
         finally
         {
             cmd.Connection.Close();
         }
     }
+
+
+    private async Task<T> TryAsync<T>(Func<Task<T>> sqlRequest)
+    {
+        var retryCount = 0;
+        Exception? lastException = null;
+        do
+        {
+            try
+            {
+                return await sqlRequest();
+            }
+            catch (Exception ex)
+            {
+                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                lastException = ex;
+            }
+        } while (retryCount++ < MaxRetries);
+
+        throw lastException;
+    }
+
 }

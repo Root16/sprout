@@ -11,12 +11,12 @@ public class IntegrationProgress
 	public IntegrationProgress(string stepName, int? totalRecordCount)
 	{
 		StepName = stepName;
-        operationCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        TotalRecordCount = totalRecordCount;
+		OperationCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		TotalRecordCount = totalRecordCount;
 		StartTime = DateTime.Now;
 	}
 
-	private readonly Dictionary<string,int> operationCounts;
+	public Dictionary<string, int> OperationCounts { get; private set; }
 
 
 	public string StepName { get; private set; }
@@ -44,14 +44,14 @@ public class IntegrationProgress
 		ProcessedRecordCount += processedRecordCount;
 		foreach (var operationGroup in operations.GroupBy(o => o, StringComparer.OrdinalIgnoreCase))
 		{
-			if (operationCounts.ContainsKey(operationGroup.Key))
+			if (OperationCounts.ContainsKey(operationGroup.Key))
 			{
-				operationCounts[operationGroup.Key] += operationGroup.Count();
+				OperationCounts[operationGroup.Key] += operationGroup.Count();
 			}
 			else
 			{
-                operationCounts[operationGroup.Key] = operationGroup.Count();
-            }
+				OperationCounts[operationGroup.Key] = operationGroup.Count();
+			}
 		}
 	}
 
@@ -91,11 +91,11 @@ public class IntegrationProgress
 				}
 			}
 
-			message.Append($"{values[values.Length - 1].Interval}{values[values.Length - 1].Label} remaining ");
+			message.Append($"{values[^1].Interval}{values[^1].Label} remaining ");
 		}
 
 		message.Append(
-			string.Join(", ", operationCounts.Select(pair => $"{pair.Key}: {pair.Value}")));
+			string.Join(", ", OperationCounts.Select(pair => $"{pair.Key}: {pair.Value}")));
 		return message.ToString();
 	}
 }

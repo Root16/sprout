@@ -1,30 +1,29 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
-public class DynamicSqlPagedQuery : IPagedQuery<DataRow>
+public class DynamicSqlPagedQuery(ILogger<DynamicSqlPagedQuery> logger, SqlConnection connection, Func<int, int, string> commandGenerator, string? totalRowCountCommandText = null) : IPagedQuery<DataRow>
 {
-    private readonly SqlConnection connection;
-    private readonly Func<int, int, string> commandGenerator;
-    private readonly string? totalRowCountCommandText;
+    private readonly ILogger<DynamicSqlPagedQuery> logger = logger;
+    private readonly SqlConnection connection = connection;
+    private readonly Func<int, int, string> commandGenerator = commandGenerator;
+    private readonly string? totalRowCountCommandText = totalRowCountCommandText;
 
-    public DynamicSqlPagedQuery(SqlConnection connection, Func<int, int, string> commandGenerator, string? totalRowCountCommandText = null)
-    {
-        this.connection = connection;
-        this.commandGenerator = commandGenerator;
-        this.totalRowCountCommandText = totalRowCountCommandText;
-    }
+    const int MaxRetries = 10;
 
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
         using var command = connection.CreateCommand();
         command.CommandText = commandGenerator(pageNumber, pageSize);
         command.Connection.Open();
-        var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+
+        var reader = await TryAsync(async () => await command.ExecuteReaderAsync(CommandBehavior.CloseConnection));
         try
         {
-            DataTable table = new DataTable();
+            DataTable table = new();
             table.Load(reader);
 
             var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
@@ -50,11 +49,34 @@ public class DynamicSqlPagedQuery : IPagedQuery<DataRow>
         cmd.Connection.Open();
         try
         {
-            return (int?)await cmd.ExecuteScalarAsync();
+            return await TryAsync(async () => (int?)await cmd.ExecuteScalarAsync());
         }
         finally
         {
             cmd.Connection.Close();
         }
+    }
+
+    private async Task<T> TryAsync<T>(Func<Task<T>> sqlRequest)
+    {
+        var retryCount = 0;
+        Exception? lastException = null;
+        do
+        {
+            try
+            {
+                return await sqlRequest();
+            }
+            catch (Exception ex)
+            {
+                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                lastException = ex;
+            }
+        } while (retryCount++ < MaxRetries);
+
+        throw lastException;
     }
 }

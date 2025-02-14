@@ -9,6 +9,7 @@ public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
 	IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput input);
 
     int BatchSize { get; }
+    TimeSpan? BatchDelay { get; }
     bool DryRun { get; }
     IEnumerable<string> DataOperationFlags { get; }
 
@@ -16,6 +17,9 @@ public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
     Task<IReadOnlyList<DataOperation<TOutput>>> OnAfterMapAsync(IReadOnlyList<DataOperation<TOutput>> batch);
     Task<IReadOnlyList<DataOperation<TOutput>>> OnBeforeDeliveryAsync(IReadOnlyList<DataOperation<TOutput>> batch);
     Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<TOutput>> results);
+    void OnStepStart();
+    void OnStepFinished();
+    void OnStepError();
 }
 
 

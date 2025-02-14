@@ -11,8 +11,9 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
 
     public bool DryRun { get; set; }
     public int BatchSize { get; set; }
-    
-    private HashSet<string> dataOperationFlags = new(StringComparer.OrdinalIgnoreCase);
+    public TimeSpan? BatchDelay { get; set; }
+
+    private readonly HashSet<string> dataOperationFlags = new(StringComparer.OrdinalIgnoreCase);
     public IEnumerable<string> DataOperationFlags { get { return dataOperationFlags; } }
 
 
@@ -35,7 +36,9 @@ public abstract class BatchIntegrationStep<TInput, TOutput> : IBatchIntegrationS
     public virtual IReadOnlyList<DataOperation<TOutput>> OnAfterMap(IReadOnlyList<DataOperation<TOutput>> batch) => batch;
     public virtual IReadOnlyList<DataOperation<TOutput>> OnBeforeDelivery(IReadOnlyList<DataOperation<TOutput>> batch) => batch;
     public virtual IReadOnlyList<TInput> OnBeforeMap(IReadOnlyList<TInput> batch) => batch;
-
-    public abstract Task RunAsync();
+    public abstract Task RunAsync(string stepName);
+    public virtual void OnStepStart() { }
+    public virtual void OnStepFinished() { }
+	public virtual void OnStepError() { }
 }
 

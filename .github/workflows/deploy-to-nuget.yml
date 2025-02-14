@@ -21,7 +21,7 @@ jobs:
     - name: Set variables
       id: setvars
       run: |
-        if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
+        if [[ "${{github.base_ref}}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
           echo "VERSION_SUFFIX=" >> "$GITHUB_ENV"
         fi
 

@@ -11,7 +11,7 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
     private readonly BatchProcessor batchProcessor;
-    private MemoryDataSource<CreateContact> memoryDS;
+    private readonly MemoryDataSource<CreateContact> memoryDS;
 
     public CreateContactTestStep(MemoryDataSource<CreateContact> memoryDS, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer, BatchProcessor batchProcessor)
     {
@@ -58,9 +58,9 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
         ));
     }
 
-    public override async Task RunAsync()
+    public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessAllBatchesAsync(this);
+        await batchProcessor.ProcessAllBatchesAsync(this, stepName);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
@@ -81,6 +81,6 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
             }
         };
 
-        return new[] { new DataOperation<Entity>("Create", result) };
+        return [new DataOperation<Entity>("Create", result)];
     }
 }

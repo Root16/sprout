@@ -6,16 +6,10 @@ using System.Xml.Linq;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
+public class DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string fetchXml) : IPagedQuery<Entity>
 {
-    private readonly DataverseDataSource dataSource;
-    private readonly string fetchXml;
-
-    public DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string fetchXml)
-    {
-        this.dataSource = dataSource;
-        this.fetchXml = fetchXml;
-    }
+    private readonly DataverseDataSource dataSource = dataSource;
+    private readonly string fetchXml = fetchXml;
 
     private static string AddPaging(string fetchXml, int page, int pageSize, string? pagingCookie)
     {
@@ -36,7 +30,7 @@ public class DataverseFetchXmlPagedQuery : IPagedQuery<Entity>
 
     public async Task<PagedQueryResult<Entity>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
+        var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
 
         return new PagedQueryResult<Entity>
         (
