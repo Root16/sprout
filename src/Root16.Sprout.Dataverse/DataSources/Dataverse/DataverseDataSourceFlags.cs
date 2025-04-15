@@ -3,8 +3,9 @@
 public static class DataverseDataSourceFlags
 {
     /// <summary>
-    /// Bypass only synchronous logic. This optional parameter is supported, but not recommended. Use BypassBusinessLogicExecution with the CustomSync value to get the same result.
+    /// Bypass only synchronous logic. This optional parameter is supported, but not recommended. Use BypassBusinessLogicExecutionSync to get the same result.
     /// </summary>
+    [Obsolete("Use BypassBusinessLogicExecutionSync to get the same result.")]
     public static readonly string BypassCustomPluginExecution = nameof(BypassCustomPluginExecution);
     /// <summary>
     /// Bypass Power Automate Flows.
