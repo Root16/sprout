@@ -13,9 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Dataverse", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.SqlServer", "Root16.Sprout.SqlServer\Root16.Sprout.SqlServer.csproj", "{2D4771B9-310D-4829-AE16-219EFFC1A707}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Sample.SqlServer", "Root16.Sprout.Sample.SqlServer\Root16.Sprout.Sample.SqlServer.csproj", "{DE0FA5BD-0445-406E-9158-7F89FC2B6958}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.SqlServer", "Root16.Sprout.Sample.SqlServer\Root16.Sprout.Sample.SqlServer.csproj", "{DE0FA5BD-0445-406E-9158-7F89FC2B6958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.UnitTests", "Root16.Sprout.UnitTests\Root16.Sprout.UnitTests.csproj", "{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.UnitTests", "Root16.Sprout.UnitTests\Root16.Sprout.UnitTests.csproj", "{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.CSV", "Root16.Sprout.CSV\Root16.Sprout.CSV.csproj", "{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
