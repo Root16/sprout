@@ -46,6 +46,16 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection RemoveConsoleListener(this IServiceCollection services)
+    {
+        var progressListenerToRemove = services.FirstOrDefault(x => x.ServiceType.Name == typeof(IProgressListener).Name);
+        if (progressListenerToRemove is not null)
+        {
+            services.Remove(progressListenerToRemove);
+        }
+        return services;
+    }
+
     public static IServiceCollection AddSproutWithBatchDelay(this IServiceCollection services, TimeSpan defaultBatchDelay)
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
