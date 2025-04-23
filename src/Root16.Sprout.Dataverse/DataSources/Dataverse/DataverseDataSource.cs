@@ -243,6 +243,20 @@ public class DataverseDataSource : IDataSource<Entity>
             request.Parameters.Add(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob, true);
         }
 
+        if (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecution)
+            || (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync) && dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync)))
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomSync,CustomAsync");
+        }
+        else if(dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync))
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomSync");
+        }
+        else if (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync))
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomAsync");
+        }
+
         return request;
     }
 
