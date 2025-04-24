@@ -145,6 +145,12 @@ public static class EntityExtensions
                 {
                     different = true;
                 }
+            } else
+            {
+                if (!Equals(updateValue, originalValue))
+                {
+                    different = true;
+                }
             }
 
 
