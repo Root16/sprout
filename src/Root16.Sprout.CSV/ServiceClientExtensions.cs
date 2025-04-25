@@ -1,43 +1,50 @@
-﻿using CsvHelper.Configuration;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Root16.Sprout.DependencyInjection;
+using System.Globalization;
 
-namespace Root16.Sprout.CSV;
+namespace Root16.Sprout.CSV.DependencyInjection;
 
 public static partial class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddCSVDataSouce(this IServiceCollection services, string path, Type csvType, Type csvMapType)
-    {
 
-        return services;
-    }
-
-    public static IServiceCollection AddCSVDataSource<TCSVType>(this IServiceCollection services, string path, Type csvMapType)
+    public static IServiceCollection RegisterCSVDataSource<TCSVType,TCSVMapType>(this IServiceCollection services, string path)
         where TCSVType : class
+        where TCSVMapType : ClassMap<TCSVType>
     {
-
-        return services;
-    }
-
-    public static IServiceCollection AddCSVDataSouce<TCSVType,TCSVMapType>(this IServiceCollection services, string path)
-        where TCSVType : class
-        where TCSVMapType : ClassMap
-    {
-
-        return services;
-    }
-
-    public static IServiceCollection AddCSVDataSouce<TCSVType, TCSVMapType>(this IServiceCollection services, string path, string csvDataSourceName)
-        where TCSVType : class
-        where TCSVMapType : ClassMap
-    {
-        services.AddKeyedSingleton(serviceKey: csvDataSourceName, (serviceProvider, myKey) =>
+        services.AddKeyedSingleton(typeof(TCSVType), (serviceProvider, mykey) =>
         {
-            return new CSVDataSource<TCSVType>(path)
+            return new CSVDataSourceRegistration<TCSVType, TCSVMapType>(path);
+        });
+        services.AddSingleton<CSVDataSource<TCSVType>>(serviceProvider =>
+        {
+            CSVDataSourceRegistration<TCSVType, TCSVMapType> registration = serviceProvider.GetRequiredKeyedService<CSVDataSourceRegistration<TCSVType, TCSVMapType>>(typeof(TCSVType));
+            using var reader = new StreamReader(registration.Path);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            csv.Context.RegisterClassMap<TCSVMapType>();
+            var records = csv.GetRecords<TCSVType>().ToList();
+            return new CSVDataSource<TCSVType>(records);
+        });
+        return services;
+    }
+
+    public static IServiceCollection RegisterCSVDataSource<TCSVType, TCSVMapType>(this IServiceCollection services, string path, string csvDataSourceName)
+        where TCSVType : class
+        where TCSVMapType : ClassMap
+    {
+        services.AddKeyedSingleton(csvDataSourceName, (serviceProvider, mykey) =>
+        {
+            return new CSVDataSourceRegistration<TCSVType, TCSVMapType>(path);
+        });
+        services.AddKeyedSingleton<CSVDataSource<TCSVType>>(csvDataSourceName, (serviceProvider, mykey) =>
+        {
+            CSVDataSourceRegistration<TCSVType, TCSVMapType> registration = serviceProvider.GetRequiredKeyedService<CSVDataSourceRegistration<TCSVType, TCSVMapType>>(mykey);
+            using var reader = new StreamReader(registration.Path);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            csv.Context.RegisterClassMap<TCSVMapType>();
+            var records = csv.GetRecords<TCSVType>().ToList();
+            return new CSVDataSource<TCSVType>(records);
         });
         return services;
     }

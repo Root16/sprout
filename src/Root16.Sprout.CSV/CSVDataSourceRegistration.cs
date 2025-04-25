@@ -1,20 +1,12 @@
 ﻿using CsvHelper.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Root16.Sprout.DependencyInjection;
 
-public class CSVDataSourceRegistration<TCSVType, TCSVMapType>
+public class CSVDataSourceRegistration<TCSVType, TCSVMapType>(string path)
     where TCSVType : class
     where TCSVMapType : ClassMap
 {
-    public string Path { get; }
-
-    public CSVDataSourceRegistration(string path)
-    {
-        Path = path;
-    }
+    public readonly TCSVType CSVType = Activator.CreateInstance<TCSVType>();
+    public readonly TCSVMapType CSVMapType = Activator.CreateInstance<TCSVMapType>();
+    public readonly string Path = path;
 }
