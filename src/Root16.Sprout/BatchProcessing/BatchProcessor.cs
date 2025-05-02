@@ -8,19 +8,29 @@ public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDe
     private readonly IProgressListener progressListener = progressListener;
     private readonly TimeSpan defaultBatchDelay = batchDelay;
 
+    [Obsolete("Please use ProcessBatches.")]
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput, TOutput> step, string stepName)
+    {
+        await ProcessBatches(step, stepName);
+    }
+
+    public async Task ProcessBatches<TInput, TOutput>(
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName, int? maxBatchCount = null)
     {
         step.OnStepStart();
 
         BatchState<TInput>? batchState = null;
-        TimeSpan batchDelay = step.BatchDelay ?? this.defaultBatchDelay;
+        TimeSpan batchDelay = step.BatchDelay ?? defaultBatchDelay;
+        int batchCount = 0;
+
         do
         {
             if (batchState is not null && batchDelay.Ticks > 0) await Task.Delay(batchDelay);
             batchState = await ProcessBatchAsync(step, stepName, batchState);
+            batchCount++;
         }
-        while (batchState.QueryState?.MoreRecords == true);
+        while (batchState.QueryState?.MoreRecords == true || (maxBatchCount is not null && batchCount == maxBatchCount));
 
         step.OnStepFinished();
     }
