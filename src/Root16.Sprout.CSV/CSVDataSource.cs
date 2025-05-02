@@ -2,17 +2,10 @@
 
 namespace Root16.Sprout.CSV;
 
-public class CSVDataSource<T> : MemoryDataSource<T> where T : class
+public class CSVDataSource<T>(IEnumerable<T> records) : MemoryDataSource<T>(records) where T : class
 {
-    public new List<T> Records { get; }
-
-    public CSVDataSource() : base()
+    public override Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
-        Records = [];
-    }
-
-    public CSVDataSource(IEnumerable<T> records)
-    {
-        Records = records.ToList();
+        throw new NotImplementedException("CSVDataSource has not been implemented as an output source.");
     }
 }

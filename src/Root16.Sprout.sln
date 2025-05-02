@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.UnitTests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.CSV", "Root16.Sprout.CSV\Root16.Sprout.CSV.csproj", "{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.CSV.Sample", "Root16.Sprout.CSV.Sample\Root16.Sprout.CSV.Sample.csproj", "{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
