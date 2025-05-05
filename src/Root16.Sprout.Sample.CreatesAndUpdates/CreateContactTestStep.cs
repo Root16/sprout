@@ -19,8 +19,8 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
         this.reducer = reducer;
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
-        DryRun = false;
-        BatchSize = 2000;
+        DryRun = true;
+        BatchSize = 200;
     }
 
     public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
@@ -60,7 +60,7 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
 
     public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessAllBatchesAsync(this, stepName);
+        await batchProcessor.ProcessBatchesAsync(this, stepName, 5);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;
