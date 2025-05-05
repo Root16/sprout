@@ -17,8 +17,10 @@ public class MemoryPagedQuery<T>(IEnumerable<T> data) : IPagedQuery<T>
         ));
     }
 
-    public Task<int?> GetTotalRecordCountAsync()
+    public Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount = null)
     {
-        return Task.FromResult((int?)data.Count);
+        return maxBatchCount is null
+            ? Task.FromResult((int?)data.Count)
+            : Task.FromResult<int?>(Math.Min(data.Count, batchSize * maxBatchCount.Value));
     }
 }
