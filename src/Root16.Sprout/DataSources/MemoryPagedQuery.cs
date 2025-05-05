@@ -1,5 +1,4 @@
-﻿
-namespace Root16.Sprout.DataSources;
+﻿namespace Root16.Sprout.DataSources;
 
 public class MemoryPagedQuery<T>(IEnumerable<T> data) : IPagedQuery<T>
 {
