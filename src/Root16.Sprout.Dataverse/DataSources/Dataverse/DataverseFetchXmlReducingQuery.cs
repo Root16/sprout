@@ -43,7 +43,7 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
         );
     }
 
-    public Task<int?> GetTotalRecordCountAsync()
+    public Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount)
     {
         var fetchDoc = XDocument.Parse(fetchXml);
         if (fetchDoc.Root is null)
@@ -96,9 +96,16 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
             moreRecords = results.MoreRecords;
             pagingCookie = results.PagingCookie;
             page++;
+
+            if(maxBatchCount is not null && totalCount >= (maxBatchCount * batchSize))
+            {
+                break;
+            }
         }
         while (moreRecords);
 
-        return Task.FromResult<int?>(totalCount);
+        return maxBatchCount is null
+            ? Task.FromResult<int?>(totalCount)
+            : Task.FromResult((int?)Math.Min(totalCount, batchSize * maxBatchCount.Value));
     }
 }
