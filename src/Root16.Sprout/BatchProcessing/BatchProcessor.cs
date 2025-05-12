@@ -8,17 +8,32 @@ public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDe
     private readonly IProgressListener progressListener = progressListener;
     private readonly TimeSpan defaultBatchDelay = batchDelay;
 
+    [Obsolete("Please use ProcessBatches.")]
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput, TOutput> step, string stepName)
+    {
+        await ProcessBatchesAsync(step, stepName);
+    }
+
+    public async Task ProcessBatchesAsync<TInput, TOutput>(
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName, int? maxBatchCount = null)
     {
         step.OnStepStart();
 
         BatchState<TInput>? batchState = null;
-        TimeSpan batchDelay = step.BatchDelay ?? this.defaultBatchDelay;
+        TimeSpan batchDelay = step.BatchDelay ?? defaultBatchDelay;
+        int batchCount = 0;
+
         do
         {
             if (batchState is not null && batchDelay.Ticks > 0) await Task.Delay(batchDelay);
-            batchState = await ProcessBatchAsync(step, stepName, batchState);
+            batchState = await ProcessBatchAsync(step, stepName, batchState, maxBatchCount);
+            batchCount++;
+
+            if (maxBatchCount is not null && batchCount == maxBatchCount)
+            {
+                break;
+            }
         }
         while (batchState.QueryState?.MoreRecords == true);
 
@@ -26,8 +41,10 @@ public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDe
     }
 
     public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step, string stepName,
-        BatchState<TInput>? batchState)
+        IBatchIntegrationStep<TInput, TOutput> step,
+        string stepName,
+        BatchState<TInput>? batchState,
+        int? maxBatchCount = null)
     {
 
         var queryState = batchState?.QueryState;
@@ -37,7 +54,7 @@ public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDe
         var query = step.GetInputQuery();
         if (queryState is null)
         {
-            var total = await query.GetTotalRecordCountAsync();
+            var total = await query.GetTotalRecordCountAsync(step.BatchSize, maxBatchCount);
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout", "Root16.Spr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.ParallelSteps", "Root16.Sprout.Sample.ParallelSteps\Root16.Sprout.Sample.ParallelSteps.csproj", "{47345E65-F6CE-4D93-94D6-751515B31DCC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.CreatesAndUpdates", "Root16.Sprout.Sample.CreatesAndUpdates\Root16.Sprout.Sample.CreatesAndUpdates.csproj", "{258956BF-023D-46A4-BCC3-F3F3B339612C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.CreateUpdateAndDelete", "Root16.Sprout.Sample.CreatesAndUpdates\Root16.Sprout.Sample.CreateUpdateAndDelete.csproj", "{258956BF-023D-46A4-BCC3-F3F3B339612C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Dataverse", "Root16.Sprout.Dataverse\Root16.Sprout.Dataverse.csproj", "{5DE864A9-B356-4920-BE17-181051EDFAA2}"
 EndProject
