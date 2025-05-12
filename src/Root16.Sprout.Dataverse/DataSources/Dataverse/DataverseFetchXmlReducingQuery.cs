@@ -43,29 +43,29 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
         );
     }
 
-    public Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount)
+    public async Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount)
     {
         var fetchDoc = XDocument.Parse(fetchXml);
         if (fetchDoc.Root is null)
         {
-            return Task.FromResult<int?>(null);
+            return null;
         }
 
         if ((bool?)fetchDoc.Root?.Attribute("aggregate") == true)
         {
-            return Task.FromResult<int?>(null);
+            return null;
         }
 
         var entityElem = fetchDoc.Root?.Element("entity");
         if (entityElem is null)
         {
-            return Task.FromResult<int?>(null);
+            return null;
         }
 
         var attributeElements = fetchDoc.Root?.Descendants().Where(e => e.Name == "attribute").ToArray();
         if (attributeElements is null)
         {
-            return Task.FromResult<int?>(null);
+            return null;
         }
 
         foreach (var attr in attributeElements)
@@ -91,7 +91,7 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
         do
         {
             AddPaging(fetchDoc, page, pageSize, pagingCookie);
-            var results = dataSource.CrmServiceClient.RetrieveMultiple(new FetchExpression { Query = fetchDoc.ToString(SaveOptions.DisableFormatting) });
+            var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression { Query = fetchDoc.ToString(SaveOptions.DisableFormatting) });
             totalCount += results.Entities.Count;
             moreRecords = results.MoreRecords;
             pagingCookie = results.PagingCookie;
@@ -105,7 +105,7 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
         while (moreRecords);
 
         return maxBatchCount is null
-            ? Task.FromResult<int?>(totalCount)
-            : Task.FromResult((int?)Math.Min(totalCount, batchSize * maxBatchCount.Value));
+            ? (totalCount)
+            : (int?)Math.Min(totalCount, batchSize * maxBatchCount.Value);
     }
 }

@@ -55,16 +55,21 @@ public class SqlPagedQuery(ILogger<SqlPagedQuery> logger, SqlConnection connecti
         }
     }
 
-    public async Task<int?> GetTotalRecordCountAsync()
+    public async Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount)
     {
-        if (string.IsNullOrEmpty(totalRowCountCommandText)) return null;
+        if (string.IsNullOrWhiteSpace(totalRowCountCommandText)) return null;
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = totalRowCountCommandText;
         cmd.Connection.Open();
         try
         {
-            return await TryAsync(async () => (int?)await cmd.ExecuteScalarAsync());
+
+            var totalCount = await TryAsync(async () => (int?)await cmd.ExecuteScalarAsync());
+
+            return maxBatchCount is null
+                ? totalCount
+                : Math.Min((int) totalCount, batchSize * maxBatchCount.Value);
         }
         finally
         {

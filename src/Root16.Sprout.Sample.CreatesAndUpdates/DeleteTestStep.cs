@@ -16,7 +16,7 @@ internal class DeleteTestStep : BatchIntegrationStep<Entity, Entity>
         _dataverseDataSource = dataverseDataSource;
         _batchProcessor = batchProcessor;
         DryRun = true;
-        BatchSize = 500;
+        BatchSize = 200;
     }
 
     public override async Task RunAsync(string stepName)
