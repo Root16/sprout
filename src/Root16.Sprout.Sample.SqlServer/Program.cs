@@ -63,7 +63,7 @@ host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 
-
-await runtime.RunAllStepsAsync();
+await runtime.RunStepAsync<SampleSQLStep>();
+//await runtime.RunAllStepsAsync();
 
 Console.WriteLine("Sprout Sample Complete.");
