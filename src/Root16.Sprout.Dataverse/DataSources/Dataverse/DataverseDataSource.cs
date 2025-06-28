@@ -108,6 +108,7 @@ public class DataverseDataSource : IDataSource<Entity>
 
         if (requestCollection.Count == 1)
         {
+            var request = requestCollection[0];
             try
             {
                 if (!dryRun)
@@ -118,7 +119,7 @@ public class DataverseDataSource : IDataSource<Entity>
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                LogRequestError(request, e);
                 results.Add(ResultFromRequestType(requestCollection[0], false));
             }
         }
@@ -153,23 +154,20 @@ public class DataverseDataSource : IDataSource<Entity>
 
                     for (var k = 0; k < batch.Length; k++)
                     {
+                        var req = batch[k];
                         var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
                         if (response?.Fault is not null)
                         {
-                            parallelResults.Add(ResultFromRequestType(batch[k], false));
-                            if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
-                                && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
-                            {
-                                logger.LogError(innermostFault.Message);
-                            }
-                            else
-                            {
-                                logger.LogError(response?.Fault.Message);
-                            }
+                            parallelResults.Add(ResultFromRequestType(req, false));
+
+                            var errorMessage = response.Fault.InnerFault?.InnerFault?.Message 
+                                           ?? response.Fault.Message;
+
+                            LogRequestError(req, new Exception(errorMessage));
                         }
                         else
                         {
-                            parallelResults.Add(ResultFromRequestType(batch[k], true));
+                            parallelResults.Add(ResultFromRequestType(req, true));
                         }
                     }
                 });
@@ -287,4 +285,12 @@ public class DataverseDataSource : IDataSource<Entity>
         
         throw lastException;
     }
+	private void LogRequestError(OrganizationRequest request, Exception ex)
+	{
+		var target = request.Parameters.TryGetValue("Target", out var entityObj) && entityObj is Entity entity
+			? $"{entity.LogicalName} (Id: {entity.Id})"
+			: "Unknown target";
+
+		logger.LogError("Request failed for target: {Target}. Exception: {Message}", target, ex.Message);
+	}
 }
