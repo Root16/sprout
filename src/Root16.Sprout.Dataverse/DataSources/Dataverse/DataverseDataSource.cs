@@ -15,7 +15,9 @@ public class DataverseDataSource : IDataSource<Entity>
 
     const int MaxRetries = 10;
 
-    public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
+    public DataverseDataSource(
+        ServiceClient crmServiceClient, 
+        ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
         ServiceClient.MaxConnectionTimeout = TimeSpan.FromMinutes(11);
@@ -291,6 +293,9 @@ public class DataverseDataSource : IDataSource<Entity>
 			? $"{entity.LogicalName} (Id: {entity.Id})"
 			: "Unknown target";
 
-		logger.LogError("Request failed for target: {Target}. Exception: {Message}", target, ex.Message);
+        if(logger.IsEnabled(LogLevel.Debug))
+        {
+		    logger.LogDebug("Request failed for target: {Target}. Exception: {Message}", target, ex.Message);
+        }
 	}
 }

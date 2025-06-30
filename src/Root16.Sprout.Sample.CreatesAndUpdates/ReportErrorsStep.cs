@@ -13,11 +13,13 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	private readonly BatchProcessor batchProcessor;
 	EntityOperationReducer reducer;
 	private readonly ILogger<ReportErrorsStep> logger;
+	//private override AlternateKey = new Sprout.AlternateKey('my_alternate_key', typeof(string));
 	public ReportErrorsStep(
 		BatchProcessor batchProcessor,
 		DataverseDataSource dataverseDataSource,
 		EntityOperationReducer reducer,
 		ILogger<ReportErrorsStep> logger
+		//Sprout.DataveserBatchAnalyzer dataverseBatchAnalyzer 
 		)
 	{
 		this.batchProcessor = batchProcessor;
@@ -77,6 +79,7 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	}
 	public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
 	{
+		//return reducer.ReduceOperations(this.AlternateKey);
 		return reducer.ReduceOperations(batch, e => e.Id.ToString());
 	}
 
@@ -87,6 +90,16 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		accountUpdate["statuscode"] = new OptionSetValue(-1);
 
 		return [new DataOperation<Entity>("Update", accountUpdate)];
+	}
+	public override Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<Entity>> results)
+	{
+		//Report on all the failures of the batch - optionally log to console / log file. Report the guid of the records that failed - as well as the alternate key if applicable 
+		//dataverseBatchAnalyzer.ReportFailures("./{nameof(ReportErrorsStep)}/run-[timestamphere].log", this.AlternateKey);
+
+		//Report on all the diffs of the batch - optionally log to console / log file. Report the guid of the records that failed - as well as the alternate key if applicable 
+		//dataveserBatchAnalyzer.ReportDiffs("./{nameof(ReportErrorsStep)}/run-[timestamphere].log", this.AlternateKey);
+
+		return base.OnAfterDeliveryAsync(results);
 	}
 
 	public override async Task RunAsync(string stepName)
