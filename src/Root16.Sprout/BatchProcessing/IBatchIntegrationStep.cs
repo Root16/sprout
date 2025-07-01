@@ -5,6 +5,10 @@ namespace Root16.Sprout.BatchProcessing;
 public interface IBatchIntegrationStep<TInput, TOutput> : IIntegrationStep
 {
     IDataSource<TOutput> OutputDataSource { get; }
+	/// <summary>
+	/// Lambda for seleting the primary key by which to perform matching between input and output records.
+	/// </summary>
+	Func<TOutput, string>? KeySelector { get; init; }
     IPagedQuery<TInput> GetInputQuery();
 	IReadOnlyList<DataOperation<TOutput>> MapRecord(TInput input);
 

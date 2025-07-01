@@ -13,7 +13,6 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	private readonly BatchProcessor batchProcessor;
 	EntityOperationReducer reducer;
 	private readonly ILogger<ReportErrorsStep> logger;
-	//private override AlternateKey = new Sprout.AlternateKey('my_alternate_key', typeof(string));
 	public ReportErrorsStep(
 		BatchProcessor batchProcessor,
 		DataverseDataSource dataverseDataSource,
@@ -27,6 +26,7 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		BatchSize = 10;
 		this.reducer = reducer;
 		this.logger = logger;
+		this.KeySelector = e => e.GetAttributeValue<string>("name") ?? e.Id.ToString();
 		AddDataOperationFlag(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync);
 		AddDataOperationFlag(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob);
 	}
@@ -79,8 +79,7 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	}
 	public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
 	{
-		//return reducer.ReduceOperations(this.AlternateKey);
-		return reducer.ReduceOperations(batch, e => e.Id.ToString());
+		return reducer.ReduceOperations(batch, this.KeySelector!);
 	}
 
 	public override IReadOnlyList<DataOperation<Entity>> MapRecord(Entity source)

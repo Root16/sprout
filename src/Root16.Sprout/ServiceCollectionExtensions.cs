@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DependencyInjection;
+using Root16.Sprout.Logging;
 using Root16.Sprout.Progress;
 
 namespace Root16.Sprout;
@@ -42,6 +43,7 @@ public static class ServiceCollectionExtensions
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
         services.TryAddTransient<BatchProcessor>();
+        services.TryAddTransient<BatchLogger>();
         services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
         return services;
     }
@@ -59,9 +61,11 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSproutWithBatchDelay(this IServiceCollection services, TimeSpan defaultBatchDelay)
     {
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
+        services.TryAddTransient<BatchLogger>();
         services.TryAddTransient<BatchProcessor>((serviceProvider) =>
         {
-            return new (serviceProvider.GetRequiredService<IProgressListener>(), defaultBatchDelay);
+            var batchLogger = serviceProvider.GetRequiredService<BatchLogger>();
+            return new (serviceProvider.GetRequiredService<IProgressListener>(), batchLogger, defaultBatchDelay);
         });
         services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
         return services;

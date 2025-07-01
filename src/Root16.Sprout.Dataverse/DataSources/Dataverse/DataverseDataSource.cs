@@ -121,8 +121,8 @@ public class DataverseDataSource : IDataSource<Entity>
             }
             catch (Exception e)
             {
-                LogRequestError(request, e);
-                results.Add(ResultFromRequestType(requestCollection[0], false));
+                logger.LogError(e.Message);
+                results.Add(ResultFromRequestType(requestCollection[0], false, e.Message));
             }
         }
         else if (requestCollection.Count > 1)
@@ -160,12 +160,15 @@ public class DataverseDataSource : IDataSource<Entity>
                         var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
                         if (response?.Fault is not null)
                         {
-                            parallelResults.Add(ResultFromRequestType(req, false));
-
                             var errorMessage = response.Fault.InnerFault?.InnerFault?.Message 
                                            ?? response.Fault.Message;
 
-                            LogRequestError(req, new Exception(errorMessage));
+                            parallelResults.Add(ResultFromRequestType(req, false, errorMessage));
+
+                            if (logger.IsEnabled(LogLevel.Debug))
+                            {
+                                logger.LogError(errorMessage);
+                            }
                         }
                         else
                         {
@@ -180,7 +183,7 @@ public class DataverseDataSource : IDataSource<Entity>
         return results;
     }
 
-    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
+    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful, string? errorMessage = null)
     {
         Entity target;
         if (request.Parameters["Target"] is EntityReference entityRef)
@@ -191,7 +194,14 @@ public class DataverseDataSource : IDataSource<Entity>
         {
             target = (Entity)request.Parameters["Target"];
         }
-        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, target), wasSuccessful);
+
+        return new DataOperationResult<Entity>(
+            new DataOperation<Entity>(request.RequestName, target), 
+            wasSuccessful, 
+            target.Id.ToString(),
+            target.LogicalName,
+            errorMessage
+            );
     }
 
     public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
@@ -287,15 +297,4 @@ public class DataverseDataSource : IDataSource<Entity>
         
         throw lastException;
     }
-	private void LogRequestError(OrganizationRequest request, Exception ex)
-	{
-		var target = request.Parameters.TryGetValue("Target", out var entityObj) && entityObj is Entity entity
-			? $"{entity.LogicalName} (Id: {entity.Id})"
-			: "Unknown target";
-
-        if(logger.IsEnabled(LogLevel.Debug))
-        {
-		    logger.LogDebug("Request failed for target: {Target}. Exception: {Message}", target, ex.Message);
-        }
-	}
 }

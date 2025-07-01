@@ -1,9 +1,13 @@
 ﻿using Root16.Sprout.DataSources;
+using Root16.Sprout.Logging;
 using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDelay = default)
+public class BatchProcessor(
+    IProgressListener progressListener, 
+    BatchLogger batchLogger,
+    TimeSpan batchDelay = default)
 {
     private readonly IProgressListener progressListener = progressListener;
     private readonly TimeSpan defaultBatchDelay = batchDelay;
@@ -72,7 +76,11 @@ public class BatchProcessor(IProgressListener progressListener, TimeSpan batchDe
         data = await step.OnAfterMapAsync(data);
 
         data = await step.OnBeforeDeliveryAsync(data);
+
         var results = await step.OutputDataSource.PerformOperationsAsync(data, step.DryRun, step.DataOperationFlags);
+
+        batchLogger.LogFailures(results, step.KeySelector);
+
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)

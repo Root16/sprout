@@ -29,7 +29,7 @@ builder.Services.AddSingleton(
 );
 
 //Enable debug errors - to see all failures from Dataverse
-builder.Logging.AddFilter("Root16.Sprout", LogLevel.Debug);
+//builder.Logging.AddFilter("Root16.Sprout", LogLevel.Debug);
 
 var host = builder.Build();
 host.Start();
