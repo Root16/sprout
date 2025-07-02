@@ -18,7 +18,6 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		DataverseDataSource dataverseDataSource,
 		EntityOperationReducer reducer,
 		ILogger<ReportErrorsStep> logger
-		//Sprout.DataveserBatchAnalyzer dataverseBatchAnalyzer 
 		)
 	{
 		this.batchProcessor = batchProcessor;
@@ -92,15 +91,8 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	}
 	public override Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<Entity>> results)
 	{
-		//Report on all the failures of the batch - optionally log to console / log file. Report the guid of the records that failed - as well as the alternate key if applicable 
-		//dataverseBatchAnalyzer.ReportFailures("./{nameof(ReportErrorsStep)}/run-[timestamphere].log", this.AlternateKey);
-
-		//Report on all the diffs of the batch - optionally log to console / log file. Report the guid of the records that failed - as well as the alternate key if applicable 
-		//dataveserBatchAnalyzer.ReportDiffs("./{nameof(ReportErrorsStep)}/run-[timestamphere].log", this.AlternateKey);
-
 		return base.OnAfterDeliveryAsync(results);
 	}
-
 	public override async Task RunAsync(string stepName)
 	{
 		await batchProcessor.ProcessBatchesAsync(this, stepName);

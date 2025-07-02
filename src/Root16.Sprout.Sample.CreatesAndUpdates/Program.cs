@@ -28,7 +28,7 @@ builder.Services.AddSingleton(
     _ => new MemoryDataSource<UpdateContact>(SampleData.GenerateUpdateContactSampleData(amount: 250, startNumber: 1975))
 );
 
-//Enable debug errors - to see all failures from Dataverse
+//Enable debug errors - to see all failures and diff information from DataverseDatasource. OTHERWISE - failures are logged as normal
 //builder.Logging.AddFilter("Root16.Sprout", LogLevel.Debug);
 
 var host = builder.Build();
@@ -36,12 +36,12 @@ host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 
-//await runtime.RunStepAsync<DeleteTestStep>();
-//await runtime.RunStepAsync<CreateContactTestStep>();
+await runtime.RunStepAsync<DeleteTestStep>();
+await runtime.RunStepAsync<CreateContactTestStep>();
 
 //Only the overlapping amount should be updated in this step as the data operation is "Update".
 //In the case above it's set so that only 25 of the possible 250 entities are update
-//await runtime.RunStepAsync<UpdateContactTestStep>();
+await runtime.RunStepAsync<UpdateContactTestStep>();
 
 //Log any errors along with the `Target` Entity that created each error
 await runtime.RunStepAsync<ReportErrorsStep>();
