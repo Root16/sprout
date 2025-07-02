@@ -289,7 +289,10 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogError(ex, ex.Message);
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
                 }
                 lastException = ex;
             }
