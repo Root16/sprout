@@ -136,7 +136,10 @@ public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory
                 finishedOperations.Add(new DataOperationResult<IDbCommand>(dataOperation, true));
             } catch(Exception ex)
             {
-                logger.LogError(ex.Message);
+				if (logger.IsEnabled(LogLevel.Debug))
+				{
+					logger.LogError(ex, ex.Message);
+				}
                 finishedOperations.Add(new DataOperationResult<IDbCommand>(dataOperation, false));
             }
             finally

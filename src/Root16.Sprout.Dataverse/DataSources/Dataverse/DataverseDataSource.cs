@@ -15,7 +15,9 @@ public class DataverseDataSource : IDataSource<Entity>
 
     const int MaxRetries = 10;
 
-    public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
+    public DataverseDataSource(
+        ServiceClient crmServiceClient, 
+        ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
         ServiceClient.MaxConnectionTimeout = TimeSpan.FromMinutes(11);
@@ -108,6 +110,7 @@ public class DataverseDataSource : IDataSource<Entity>
 
         if (requestCollection.Count == 1)
         {
+            var request = requestCollection[0];
             try
             {
                 if (!dryRun)
@@ -119,7 +122,7 @@ public class DataverseDataSource : IDataSource<Entity>
             catch (Exception e)
             {
                 logger.LogError(e.Message);
-                results.Add(ResultFromRequestType(requestCollection[0], false));
+                results.Add(ResultFromRequestType(requestCollection[0], false, e.Message));
             }
         }
         else if (requestCollection.Count > 1)
@@ -153,23 +156,23 @@ public class DataverseDataSource : IDataSource<Entity>
 
                     for (var k = 0; k < batch.Length; k++)
                     {
+                        var req = batch[k];
                         var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
                         if (response?.Fault is not null)
                         {
-                            parallelResults.Add(ResultFromRequestType(batch[k], false));
-                            if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
-                                && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
+                            var errorMessage = response.Fault.InnerFault?.InnerFault?.Message 
+                                           ?? response.Fault.Message;
+
+                            parallelResults.Add(ResultFromRequestType(req, false, errorMessage));
+
+                            if (logger.IsEnabled(LogLevel.Debug))
                             {
-                                logger.LogError(innermostFault.Message);
-                            }
-                            else
-                            {
-                                logger.LogError(response?.Fault.Message);
+                                logger.LogError(errorMessage);
                             }
                         }
                         else
                         {
-                            parallelResults.Add(ResultFromRequestType(batch[k], true));
+                            parallelResults.Add(ResultFromRequestType(req, true));
                         }
                     }
                 });
@@ -180,7 +183,7 @@ public class DataverseDataSource : IDataSource<Entity>
         return results;
     }
 
-    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
+    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful, string? errorMessage = null)
     {
         Entity target;
         if (request.Parameters["Target"] is EntityReference entityRef)
@@ -191,7 +194,14 @@ public class DataverseDataSource : IDataSource<Entity>
         {
             target = (Entity)request.Parameters["Target"];
         }
-        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, target), wasSuccessful);
+
+        return new DataOperationResult<Entity>(
+            new DataOperation<Entity>(request.RequestName, target), 
+            wasSuccessful, 
+            target.Id.ToString(),
+            target.LogicalName,
+            errorMessage
+            );
     }
 
     public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
@@ -279,7 +289,10 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogError(ex, ex.Message);
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.LogError(ex, ex.Message);
+                    }
                 }
                 lastException = ex;
             }
