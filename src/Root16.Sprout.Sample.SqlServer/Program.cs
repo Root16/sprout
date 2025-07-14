@@ -28,6 +28,8 @@ builder.Services.RegisterStep<GenericSampleSQLStep>("ThirdSQLDataSourceStep", (s
     return new GenericSampleSQLStep(myKey as string, serviceProvider, serviceProvider.GetRequiredService<BatchProcessor>());
 });
 
+builder.Services.RegisterStep<SampleSQLReducingStep>();
+
 //Hide Logs Below Warning for Dataverse connections
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
 
@@ -63,7 +65,6 @@ host.Start();
 
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 
-await runtime.RunStepAsync<SampleSQLStep>();
-//await runtime.RunAllStepsAsync();
+await runtime.RunAllStepsAsync();
 
 Console.WriteLine("Sprout Sample Complete.");
