@@ -36,25 +36,25 @@ public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory
         return new SqlPagedQuery(loggerFactory.CreateLogger<SqlPagedQuery>(), connection, command, totalCommand, addPaging);
     }
     
-    public SqlReducingQuery CreateReducingQuery(string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
+    public SqlReducingQuery CreateReducingQuery(string commandText, string? totalRowCountCommandText = null)
     {
-        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, commandText, totalRowCountCommandText, addPaging);
+        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, commandText, totalRowCountCommandText);
     }
 
-    public SqlReducingQuery CreateReducingQueryFromFile(string commandFilePath, string? totalRowCountCommandText = null, bool addPaging = true)
+    public SqlReducingQuery CreateReducingQueryFromFile(string commandFilePath, string? totalRowCountCommandText = null)
     {
         using StreamReader reader = new(commandFilePath.ToString());
         var commandText = reader.ReadToEnd();
-        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, commandText, totalRowCountCommandText, addPaging);
+        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, commandText, totalRowCountCommandText);
     }
 
-    public SqlReducingQuery CreateReducingQueryFromFiles(string commandFilePath, string totalRowCommandTextFilePath, bool addPaging = true)
+    public SqlReducingQuery CreateReducingQueryFromFiles(string commandFilePath, string totalRowCommandTextFilePath)
     {
         using StreamReader commandReader = new(commandFilePath);
         using StreamReader totalRowCommandReader = new(totalRowCommandTextFilePath);
         var command = commandReader.ReadToEnd();
         var totalCommand = totalRowCommandReader.ReadToEnd();
-        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, command, totalCommand, addPaging);
+        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, command, totalCommand);
     }
     
     public void ExecuteNonQuery(string commandText)

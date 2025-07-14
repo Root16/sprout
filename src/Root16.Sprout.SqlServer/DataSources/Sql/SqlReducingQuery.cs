@@ -4,13 +4,12 @@ using System.Data;
 
 namespace Root16.Sprout.DataSources.Sql;
 
-public class SqlReducingQuery(ILogger<SqlReducingQuery> logger, SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
+public class SqlReducingQuery(ILogger<SqlReducingQuery> logger, SqlConnection connection, string commandText, string? totalRowCountCommandText = null) : IPagedQuery<DataRow>
 {
     private readonly ILogger<SqlReducingQuery> logger = logger;
     private readonly SqlConnection connection = connection;
     private readonly string commandText = commandText;
     private readonly string? totalRowCountCommandText = totalRowCountCommandText;
-    private readonly bool addPaging = addPaging;
 
     const int MaxRetries = 10;
 
@@ -19,21 +18,19 @@ public class SqlReducingQuery(ILogger<SqlReducingQuery> logger, SqlConnection co
         pageNumber = 1;
         using var command = connection.CreateCommand();
         command.CommandText = commandText.Trim();
-        if (addPaging)
-        {
-            if (command.CommandText.EndsWith(";"))
-            {
-                command.CommandText = command.CommandText[..^1];
-            }
 
-            if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
-            {
-                command.CommandText += $" OFFSET 0 ROWS FETCH NEXT {pageSize} ROWS ONLY";
-            }
-            else
-            {
-                command.CommandText += $" ORDER BY 1 OFFSET 0 ROWS FETCH NEXT {pageSize} ROWS ONLY";
-            }
+        if (command.CommandText.EndsWith(";"))
+        {
+            command.CommandText = command.CommandText[..^1];
+        }
+
+        if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
+        {
+            command.CommandText += $" OFFSET 0 ROWS FETCH NEXT {pageSize} ROWS ONLY";
+        }
+        else
+        {
+            command.CommandText += $" ORDER BY 1 OFFSET 0 ROWS FETCH NEXT {pageSize} ROWS ONLY";
         }
         command.Connection.Open();
         var reader = await TryAsync(() => command.ExecuteReaderAsync(CommandBehavior.CloseConnection));
