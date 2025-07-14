@@ -257,6 +257,26 @@ public class DataverseDataSource : IDataSource<Entity>
             request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomAsync");
         }
 
+        var stepIds = dataOperationFlags
+            .Where(flag =>
+                new[]
+                {
+                    DataverseDataSourceFlags.BypassCustomPluginExecution,
+                    DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecution,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecutionSync,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecutionStepIds
+                }.All(param => param != flag))
+            .SelectMany(flag =>
+                flag.Split(',', StringSplitOptions.TrimEntries)
+                    .Where(s => !string.IsNullOrWhiteSpace(s) && Guid.TryParse(s, out var _)))
+            .ToArray();
+        if (stepIds.Length > 0)
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecutionStepIds, string.Join(",", stepIds));
+        }
+
         return request;
     }
 
