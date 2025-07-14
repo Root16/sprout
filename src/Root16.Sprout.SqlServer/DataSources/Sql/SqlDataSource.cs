@@ -35,7 +35,28 @@ public class SqlDataSource(string connectionString, ILoggerFactory loggerFactory
         var totalCommand = totalRowCommandReader.ReadToEnd();
         return new SqlPagedQuery(loggerFactory.CreateLogger<SqlPagedQuery>(), connection, command, totalCommand, addPaging);
     }
+    
+    public SqlReducingQuery CreateReducingQuery(string commandText, string? totalRowCountCommandText = null, bool addPaging = true)
+    {
+        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, commandText, totalRowCountCommandText, addPaging);
+    }
 
+    public SqlReducingQuery CreateReducingQueryFromFile(string commandFilePath, string? totalRowCountCommandText = null, bool addPaging = true)
+    {
+        using StreamReader reader = new(commandFilePath.ToString());
+        var commandText = reader.ReadToEnd();
+        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, commandText, totalRowCountCommandText, addPaging);
+    }
+
+    public SqlReducingQuery CreateReducingQueryFromFiles(string commandFilePath, string totalRowCommandTextFilePath, bool addPaging = true)
+    {
+        using StreamReader commandReader = new(commandFilePath);
+        using StreamReader totalRowCommandReader = new(totalRowCommandTextFilePath);
+        var command = commandReader.ReadToEnd();
+        var totalCommand = totalRowCommandReader.ReadToEnd();
+        return new SqlReducingQuery(loggerFactory.CreateLogger<SqlReducingQuery>(), connection, command, totalCommand, addPaging);
+    }
+    
     public void ExecuteNonQuery(string commandText)
     {
         using var command = connection.CreateCommand();

@@ -16,6 +16,7 @@ namespace Root16.Sprout.Sample.SqlServer
             _batchProcessor = batchProcessor;
             _sqlDataSource = sqlDataSource;
             BatchSize = 1;
+            DryRun = true;
         }
 
         public override IDataSource<IDbCommand> OutputDataSource => _sqlDataSource;

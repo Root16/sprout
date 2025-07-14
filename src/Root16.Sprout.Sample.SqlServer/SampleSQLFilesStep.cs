@@ -16,6 +16,7 @@ namespace Root16.Sprout.Sample.SqlServer
             _batchProcessor = batchProcessor;
             _sqlDataSource = sqlDataSource;
             BatchSize = 1;
+            DryRun = true;
         }
 
         public override IDataSource<IDbCommand> OutputDataSource => _sqlDataSource;
@@ -51,7 +52,7 @@ namespace Root16.Sprout.Sample.SqlServer
 
         public override async Task RunAsync(string stepName)
         {
-            await _batchProcessor.ProcessAllBatchesAsync(this, stepName);
+            await _batchProcessor.ProcessBatchesAsync(this, stepName);
         }
     }
 }
