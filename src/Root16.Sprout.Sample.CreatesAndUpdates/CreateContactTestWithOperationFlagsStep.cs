@@ -3,10 +3,11 @@ using Microsoft.Xrm.Sdk.Query;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
+using Root16.Sprout.BatchProcessing.Dataverse;
 
 namespace Root16.Sprout.Sample.CreatesAndUpdates;
 
-internal class CreateContactTestWithOperationFlagsStep : BatchIntegrationStep<CreateContact, Entity>
+internal class CreateContactTestWithOperationFlagsStep : DataverseBatchIntegrationStep<CreateContact, Entity>
 {
     private readonly DataverseDataSource dataverseDataSource;
     private readonly EntityOperationReducer reducer;
@@ -22,14 +23,14 @@ internal class CreateContactTestWithOperationFlagsStep : BatchIntegrationStep<Cr
         DryRun = true;
         BatchSize = 200;
 
-        AddDataOperationFlag(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob); // bypass power automate flows
+        BypassPowerAutomateFlows();
 
-        AddDataOperationFlag(DataverseDataSourceFlags.BypassBusinessLogicExecution); // bypass both synchronous and asynchronous custom logic, excluding power automate flows
-        //AddDataOperationFlag(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync); //  bypass only synchronous custom logic, excluding power automate flows
-        //AddDataOperationFlag(DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync); //  bypass only asynchronous custom logic, excluding power automate flows
+        BypassCustomBusinessLogic(); // bypass both synchronous and asynchronous custom logic, excluding power automate flows
+        BypassCustomBusinessLogic(BusinessLogicType.Synchronous); //  bypass only synchronous custom logic, excluding power automate flows
+        BypassCustomBusinessLogic(BusinessLogicType.Asynchronous); //  bypass only asynchronous custom logic, excluding power automate flows
 
-        AddDataOperationFlag("d96b9829-e960-f011-bec2-0022481c36f4,d96b9829-e960-f011-bec2-0022481c36f2"); // bypass specific plugin step id's with comma separated guids
-        AddDataOperationFlag("b169a062-b950-e1a3-b243-9309bcfc9f1c"); // bypass specific plugin step id
+        BypassPluginStepIds(new("d96b9829-e960-f011-bec2-0022481c36f4"), new("d96b9829-e960-f011-bec2-0022481c36f2")); // bypass specific plugin step id's with comma separated guids
+        BypassPluginStepId(new("b169a062-b950-e1a3-b243-9309bcfc9f1c")); // bypass specific plugin step id
     }
 
     public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
