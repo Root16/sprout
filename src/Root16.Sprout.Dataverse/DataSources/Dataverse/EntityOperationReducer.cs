@@ -62,7 +62,7 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
                 if (delta is not null && (delta.Attributes.Count > 1
-                    || delta.Attributes.Count == 1 && !delta.Attributes.Contains("createdon")))
+                    || (delta.Attributes.Count == 1 && !delta.Attributes.Contains("createdon"))))
                 {
                     results.Add(new DataOperation<Entity>("Update", delta));
                     if (logger.IsEnabled(LogLevel.Debug))
