@@ -50,7 +50,7 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
 
             var matches = potentialMatchDict.GetValue(keySelector(change.Data));
 
-            if (matches is not null && matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
+            if (matches is not null && matches.Count != 0 && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
                 if (matches.Count > 1)
                 {
@@ -61,7 +61,8 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
                 var match = matches[0];
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
-                if (delta is not null && delta.Attributes.Count > 0)
+                if (delta is not null && (delta.Attributes.Count > 1
+                    || delta.Attributes.Count == 1 && !delta.Attributes.Contains("createdon")))
                 {
                     results.Add(new DataOperation<Entity>("Update", delta));
                     if (logger.IsEnabled(LogLevel.Debug))
