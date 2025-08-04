@@ -12,12 +12,15 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	private readonly DataverseDataSource dataverseDataSource;
 	private readonly BatchProcessor batchProcessor;
 	EntityOperationReducer reducer;
+	EntityBatchAnalyzer analyzer;
+	private IList<Entity> matches;
 	private readonly ILogger<ReportErrorsStep> logger;
-	public ReportErrorsStep(
+    public ReportErrorsStep(
 		BatchProcessor batchProcessor,
 		DataverseDataSource dataverseDataSource,
 		EntityOperationReducer reducer,
-		ILogger<ReportErrorsStep> logger
+		ILogger<ReportErrorsStep> logger,
+		EntityBatchAnalyzer analyzer
 		)
 	{
 		this.batchProcessor = batchProcessor;
@@ -25,6 +28,8 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		BatchSize = 10;
 		this.reducer = reducer;
 		this.logger = logger;
+		this.analyzer = analyzer;
+		//DryRun = true; // false - errors will occur, true - no errors will occur
 		this.KeySelector = e => e.GetAttributeValue<string>("name") ?? e.Id.ToString();
 		AddDataOperationFlag(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync);
 		AddDataOperationFlag(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob);
@@ -69,7 +74,8 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 			logger.LogInformation($"Potentional matches for: {batch.First()}: {potentialMatches.Entities.Count()}");
 
 			reducer.SetPotentialMatches(potentialMatches.Entities);
-		}
+			matches = potentialMatches.Entities; // store this for analyzer.ReportDifferences()
+        }
 		else
 		{
 			reducer.SetPotentialMatches(new List<Entity>());
@@ -88,12 +94,16 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		accountUpdate["statuscode"] = new OptionSetValue(-1);
 
 		return [new DataOperation<Entity>("Update", accountUpdate)];
-	}
-	public override Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<Entity>> results)
-	{
+    }
+    public override Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<Entity>> results)
+    {
+		analyzer.ReportFailures($"./report/{nameof(ReportErrorsStep)}-error-{DateTime.Now:yyyy-MM-dd}.txt", results, this.KeySelector!);
+		analyzer.ReportDifferences($"./report/{nameof(ReportErrorsStep)}-diff-{DateTime.Now:yyyy-MM-dd}.txt", results, [.. matches], this.KeySelector!);
+
 		return base.OnAfterDeliveryAsync(results);
-	}
-	public override async Task RunAsync(string stepName)
+
+    }
+    public override async Task RunAsync(string stepName)
 	{
 		await batchProcessor.ProcessBatchesAsync(this, stepName);
 	}
