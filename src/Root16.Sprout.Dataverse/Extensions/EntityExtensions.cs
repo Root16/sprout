@@ -175,7 +175,7 @@ public static class EntityExtensions
         return sb.ToString();
     }
 
-    public static string? DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat="u")
+    public static string DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat="u")
     {
         if (attributeValue is null)
         {

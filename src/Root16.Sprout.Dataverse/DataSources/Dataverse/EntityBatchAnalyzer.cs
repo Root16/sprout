@@ -15,14 +15,13 @@ public class EntityBatchAnalyzer(
         {
             object previousValue = null;
             previousData?.Attributes.TryGetValue(attribute.Key, out previousValue);
-            if (previousValue != data[attribute.Key])
-                changeRecord.Changes.Add(attribute.Key, new(FormatValue(previousValue), FormatValue(attribute.Value)));
+            changeRecord.Changes.Add(attribute.Key, new(FormatValue(previousValue), FormatValue(attribute.Value)));
         }
 
         return changeRecord;
     }
 
-    public override string? FormatValue(object? attributeValue)
+    public override string FormatValue(object? attributeValue)
     {
         return EntityExtensions.DisplayAttributeValue(attributeValue);
     }

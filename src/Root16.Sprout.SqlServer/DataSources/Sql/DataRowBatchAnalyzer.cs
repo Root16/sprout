@@ -23,8 +23,8 @@ public class DataRowBatchAnalyzer(
         return changeRecord;
     }
 
-    public override string? FormatValue(object value)
+    public override string FormatValue(object value)
     {
-        return value?.ToString();
+        return value?.ToString() ?? string.Empty;
     }
 }
