@@ -5,6 +5,7 @@ using Microsoft.Xrm.Sdk.Messages;
 using System.Collections.Concurrent;
 using System.Net;
 using System.ServiceModel;
+using RequestAudit = (Microsoft.Xrm.Sdk.OrganizationRequest? Request, Root16.Sprout.Logging.Audit? Audit);
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -62,15 +63,12 @@ public class DataverseDataSource : IDataSource<Entity>
         {
             RemoveAttribute(group, ImpersonateUsingAttribute);
 
-            var requests = new OrganizationRequestCollection();
-
-            requests.AddRange(group
-                .Select(c => CreateOrganizationRequest(c, dataOperationFlags))
-                .Where(r => r is not null)
-            );
+            IList<RequestAudit> reqAuds = group
+                .Select(c => (Request:CreateOrganizationRequest(c, dataOperationFlags),Audit:c.Audit))
+                .Where(r => r.Request is not null).ToList();
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
-            results.AddRange(await ExecuteMultipleAsync(requests, dryRun));
+            results.AddRange(await ExecuteMultipleAsync(reqAuds, dryRun));
             CrmServiceClient.CallerId = Guid.Empty;
         }
 
@@ -103,35 +101,35 @@ public class DataverseDataSource : IDataSource<Entity>
     }
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> ExecuteMultipleAsync(
-        OrganizationRequestCollection requestCollection,
+        IList<RequestAudit> requestAudits,
         bool dryRun)
     {
         var results = new List<DataOperationResult<Entity>>();
 
-        if (requestCollection.Count == 1)
+        if (requestAudits.Count == 1)
         {
-            var request = requestCollection[0];
+            var request = requestAudits[0];
             try
             {
                 if (!dryRun)
                 {
-                    var response = await TryExecuteRequestAsync(requestCollection[0]);
+                    var response = await TryExecuteRequestAsync(requestAudits[0].Request!);
                 }
-                results.Add(ResultFromRequestType(requestCollection[0], true));
+                results.Add(ResultFromRequestType(requestAudits[0], true));
             }
             catch (Exception e)
             {
                 logger.LogError(e.Message);
-                results.Add(ResultFromRequestType(requestCollection[0], false, e.Message));
+                results.Add(ResultFromRequestType(requestAudits[0], false, e.Message));
             }
         }
-        else if (requestCollection.Count > 1)
+        else if (requestAudits.Count > 1)
         {
             if (dryRun)
             {
-                for (var i = 0; i < requestCollection.Count; i++)
+                for (var i = 0; i < requestAudits.Count; i++)
                 {
-                    results.Add(ResultFromRequestType(requestCollection[i], true));
+                    results.Add(ResultFromRequestType(requestAudits[i], true));
                 }
             }
             else
@@ -140,7 +138,7 @@ public class DataverseDataSource : IDataSource<Entity>
 
                 ParallelOptions parallelOptions = new() { MaxDegreeOfParallelism = CrmServiceClient.RecommendedDegreesOfParallelism };
 
-                await Parallel.ForEachAsync(requestCollection.Chunk(10), parallelOptions, async (batch, token) =>
+                await Parallel.ForEachAsync(requestAudits.Chunk(10), parallelOptions, async (batch, token) =>
                 {
                     ExecuteMultipleRequest request = new()
                     {
@@ -150,7 +148,7 @@ public class DataverseDataSource : IDataSource<Entity>
                         },
                         Requests = []
                     };
-                    request.Requests.AddRange(batch);
+                    request.Requests.AddRange(batch.Select(ra => ra.Request));
 
                     ExecuteMultipleResponse batchResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(request, token);
 
@@ -183,21 +181,21 @@ public class DataverseDataSource : IDataSource<Entity>
         return results;
     }
 
-    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful, string? errorMessage = null)
+    private static DataOperationResult<Entity> ResultFromRequestType(RequestAudit request, bool wasSuccessful, string? errorMessage = null)
     {
         Entity target;
-        if (request.Parameters["Target"] is EntityReference entityRef)
+        if (request.Request!.Parameters["Target"] is EntityReference entityRef)
         {
             target = new Entity(entityRef.LogicalName, entityRef.Id);
         }
         else
         {
-            target = (Entity)request.Parameters["Target"];
+            target = (Entity)request.Request!.Parameters["Target"];
         }
 
         return new DataOperationResult<Entity>(
-            new DataOperation<Entity>(request.RequestName, target), 
-            wasSuccessful, 
+            new DataOperation<Entity>(request.Request.RequestName, target, request.Audit),
+            wasSuccessful,
             target.Id.ToString(),
             target.LogicalName,
             errorMessage

@@ -9,17 +9,22 @@ public class DataRowBatchAnalyzer(
     ILogger<DataRowBatchAnalyzer> analyzer
     ) : BatchAnalyzer<DataRow>
 {
-    protected override ChangeRecord GetDifference(string key, DataRow data, DataRow? previousData = null)
+    public override Audit GetDifference(string key, DataRow data, DataRow? previousData = null)
     {
-        var changeRecord = new ChangeRecord(data.Table.TableName, key, []);
+        var changeRecord = new Audit(data.Table.TableName, string.Join(",", FormatValue(data.Table.PrimaryKey)), key, []);
         foreach (var column in data.Table.Columns.Cast<DataColumn>())
         {
             object previousValue = null;
             previousData?.TryGetValue(column.ColumnName, out previousValue);
-            if(previousValue != data[column.ColumnName])
+            if (previousValue != data[column.ColumnName])
                 changeRecord.Changes.Add(column.ColumnName, new ChangeValue($"{previousValue}", $"{data[column.ColumnName]}"));
         }
 
         return changeRecord;
+    }
+
+    public override string? FormatValue(object value)
+    {
+        return value?.ToString();
     }
 }
