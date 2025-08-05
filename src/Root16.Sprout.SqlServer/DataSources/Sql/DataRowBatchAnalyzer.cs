@@ -9,9 +9,9 @@ public class DataRowBatchAnalyzer(
     ILogger<DataRowBatchAnalyzer> analyzer
     ) : BatchAnalyzer<DataRow>
 {
-    protected override ChangeRecord GetDifference(string key, DataRow data, DataRow? previousData = null)
+    public override Audit GetDifference(string key, DataRow data, DataRow? previousData = null)
     {
-        var changeRecord = new ChangeRecord(data.Table.TableName, key, []);
+        var changeRecord = new Audit(data.Table.TableName, key, []);
         foreach (var column in data.Table.Columns.Cast<DataColumn>())
         {
             object previousValue = null;

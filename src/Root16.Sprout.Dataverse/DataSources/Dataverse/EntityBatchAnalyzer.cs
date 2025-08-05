@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Root16.Sprout.Logging;
-using System.Data.Common;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -9,9 +8,9 @@ public class EntityBatchAnalyzer(
     ILogger<EntityBatchAnalyzer> logger
     ) : BatchAnalyzer<Entity>
 {
-    protected override ChangeRecord GetDifference(string key, Entity data, Entity? previousData = null)
+    public override Audit GetDifference(string key, Entity data, Entity? previousData = null)
     {
-        var changeRecord = new ChangeRecord(data.LogicalName, data.Id.ToString(), []);
+        var changeRecord = new Audit(data.LogicalName, data.Id.ToString(), []);
         foreach (var attribute in data.Attributes)
         {
             object previousValue = null;
