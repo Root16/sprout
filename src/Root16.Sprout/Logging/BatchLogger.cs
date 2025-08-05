@@ -6,10 +6,6 @@ namespace Root16.Sprout.Logging;
 
 public class BatchLogger(ILogger<BatchLogger> logger)
 {
-    public DateTimeKind TimeFormat { get; set; } = DateTimeKind.Local;
-    private string timeFormatString { get { return TimeFormat != DateTimeKind.Utc ? "yyyy-MM-ddTHH:mm:sszzz" : "u"; } }
-
-
     public void LogFailures<TOutput>(
         IReadOnlyList<DataOperationResult<TOutput>> results,
         Func<TOutput, string>? keySelector = null
@@ -30,10 +26,11 @@ public class BatchLogger(ILogger<BatchLogger> logger)
         }
     }
 
-    public virtual void ReportFailures<TOutput>(
+    public void ReportFailuresToFile<TOutput>(
         string outputFilePath,
         IReadOnlyList<DataOperationResult<TOutput>> results,
-        Func<TOutput, string>? keySelector = null
+        Func<TOutput, string>? keySelector = null,
+        string? dateTimeFormat = "u"
         )
     {
         if (string.IsNullOrWhiteSpace(outputFilePath)) throw new ArgumentNullException($"Missing {nameof(outputFilePath)}.");
@@ -46,7 +43,7 @@ public class BatchLogger(ILogger<BatchLogger> logger)
                 HashSet<string> keys = [result.PrimaryKey ?? "Unknown primary key", keySelector?.Invoke(result.Operation.Data) ?? "Unknown key via key selector"];
                 var (operation, tableName, keyExpression) = (result.Operation.OperationType, result.TableName ?? "Unknown Table", string.Join(", ", keys ?? ["Unknown Key"]));
 
-                sb.AppendLine($"[{DateTimeOffset.Now.ToString(timeFormatString)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Error: {result.ErrorMessage}");
+                sb.AppendLine($"[{DateTimeOffset.Now.ToString(dateTimeFormat)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Error: {result.ErrorMessage}");
             }
         }
 
@@ -58,10 +55,11 @@ public class BatchLogger(ILogger<BatchLogger> logger)
         }
     }
 
-    public virtual void ReportDifferences<TOutput>(
+    public void ReportDifferencesToFile<TOutput>(
         string outputFilePath,
         IReadOnlyList<DataOperationResult<TOutput>> results,
-        Func<TOutput, string>? keySelector = null
+        Func<TOutput, string>? keySelector = null,
+        string? dateTimeFormat = "u"
         )
     {
         if (string.IsNullOrWhiteSpace(outputFilePath)) throw new ArgumentNullException($"Missing {nameof(outputFilePath)}.");
@@ -73,7 +71,7 @@ public class BatchLogger(ILogger<BatchLogger> logger)
             var (data, operation, tableName, keyExpression) = (result.Operation.Data, result.Operation.OperationType, result.TableName ?? "Unknown Table", string.Join(", ", keys ?? ["Unknown Key"]));
 
             var audit = result.Operation.Audit;
-            sb.AppendLine($"[{DateTimeOffset.Now.ToString(timeFormatString)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Difference: {System.Text.Json.JsonSerializer.Serialize(audit)}");
+            sb.AppendLine($"[{DateTimeOffset.Now.ToString(dateTimeFormat)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Difference: {System.Text.Json.JsonSerializer.Serialize(audit)}");
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);

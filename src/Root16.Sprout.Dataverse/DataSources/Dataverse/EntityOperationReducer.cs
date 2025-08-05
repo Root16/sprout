@@ -52,6 +52,7 @@ public class EntityOperationReducer(
             if (change is null) continue;
 
             var matches = potentialMatchDict.GetValue(keySelector(change.Data));
+            var altKey = keySelector(change.Data);
 
             if (matches is not null && matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
@@ -64,7 +65,7 @@ public class EntityOperationReducer(
                 var match = matches[0];
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
-                var audit = analyzer.GetDifference(delta.Id.ToString(), delta, match);
+                var audit = analyzer.GetDifference(altKey, delta, match);
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
                     results.Add(new DataOperation<Entity>("Update", delta, audit));
@@ -77,7 +78,7 @@ public class EntityOperationReducer(
             else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
             {
                 var delta = ReduceEntityChanges(change.Data, null);
-                var audit = analyzer.GetDifference(delta.Id.ToString(), delta);
+                var audit = analyzer.GetDifference(altKey, delta);
 
                 if (delta is not null && delta.Attributes.Count > 0)
                 {

@@ -10,43 +10,20 @@ public class EntityBatchAnalyzer(
 {
     public override Audit GetDifference(string key, Entity data, Entity? previousData = null)
     {
-        var changeRecord = new Audit(data.LogicalName, data.Id.ToString(), []);
+        var changeRecord = new Audit(data.LogicalName, FormatValue(data.Id), key, []);
         foreach (var attribute in data.Attributes)
         {
             object previousValue = null;
             previousData?.Attributes.TryGetValue(attribute.Key, out previousValue);
             if (previousValue != data[attribute.Key])
-                changeRecord.Changes.Add(attribute.Key, new(FormatAttributeValue(previousValue), FormatAttributeValue(attribute.Value)));
+                changeRecord.Changes.Add(attribute.Key, new(FormatValue(previousValue), FormatValue(attribute.Value)));
         }
 
         return changeRecord;
     }
 
-    private string? FormatAttributeValue(object? attributeValue)
+    public override string? FormatValue(object? attributeValue)
     {
-        if (attributeValue is null)
-        {
-            return null;
-        }
-        else if (attributeValue is EntityReference entityRef)
-        {
-            return $"{entityRef.LogicalName}({entityRef.Id})";
-        }
-        else if (attributeValue is Money money)
-        {
-            return money.Value.ToString();
-        }
-        else if (attributeValue is OptionSetValue optionSetValue)
-        {
-            return optionSetValue.Value.ToString();
-        }
-        else if (attributeValue is string)
-        {
-            return $"{attributeValue}";
-        }
-        else
-        {
-            return $"{attributeValue}";
-        }
+        return EntityExtensions.DisplayAttributeValue(attributeValue);
     }
 }

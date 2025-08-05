@@ -6,8 +6,8 @@ public record DataOperation<T>(string OperationType, T Data)
 {
     public Audit? Audit { get; set; }
 
-    public DataOperation(string OperationType, T Data, Audit? Change) : this(OperationType, Data)
+    public DataOperation(string OperationType, T Data, Audit? Audit) : this(OperationType, Data)
     {
-        this.Audit = Change;
+        this.Audit = Audit;
     }
 }

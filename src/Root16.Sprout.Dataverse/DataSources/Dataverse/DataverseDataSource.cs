@@ -68,8 +68,7 @@ public class DataverseDataSource : IDataSource<Entity>
                 .Where(r => r.Request is not null).ToList();
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
-            var respResults = await ExecuteMultipleAsync(reqAuds, dryRun);
-            results.AddRange(respResults);
+            results.AddRange(await ExecuteMultipleAsync(reqAuds, dryRun));
             CrmServiceClient.CallerId = Guid.Empty;
         }
 
