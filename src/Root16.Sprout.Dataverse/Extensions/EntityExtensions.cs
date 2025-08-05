@@ -181,9 +181,13 @@ public static class EntityExtensions
         {
             return "(null)";
         }
+        else if (attributeValue is EntityCollection entityCol)
+        {
+            return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => $"{entity.LogicalName}({entity.Id})"))}]";
+        }
         else if (attributeValue is EntityReferenceCollection entityRefCol) 
         {
-            return string.Join(",", entityRefCol.Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"));
+            return $"[{string.Join(",", entityRefCol.OrderBy(e=>e.Id).Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"))}]";
         }
         else if (attributeValue is EntityReference entityRef)
         {
@@ -195,7 +199,7 @@ public static class EntityExtensions
         }
         else if (attributeValue is OptionSetValueCollection optionSetValueCol) 
         {
-            return string.Join(",", optionSetValueCol.Select(op=>op.Value));
+            return $"[{string.Join(",", optionSetValueCol.OrderBy(op=>op.Value).Select(op => op.Value))}]";
         }
         else if (attributeValue is DateTime dateTimeValue)
         {
