@@ -29,8 +29,8 @@ internal class CreateContactTestWithOperationFlagsStep : DataverseBatchIntegrati
         BypassCustomBusinessLogic(BusinessLogicType.Synchronous); //  bypass only synchronous custom logic, excluding power automate flows
         BypassCustomBusinessLogic(BusinessLogicType.Asynchronous); //  bypass only asynchronous custom logic, excluding power automate flows
 
-        BypassPluginStepIds(new("d96b9829-e960-f011-bec2-0022481c36f4"), new("d96b9829-e960-f011-bec2-0022481c36f2")); // bypass specific plugin step id's with comma separated guids
-        BypassPluginStepId(new("b169a062-b950-e1a3-b243-9309bcfc9f1c")); // bypass specific plugin step id
+        BypassPluginStepIds(new Guid("d96b9829-e960-f011-bec2-0022481c36f4"), new Guid("d96b9829-e960-f011-bec2-0022481c36f2")); // bypass specific plugin step id's with comma separated guids
+        BypassPluginStepIds("b169a062-b950-e1a3-b243-9309bcfc9f1c"); // bypass specific plugin step id
     }
 
     public override async Task<IReadOnlyList<CreateContact>> OnBeforeMapAsync(IReadOnlyList<CreateContact> batch)
