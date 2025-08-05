@@ -269,7 +269,7 @@ public class DataverseDataSource : IDataSource<Entity>
                     DataverseDataSourceFlags.BypassBusinessLogicExecutionStepIds
                 }.All(param => param != flag))
             .SelectMany(flag =>
-                flag.Split(',', StringSplitOptions.TrimEntries)
+                flag.Split([',',';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
                     .Where(s => !string.IsNullOrWhiteSpace(s) && Guid.TryParse(s, out var _)))
             .ToArray();
         if (stepIds.Length > 0)

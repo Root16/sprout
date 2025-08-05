@@ -2,7 +2,9 @@
 
 namespace Root16.Sprout.BatchProcessing.Dataverse;
 
-public abstract partial class DataverseBatchIntegrationStep<TInput, TOutput> : BatchIntegrationStep<TInput, TOutput>
+public abstract partial class DataverseBatchIntegrationStep<TInput, TOutput> : BatchIntegrationStep<TInput, TOutput> 
+    where TOutput : class 
+    where TInput : class
 {
     protected DataverseBatchIntegrationStep() : base() { }
 
@@ -17,6 +19,6 @@ public abstract partial class DataverseBatchIntegrationStep<TInput, TOutput> : B
         }
     }
     public void BypassPowerAutomateFlows() => AddDataOperationFlag(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob);
+    public void BypassPluginStepIds(params string[] stepIds) => AddDataOperationFlag(string.Join(",", stepIds));
     public void BypassPluginStepIds(params Guid[] stepIds) => AddDataOperationFlag(string.Join(",", stepIds));
-    public void BypassPluginStepId(Guid stepId) => AddDataOperationFlag($"{stepId}");
 }
