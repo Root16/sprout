@@ -23,4 +23,8 @@ public static class DataverseDataSourceFlags
     /// Flag for BypassBusinessLogicExecution. Bypass only synchronous custom logic.
     /// </summary>
     public static readonly string BypassBusinessLogicExecutionSync = nameof(BypassBusinessLogicExecutionSync);
+    /// <summary>
+    /// Do not pass this flag directly. Instead, pass a comma separated list of plug-in step registrations to bypass only the specified plug-in steps.
+    /// </summary>
+    internal static readonly string BypassBusinessLogicExecutionStepIds = nameof(BypassBusinessLogicExecutionStepIds);
 }
