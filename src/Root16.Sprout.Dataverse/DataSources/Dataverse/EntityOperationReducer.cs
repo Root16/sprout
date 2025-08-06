@@ -5,7 +5,10 @@ using System.Text;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
+public class EntityOperationReducer(
+    ILogger<EntityOperationReducer> logger,
+    EntityBatchAnalyzer analyzer
+    )
 {
     private IEnumerable<Entity>? potentialMatches;
     private readonly ILogger<EntityOperationReducer> logger = logger;
@@ -49,6 +52,7 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
             if (change is null) continue;
 
             var matches = potentialMatchDict.GetValue(keySelector(change.Data));
+            var altKey = keySelector(change.Data);
 
             if (matches is not null && matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
@@ -61,9 +65,10 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
                 var match = matches[0];
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
+                var audit = analyzer.GetDifference(altKey, delta, match);
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
-                    results.Add(new DataOperation<Entity>("Update", delta));
+                    results.Add(new DataOperation<Entity>("Update", delta, audit));
                     if (logger.IsEnabled(LogLevel.Debug))
                     {
                         logger.LogDebug(delta.FormatChanges(match));
@@ -73,10 +78,11 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
             else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
             {
                 var delta = ReduceEntityChanges(change.Data, null);
+                var audit = analyzer.GetDifference(altKey, delta);
 
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
-                    results.Add(new DataOperation<Entity>("Create", delta));
+                    results.Add(new DataOperation<Entity>("Create", delta, audit));
 
                     if (logger.IsEnabled(LogLevel.Debug))
                     {

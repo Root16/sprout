@@ -175,31 +175,47 @@ public static class EntityExtensions
         return sb.ToString();
     }
 
-    public static object DisplayAttributeValue(object attributeValue)
+    public static string DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat="u")
     {
         if (attributeValue is null)
         {
             return "(null)";
         }
+        else if (attributeValue is EntityCollection entityCol)
+        {
+            return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => $"{entity.LogicalName}({entity.Id})"))}]";
+        }
+        else if (attributeValue is EntityReferenceCollection entityRefCol) 
+        {
+            return $"[{string.Join(",", entityRefCol.OrderBy(e=>e.Id).Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"))}]";
+        }
         else if (attributeValue is EntityReference entityRef)
         {
-            return $"({entityRef.LogicalName}, {entityRef.Id})";
+            return $"{entityRef.LogicalName}({entityRef.Id})";
         }
         else if (attributeValue is Money money)
         {
-            return money.Value;
+            return money.Value.ToString();
+        }
+        else if (attributeValue is OptionSetValueCollection optionSetValueCol) 
+        {
+            return $"[{string.Join(",", optionSetValueCol.OrderBy(op=>op.Value).Select(op => op.Value))}]";
+        }
+        else if (attributeValue is DateTime dateTimeValue)
+        {
+            return dateTimeValue.ToString(defaultDateTimeFormat);
         }
         else if (attributeValue is OptionSetValue optionSetValue)
         {
-            return optionSetValue.Value;
+            return optionSetValue.Value.ToString();
         }
         else if (attributeValue is string)
         {
-            return $"'{attributeValue}'";
+            return $"{attributeValue}";
         }
         else
         {
-            return attributeValue;
+            return $"{attributeValue}";
         }
     }
 

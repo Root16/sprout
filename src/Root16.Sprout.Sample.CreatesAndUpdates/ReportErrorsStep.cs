@@ -5,6 +5,7 @@ using Microsoft.Xrm.Sdk;
 using Root16.Sprout.DataSources.Dataverse;
 using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Extensions.Logging;
+using Root16.Sprout.Logging;
 
 namespace Root16.Sprout.Sample.CreatesAndUpdates;
 internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
@@ -12,12 +13,15 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	private readonly DataverseDataSource dataverseDataSource;
 	private readonly BatchProcessor batchProcessor;
 	EntityOperationReducer reducer;
+    BatchLogger batchLogger;
+	private IList<Entity> matches;
 	private readonly ILogger<ReportErrorsStep> logger;
-	public ReportErrorsStep(
+    public ReportErrorsStep(
 		BatchProcessor batchProcessor,
 		DataverseDataSource dataverseDataSource,
 		EntityOperationReducer reducer,
-		ILogger<ReportErrorsStep> logger
+		ILogger<ReportErrorsStep> logger,
+		BatchLogger analyzer
 		)
 	{
 		this.batchProcessor = batchProcessor;
@@ -25,6 +29,8 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		BatchSize = 10;
 		this.reducer = reducer;
 		this.logger = logger;
+		this.batchLogger = analyzer;
+		//DryRun = true; // false - errors will occur, true - no errors will occur
 		this.KeySelector = e => e.GetAttributeValue<string>("name") ?? e.Id.ToString();
 		AddDataOperationFlag(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync);
 		AddDataOperationFlag(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob);
@@ -69,7 +75,7 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 			logger.LogInformation($"Potentional matches for: {batch.First()}: {potentialMatches.Entities.Count()}");
 
 			reducer.SetPotentialMatches(potentialMatches.Entities);
-		}
+        }
 		else
 		{
 			reducer.SetPotentialMatches(new List<Entity>());
@@ -88,13 +94,20 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 		accountUpdate["statuscode"] = new OptionSetValue(-1);
 
 		return [new DataOperation<Entity>("Update", accountUpdate)];
-	}
-	public override Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<Entity>> results)
-	{
+    }
+    public override Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<Entity>> results)
+    {
+        batchLogger.ReportFailuresToFile($"./report/{nameof(ReportErrorsStep)}-error-{DateTime.Now:yyyy-MM-dd}.txt", results, this.KeySelector!);
+
+        // Relies on EntityOperationReducer or user to set the DataOperation.Change (and DataSource to not wipe out DataOperation.Change)
+		// record before calling ReportDifference
+		batchLogger.ReportDifferencesToFile($"./report/{nameof(ReportErrorsStep)}-diff-{DateTime.Now:yyyy-MM-dd}.txt", results, this.KeySelector!);
+
 		return base.OnAfterDeliveryAsync(results);
-	}
-	public override async Task RunAsync(string stepName)
-	{
-		await batchProcessor.ProcessBatchesAsync(this, stepName);
-	}
+
+    }
+    public override async Task RunAsync(string stepName)
+    {
+        await batchProcessor.ProcessBatchesAsync(this, stepName, 1);
+    }
 }
