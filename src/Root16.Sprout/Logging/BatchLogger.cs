@@ -33,7 +33,7 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 	public void UpdateTotals<TOutput>(IReadOnlyList<DataOperationResult<TOutput>> results)
 	{
 		totalSuccessfulCreates += results.Where(r => r.WasSuccessful && r.Operation.OperationType == "Create").Count();
-		totalSuccessfulUpdates = results.Where(r => r.WasSuccessful && r.Operation.OperationType == "Update").Count();
+		totalSuccessfulUpdates += results.Where(r => r.WasSuccessful && r.Operation.OperationType == "Update").Count();
 		totalFailedCreates += results.Where(r => !r.WasSuccessful && r.Operation.OperationType == "Create").Count();
 		totalFailedUpdates += results.Where(r => !r.WasSuccessful && r.Operation.OperationType == "Update").Count();
 	}
