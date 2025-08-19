@@ -41,6 +41,8 @@ public class BatchProcessor(
         }
         while (batchState.QueryState?.MoreRecords == true);
 
+        batchLogger.LogTotalsAndReset(stepName);
+
         step.OnStepFinished();
     }
 
@@ -80,6 +82,7 @@ public class BatchProcessor(
         var results = await step.OutputDataSource.PerformOperationsAsync(data, step.DryRun, step.DataOperationFlags);
 
         batchLogger.LogFailures(results, step.KeySelector);
+        batchLogger.UpdateTotals(results);
 
         await step.OnAfterDeliveryAsync(results);
 

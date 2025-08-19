@@ -14,7 +14,6 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
 	private readonly BatchProcessor batchProcessor;
 	EntityOperationReducer reducer;
     BatchLogger batchLogger;
-	private IList<Entity> matches;
 	private readonly ILogger<ReportErrorsStep> logger;
     public ReportErrorsStep(
 		BatchProcessor batchProcessor,
