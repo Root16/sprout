@@ -35,7 +35,31 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 		totalSuccessfulCreates += results.Where(r => r.WasSuccessful && r.Operation.OperationType == "Create").Count();
 		totalSuccessfulUpdates += results.Where(r => r.WasSuccessful && r.Operation.OperationType == "Update").Count();
 		totalFailedCreates += results.Where(r => !r.WasSuccessful && r.Operation.OperationType == "Create").Count();
-		totalFailedUpdates += results.Where(r => !r.WasSuccessful && r.Operation.OperationType == "Update").Count();
+		int successfulCreates = 0;
+		int successfulUpdates = 0;
+		int failedCreates = 0;
+		int failedUpdates = 0;
+		foreach (var r in results)
+		{
+			if (r.WasSuccessful)
+			{
+				if (r.Operation.OperationType == "Create")
+					successfulCreates++;
+				else if (r.Operation.OperationType == "Update")
+					successfulUpdates++;
+			}
+			else
+			{
+				if (r.Operation.OperationType == "Create")
+					failedCreates++;
+				else if (r.Operation.OperationType == "Update")
+					failedUpdates++;
+			}
+		}
+		totalSuccessfulCreates += successfulCreates;
+		totalSuccessfulUpdates = successfulUpdates;
+		totalFailedCreates += failedCreates;
+		totalFailedUpdates += failedUpdates;
 	}
 	public void LogTotalsAndReset(string stepName)
 	{
