@@ -12,7 +12,7 @@ public class BatchProcessor(
     private readonly IProgressListener progressListener = progressListener;
     private readonly TimeSpan defaultBatchDelay = batchDelay;
 
-    [Obsolete("Please use ProcessBatches.")]
+    [Obsolete("Please use ProcessBatches.", true)]
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
         IBatchIntegrationStep<TInput, TOutput> step, string stepName)
     {

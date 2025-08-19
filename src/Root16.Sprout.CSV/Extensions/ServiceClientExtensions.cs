@@ -8,6 +8,7 @@ namespace Root16.Sprout.DependencyInjection;
 
 public static partial class ServiceCollectionExtensions
 {
+    [Obsolete($"{nameof(RegisterCSVDataSource)} is deprecated. Move to registration with mapper.", true)]
     public static IServiceCollection RegisterCSVDataSource<T>(this IServiceCollection services, string csvDataSourceName, string path)
         where T : class
     {
