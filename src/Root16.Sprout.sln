@@ -17,9 +17,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.SqlSer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.UnitTests", "Root16.Sprout.UnitTests\Root16.Sprout.UnitTests.csproj", "{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.CSV", "Root16.Sprout.CSV\Root16.Sprout.CSV.csproj", "{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.CSV", "Root16.Sprout.CSV\Root16.Sprout.CSV.csproj", "{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.CSV.Sample", "Root16.Sprout.CSV.Sample\Root16.Sprout.CSV.Sample.csproj", "{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.CSV.Sample", "Root16.Sprout.CSV.Sample\Root16.Sprout.CSV.Sample.csproj", "{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Excel", "Root16.Sprout.Excel\Root16.Sprout.Excel.csproj", "{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Excel.Sample", "Root16.Sprout.Excel.Sample\Root16.Sprout.Excel.Sample.csproj", "{969358E7-77C8-4887-A7A9-6295F648C8B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +67,14 @@ Global
 		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
