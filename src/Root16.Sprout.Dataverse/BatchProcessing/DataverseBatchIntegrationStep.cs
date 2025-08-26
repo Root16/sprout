@@ -4,7 +4,6 @@ namespace Root16.Sprout.BatchProcessing.Dataverse;
 
 public abstract partial class DataverseBatchIntegrationStep<TInput, TOutput> : BatchIntegrationStep<TInput, TOutput> 
     where TOutput : class 
-    where TInput : class
 {
     protected DataverseBatchIntegrationStep() : base() { }
 
