@@ -79,7 +79,7 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 				HashSet<string> keys = [result.PrimaryKey ?? "Unknown primary key", keySelector?.Invoke(result.Operation.Data) ?? "Unknown key via key selector"];
 				var (operation, tableName, keyExpression) = (result.Operation.OperationType, result.TableName ?? "Unknown Table", string.Join(", ", keys ?? ["Unknown Key"]));
 
-				sb.AppendLine($"[{DateTimeOffset.Now.ToString(dateTimeFormat)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Error: {result.ErrorMessage}");
+				sb.AppendLine($"[{DateTimeOffset.UtcNow.ToString(dateTimeFormat)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Error: {result.ErrorMessage}");
 			}
 		}
 
@@ -107,7 +107,7 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 			var (data, operation, tableName, keyExpression) = (result.Operation.Data, result.Operation.OperationType, result.TableName ?? "Unknown Table", string.Join(", ", keys ?? ["Unknown Key"]));
 
 			var audit = result.Operation.Audit;
-			sb.AppendLine($"[{DateTimeOffset.Now.ToString(dateTimeFormat)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Difference: {System.Text.Json.JsonSerializer.Serialize(audit)}");
+			sb.AppendLine($"[{DateTimeOffset.UtcNow.ToString(dateTimeFormat)}] Target: {tableName}. Keys: {keyExpression}. Operation: {operation}. Difference: {System.Text.Json.JsonSerializer.Serialize(audit)}");
 		}
 
 		Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
