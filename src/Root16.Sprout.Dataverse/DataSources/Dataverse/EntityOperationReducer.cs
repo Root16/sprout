@@ -35,7 +35,7 @@ public class EntityOperationReducer(ILogger<EntityOperationReducer> logger)
     {
         if (potentialMatches is null || !potentialMatches.Any())
         {
-            return changes.ToList();
+            return [.. changes];
         }
 
         Dictionary<string, List<Entity>> potentialMatchDict = potentialMatches.GroupBy(x => keySelector(x)).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.FromComparison(stringComparison));
