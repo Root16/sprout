@@ -31,6 +31,6 @@ public class ExampleCSVStep1(BatchProcessor batcher, ICSVDataSourceFactory csvDa
     public override Task RunAsync(string stepName)
     {
         BatchSize = 75000;
-        return _batcher.ProcessAllBatchesAsync(this, stepName);
+        return _batcher.ProcessBatchesAsync(this, stepName);
     }
 }

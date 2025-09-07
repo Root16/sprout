@@ -61,7 +61,7 @@ internal class ContactTestStep : BatchIntegrationStep<Contact,Entity>
 
     public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessAllBatchesAsync(this, stepName);
+        await batchProcessor.ProcessBatchesAsync(this, stepName);
     }
 
     public override IDataSource<Entity> OutputDataSource => dataverseDataSource;

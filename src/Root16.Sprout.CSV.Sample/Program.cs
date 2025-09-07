@@ -19,7 +19,6 @@ builder.Services.AddSproutCSV();
 
 builder.Services.RegisterCSVDataSource<TestClass1, TestClass1Map>("CSV1", @"..\..\..\Data\test1.csv");
 builder.Services.RegisterCSVDataSource<TestClass1, TestClass1Map>("CSV1Copy", @"..\..\..\Data\test1copy.csv");
-builder.Services.RegisterCSVDataSource<Testclass2>("CSV2", @"..\..\..\Data\test2.csv");
 
 builder.Services.RegisterStep<ExampleCSVStep1>();
 builder.Services.RegisterStep<ExampleCSVStep2>();
