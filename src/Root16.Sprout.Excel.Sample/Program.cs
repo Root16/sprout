@@ -22,7 +22,7 @@ builder.Services.AddDataverseDataSource("Dataverse");
 //Register excel with implicit tab index of 0
 builder.Services.RegisterExcelDataSource<TestClass1, TestClass1Map>("EXCEL1", @"..\..\..\Data\test.xlsx");
 
-//Register excel with tab index of zero for the same file
+//Register excel with tab index of 1 for the same file
 builder.Services.RegisterExcelDataSource<TestClass1, TestClass1Map>("EXCEL2", @"..\..\..\Data\test.xlsx", tabIndex: 1);
 
 builder.Services.RegisterStep<ExampleExcelStep1>();
