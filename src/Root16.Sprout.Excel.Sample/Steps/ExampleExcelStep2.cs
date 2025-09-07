@@ -8,17 +8,17 @@ using Root16.Sprout.Excel.Sample.Models;
 
 namespace Root16.Sprout.Excel.Sample.Steps;
 
-public class ExampleExcelStep1 : BatchIntegrationStep<TestClass1, Entity>
+public class ExampleExcelStep2 : BatchIntegrationStep<TestClass1, Entity>
 {
-
-    public ExampleExcelStep1(BatchProcessor batcher, IExcelDataSourceFactory excelDataSourceFactory, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer)
+	public ExampleExcelStep2(BatchProcessor batcher, IExcelDataSourceFactory excelDataSourceFactory, DataverseDataSource dataverseDataSource, EntityOperationReducer reducer)
 	{
 		this.batcher = batcher;
 		this.dataverseDataSource = dataverseDataSource;
 		this.reducer = reducer;
-		this._excelDataSource = excelDataSourceFactory.GetExcelDataSourceByName<TestClass1>("EXCEL1");
+		this._excelDataSource = excelDataSourceFactory.GetExcelDataSourceByName<TestClass1>("EXCEL2");
 		KeySelector = entity => entity.GetAttributeValue<string>("name");
 	}
+
 	private readonly BatchProcessor batcher;
 	private readonly IExcelDataSourceFactory excelDataSourceFactory;
 	private readonly ExcelDataSource<TestClass1> _excelDataSource;

@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Root16.Sprout.Excel.Factories;
 
-namespace Root16.Sprout.Excel.Extensions;
+namespace Root16.Sprout.Excel;
 
 public static class ExcelServiceExtensions
 {

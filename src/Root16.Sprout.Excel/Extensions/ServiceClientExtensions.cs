@@ -1,10 +1,8 @@
 ﻿using ExcelDataReader;
 using Microsoft.Extensions.DependencyInjection;
-using System.Data;
-using System.Globalization;
-using System.Reflection;
+using Root16.Sprout.Excel;
 
-namespace Root16.Sprout.Excel.Extensions;
+namespace Root16.Sprout.DependencyInjection;
 
 public static partial class ServiceCollectionExtensions
 {

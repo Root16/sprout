@@ -1,6 +1,4 @@
-﻿using Root16.Sprout.Excel.Extensions;
-
-namespace Root16.Sprout.Excel.Sample.Models;
+﻿namespace Root16.Sprout.Excel.Sample.Models;
 
 public class TestClass1
 {
@@ -16,13 +14,13 @@ public sealed class TestClass1Map : ExcelClassMap<TestClass1>
 {
     public TestClass1Map()
     {
-        MapFromDictionary(new Dictionary<string, string>
+        MapFromDictionary(new Dictionary<string, List<string>>
         {
-            { "Account Name", nameof(TestClass1.AccountName) },
-            { "Address 1", nameof(TestClass1.Address1) },
-            { "My Cool Float", nameof(TestClass1.MyCoolFloat) },
-            { "A Decimal Here???", nameof(TestClass1.DecimalHere) },
-            { "A simple WhoLeNumber", nameof(TestClass1.SimpleWholeNumber) },
+            { nameof(TestClass1.AccountName),  ["Account Name", "Account Name 1"] },
+            { nameof(TestClass1.Address1), ["Address 1", "Address 2"] },
+            { nameof(TestClass1.MyCoolFloat), ["My Cool Float", "My Cool Float 1"] },
+            { nameof(TestClass1.DecimalHere), ["A Decimal Here???", "A Decimal Here??? 1"] },
+            { nameof(TestClass1.SimpleWholeNumber), ["A simple WhoLeNumber", "A simple WhoLeNumber 1"] },
         });
     }
 }
