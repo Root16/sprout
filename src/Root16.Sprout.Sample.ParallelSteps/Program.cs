@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Root16.Sprout;
 using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Dataverse.Extensions;
 using Root16.Sprout.Sample;
 using Root16.Sprout.Sample.ParallelSteps;
 using Root16.Sprout.Sample.ParallelSteps.Models;

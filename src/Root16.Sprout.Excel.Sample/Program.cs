@@ -3,12 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Root16.Sprout;
-using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Excel;
 using Root16.Sprout.Excel.Factories;
 using Root16.Sprout.Excel.Sample.Models;
 using Root16.Sprout.Excel.Sample.Steps;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Dataverse.Extensions;
+using Root16.Sprout.Excel.Extensions;
 
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);

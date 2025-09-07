@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Root16.Sprout.DataSources.Dataverse;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.Dataverse.Extensions;
 
 public static class ServiceCollectionExtensions
 {

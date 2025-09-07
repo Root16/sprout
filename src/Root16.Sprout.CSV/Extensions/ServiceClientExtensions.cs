@@ -1,10 +1,9 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Root16.Sprout.CSV;
 using System.Globalization;
 
-namespace Root16.Sprout.DependencyInjection;
+namespace Root16.Sprout.CSV.Extensions;
 
 public static partial class ServiceCollectionExtensions
 {
