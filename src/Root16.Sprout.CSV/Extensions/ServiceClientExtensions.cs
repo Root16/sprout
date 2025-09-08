@@ -1,13 +1,13 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Root16.Sprout.CSV;
 using System.Globalization;
 
-namespace Root16.Sprout.DependencyInjection;
+namespace Root16.Sprout.CSV.Extensions;
 
 public static partial class ServiceCollectionExtensions
 {
+    [Obsolete($"{nameof(RegisterCSVDataSource)} is deprecated. Move to registration with mapper.", true)]
     public static IServiceCollection RegisterCSVDataSource<T>(this IServiceCollection services, string csvDataSourceName, string path)
         where T : class
     {

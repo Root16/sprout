@@ -5,7 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <UserSecretsId>362364fc-76c7-417a-a74f-91f03a55aefe</UserSecretsId>
+    <UserSecretsId>a7408c0a-4d8c-4ea8-b57c-fcf76c6a390f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,8 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Root16.Sprout.CSV\Root16.Sprout.CSV.csproj" />
+    <ProjectReference Include="..\Root16.Sprout.Dataverse\Root16.Sprout.Dataverse.csproj" />
+    <ProjectReference Include="..\Root16.Sprout.Excel\Root16.Sprout.Excel.csproj" />
     <ProjectReference Include="..\Root16.Sprout\Root16.Sprout.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>

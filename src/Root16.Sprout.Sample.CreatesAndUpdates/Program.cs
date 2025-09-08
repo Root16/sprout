@@ -6,8 +6,8 @@ using Root16.Sprout;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Dataverse.Extensions;
 using Root16.Sprout.Logging;
-using Root16.Sprout.Sample;
 using Root16.Sprout.Sample.CreatesAndUpdates;
 using Root16.Sprout.Sample.CreateUpdateAndDelete.ReportTotals;
 
