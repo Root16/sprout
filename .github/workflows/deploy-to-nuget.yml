@@ -45,7 +45,7 @@ jobs:
           dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.Dataverse
           dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.SqlServer
           dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.CSV
-      
+          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.Excel      
     - name: Push
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
