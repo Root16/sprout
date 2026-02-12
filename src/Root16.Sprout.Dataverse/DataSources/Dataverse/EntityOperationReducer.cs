@@ -41,7 +41,7 @@ public class EntityOperationReducer(
             return changes.ToList();
         }
 
-        Dictionary<string, List<Entity>> potentialMatchDict = potentialMatches.GroupBy(x => keySelector(x)).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.FromComparison(stringComparison));
+        Dictionary<string, List<Entity>> potentialMatchDict = potentialMatches.GroupBy(x => keySelector(x), StringComparer.FromComparison(stringComparison)).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.FromComparison(stringComparison));
 
         var results = new List<DataOperation<Entity>>();
 
