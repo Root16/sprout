@@ -8,8 +8,10 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 {
 	private int totalSuccessfulCreates = 0;
 	private int totalSuccessfulUpdates = 0;
+	private int totalSuccessfulDeletes = 0;
 	private int totalFailedCreates = 0;
 	private int totalFailedUpdates = 0;
+	private int totalFailedDeletes = 0;
 
 	public void LogFailures<TOutput>(
 		IReadOnlyList<DataOperationResult<TOutput>> results,
@@ -26,7 +28,7 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 
 				var keyExpression = string.Join(", ", keys ?? ["Unknown Key"]);
 
-				logger.LogError($"Target: {tableName}. Keys: {keyExpression}. Error: {result.ErrorMessage}");
+				logger.LogError($"Target: {tableName}. Keys: {keyExpression}. Error: {result.ErrorMessages}");
 			}
 		}
 	}
@@ -36,17 +38,21 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 		{
 			if (r.WasSuccessful)
 			{
-				if (r.Operation.OperationType == "Create")
+				if (r.Operation.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
 					totalSuccessfulCreates++;
-				else if (r.Operation.OperationType == "Update")
+				else if (r.Operation.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase))
 					totalSuccessfulUpdates++;
+				else if (r.Operation.OperationType.Equals("Delete", StringComparison.OrdinalIgnoreCase))
+					totalSuccessfulDeletes++;
 			}
 			else
 			{
-				if (r.Operation.OperationType == "Create")
+				if (r.Operation.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
 					totalFailedCreates++;
-				else if (r.Operation.OperationType == "Update")
+				else if (r.Operation.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase))
 					totalFailedUpdates++;
+				else if(r.Operation.OperationType.Equals("Delete", StringComparison.OrdinalIgnoreCase))
+					totalFailedDeletes++;
 			}
 		}
 	}
@@ -54,15 +60,17 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 	{
 		logger.LogInformation($"{stepName}: {nameof(totalSuccessfulCreates)}: {totalSuccessfulCreates}");
 		logger.LogInformation($"{stepName}: {nameof(totalSuccessfulUpdates)}: {totalSuccessfulUpdates}");
+		logger.LogInformation($"{stepName}: {nameof(totalSuccessfulDeletes)}: {totalSuccessfulDeletes}");
 		logger.LogInformation($"{stepName}: {nameof(totalFailedCreates)}: {totalFailedCreates}");
 		logger.LogInformation($"{stepName}: {nameof(totalFailedUpdates)}: {totalFailedUpdates}");
+		logger.LogInformation($"{stepName}: {nameof(totalFailedDeletes)}: {totalFailedDeletes}");
 
 		totalSuccessfulCreates = 0;
 		totalSuccessfulUpdates = 0;
 		totalFailedCreates = 0;
 		totalFailedUpdates = 0;
 	}
-	public void ReportFailuresToFile<TOutput>(
+    public void ReportFailuresToFile<TOutput>(
 		string outputFilePath,
 		IReadOnlyList<DataOperationResult<TOutput>> results,
 		Func<TOutput, string>? keySelector = null,
@@ -84,14 +92,12 @@ public class BatchLogger(ILogger<BatchLogger> logger)
 		}
 
 		Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
-		using (StreamWriter outputFile = new StreamWriter(outputFilePath, append: true))
-		{
-			if (!string.IsNullOrWhiteSpace(sb.ToString()))
-				outputFile.Write(sb.ToString());
-		}
-	}
+        using StreamWriter outputFile = new StreamWriter(outputFilePath, append: true);
+        if (!string.IsNullOrWhiteSpace(sb.ToString()))
+            outputFile.Write(sb.ToString());
+    }
 
-	public void ReportDifferencesToFile<TOutput>(
+    public void ReportDifferencesToFile<TOutput>(
 		string outputFilePath,
 		IReadOnlyList<DataOperationResult<TOutput>> results,
 		Func<TOutput, string>? keySelector = null,

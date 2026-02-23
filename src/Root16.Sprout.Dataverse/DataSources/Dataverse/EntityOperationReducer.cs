@@ -10,12 +10,12 @@ public class EntityOperationReducer(
     EntityBatchAnalyzer analyzer
     )
 {
-    private IEnumerable<Entity>? potentialMatches;
+    private List<Entity>? potentialMatches = [];
     private readonly ILogger<EntityOperationReducer> logger = logger;
 
     public void SetPotentialMatches(IEnumerable<Entity> entities)
     {
-        this.potentialMatches = entities;
+        potentialMatches = [.. entities];
     }
 
     private Entity ReduceEntityChanges(Entity updates, Entity? original)
@@ -38,10 +38,10 @@ public class EntityOperationReducer(
     {
         if (potentialMatches is null || !potentialMatches.Any())
         {
-            return changes.ToList();
+            return [..changes];
         }
 
-        Dictionary<string, List<Entity>> potentialMatchDict = potentialMatches.GroupBy(x => keySelector(x)).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.FromComparison(stringComparison));
+        ILookup<string, Entity> potentialMatchLookup = potentialMatches.ToLookup(keySelector, StringComparer.FromComparison(stringComparison));
 
         var results = new List<DataOperation<Entity>>();
 
@@ -51,10 +51,16 @@ public class EntityOperationReducer(
         {
             if (change is null) continue;
 
-            var matches = potentialMatchDict.GetValue(keySelector(change.Data));
             var altKey = keySelector(change.Data);
+            var matches = potentialMatchLookup[altKey].ToList();
 
-            if (matches is not null && matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
+            if (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase)
+                && (matches is null || matches.Count == 0 || change.Data.Id == Guid.Empty))
+            {
+                results.Add(new DataOperation<Entity>("Skip", change.Data));
+            }
+            else if (matches is not null && matches.Count != 0
+                && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
                 if (matches.Count > 1)
                 {
@@ -66,13 +72,17 @@ public class EntityOperationReducer(
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
                 var audit = analyzer.GetDifference(altKey, delta, match);
-                if (delta is not null && delta.Attributes.Count > 0)
+                if (delta is not null && (delta.Attributes.Count > 1 || (delta.Attributes.Count == 1 && !delta.Contains("createdon"))))
                 {
                     results.Add(new DataOperation<Entity>("Update", delta, audit));
                     if (logger.IsEnabled(LogLevel.Debug))
                     {
                         logger.LogDebug(delta.FormatChanges(match));
                     }
+                }
+                else if (delta is null || delta.Attributes.Count == 0)
+                {
+                    results.Add(new DataOperation<Entity>("Skip", change.Data, audit));
                 }
             }
             else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))

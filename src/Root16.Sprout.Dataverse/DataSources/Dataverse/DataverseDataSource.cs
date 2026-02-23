@@ -2,10 +2,11 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Dataverse.Models;
 using System.Collections.Concurrent;
 using System.Net;
 using System.ServiceModel;
-using RequestAudit = (Microsoft.Xrm.Sdk.OrganizationRequest? Request, Root16.Sprout.Logging.Audit? Audit);
+using OrgRequestWithData = (Root16.Sprout.DataSources.DataOperation<Microsoft.Xrm.Sdk.Entity> dataOperation, Root16.Sprout.Dataverse.Models.RequestAudit RequestAudit);
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -41,7 +42,7 @@ public class DataverseDataSource : IDataSource<Entity>
         IEnumerable<IGrouping<Guid?, DataOperation<Entity>>> groups;
         if (ImpersonateUsingAttribute is not null)
         {
-            groups = operations
+            groups = [.. operations
                 .GroupBy(op =>
                 {
                     var entityRef = op.Data.GetAttributeValue<EntityReference>(ImpersonateUsingAttribute);
@@ -50,12 +51,11 @@ public class DataverseDataSource : IDataSource<Entity>
                         return entityRef?.Id;
                     }
                     return null;
-                })
-                .ToArray();
+                })];
         }
         else
         {
-            groups = operations.GroupBy(op => (Guid?)null).ToArray();
+            groups = [.. operations.GroupBy(op => (Guid?)null)];
         }
 
         var results = new List<DataOperationResult<Entity>>();
@@ -63,12 +63,16 @@ public class DataverseDataSource : IDataSource<Entity>
         {
             RemoveAttribute(group, ImpersonateUsingAttribute);
 
-            IList<RequestAudit> reqAuds = group
-                .Select(c => (Request:CreateOrganizationRequest(c, dataOperationFlags),Audit:c.Audit))
-                .Where(r => r.Request is not null).ToList();
+            IList<OrgRequestWithData> OrgRequestsWithData = [.. group
+                .Select(c => new OrgRequestWithData(c, new RequestAudit(CreateOrganizationRequest(c, dataOperationFlags), c.Audit))).ToList()];
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
-            results.AddRange(await ExecuteMultipleAsync(reqAuds, dryRun));
+
+            var resultsFromSkippedOperations = OrgRequestsWithData.Where(x => x.RequestAudit.Request is null).Select(x => new DataOperationResult<Entity>(x.dataOperation, false, x.dataOperation.Data?.Id.ToString(), x.dataOperation.Data?.LogicalName, "Operation was skipped for target. Please check the Data Operation Type."));
+            var requestsToSend = OrgRequestsWithData.Where(x => x.RequestAudit.Request is not null).Select(x => x.RequestAudit);
+
+            results.AddRange(resultsFromSkippedOperations);
+            results.AddRange(await ExecuteMultipleAsync([.. requestsToSend], dryRun));
             CrmServiceClient.CallerId = Guid.Empty;
         }
 
