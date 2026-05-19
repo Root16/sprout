@@ -102,7 +102,7 @@ public class BatchProcessor(
                 proccessedCount,
                 queryState.TotalRecordCount,
                 result.MoreRecords,
-                queryState.Bookmark
+                result.Bookmark
             ),
             progress
         );
