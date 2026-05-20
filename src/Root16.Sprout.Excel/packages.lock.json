@@ -2,20 +2,19 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
-      "Microsoft.Data.SqlClient": {
+      "ExcelDataReader": {
         "type": "Direct",
-        "requested": "[5.2.0, )",
-        "resolved": "5.2.0",
-        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "AMv3oDETRHSRyXC17rBtKH45qIfFyo433LMeaMB3u4RNr/c9Luuc0Z+JMP6+3Cx9n4wXqFqcrEIVxrf/GgYnZg=="
+      },
+      "ExcelDataReader.DataSet": {
+        "type": "Direct",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "zA2/CVzbMspkNg0qf0/Zp+eU6VxYP5PtiJSErLDP46d/Y7F6of/NCcSGeXjs97KDq7UiEf6XJe+89s/92n2GYg==",
         "dependencies": {
-          "Azure.Identity": "1.10.3",
-          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
-          "Microsoft.Identity.Client": "4.56.0",
-          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
-          "Microsoft.SqlServer.Server": "1.0.0",
-          "System.Configuration.ConfigurationManager": "8.0.0",
-          "System.Runtime.Caching": "8.0.0"
+          "ExcelDataReader": "3.7.0"
         }
       },
       "Azure.Core": {
@@ -42,6 +41,21 @@
         "type": "Transitive",
         "resolved": "5.0.0",
         "contentHash": "W8DPQjkMScOMTtJbPwmPyj9c3zYSFGawDW3jwlBOOsnY+EzZFLgNQ/UMkK35JmkNOVPdCyPr2Tw7Vv9N+KA3ZQ=="
+      },
+      "Microsoft.Data.SqlClient": {
+        "type": "Transitive",
+        "resolved": "5.2.0",
+        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "dependencies": {
+          "Azure.Identity": "1.10.3",
+          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
+          "Microsoft.Identity.Client": "4.56.0",
+          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
+          "Microsoft.SqlServer.Server": "1.0.0",
+          "System.Configuration.ConfigurationManager": "8.0.0",
+          "System.Runtime.Caching": "8.0.0"
+        }
       },
       "Microsoft.Data.SqlClient.SNI.runtime": {
         "type": "Transitive",
@@ -261,8 +275,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -432,23 +446,29 @@
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
         }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
+        }
       }
     },
     "net6.0": {
-      "Microsoft.Data.SqlClient": {
+      "ExcelDataReader": {
         "type": "Direct",
-        "requested": "[5.2.0, )",
-        "resolved": "5.2.0",
-        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "AMv3oDETRHSRyXC17rBtKH45qIfFyo433LMeaMB3u4RNr/c9Luuc0Z+JMP6+3Cx9n4wXqFqcrEIVxrf/GgYnZg=="
+      },
+      "ExcelDataReader.DataSet": {
+        "type": "Direct",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "zA2/CVzbMspkNg0qf0/Zp+eU6VxYP5PtiJSErLDP46d/Y7F6of/NCcSGeXjs97KDq7UiEf6XJe+89s/92n2GYg==",
         "dependencies": {
-          "Azure.Identity": "1.10.3",
-          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
-          "Microsoft.Identity.Client": "4.56.0",
-          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
-          "Microsoft.SqlServer.Server": "1.0.0",
-          "System.Configuration.ConfigurationManager": "6.0.1",
-          "System.Runtime.Caching": "6.0.0"
+          "ExcelDataReader": "3.7.0"
         }
       },
       "Azure.Core": {
@@ -475,6 +495,21 @@
         "type": "Transitive",
         "resolved": "5.0.0",
         "contentHash": "W8DPQjkMScOMTtJbPwmPyj9c3zYSFGawDW3jwlBOOsnY+EzZFLgNQ/UMkK35JmkNOVPdCyPr2Tw7Vv9N+KA3ZQ=="
+      },
+      "Microsoft.Data.SqlClient": {
+        "type": "Transitive",
+        "resolved": "5.2.0",
+        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "dependencies": {
+          "Azure.Identity": "1.10.3",
+          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
+          "Microsoft.Identity.Client": "4.56.0",
+          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
+          "Microsoft.SqlServer.Server": "1.0.0",
+          "System.Configuration.ConfigurationManager": "6.0.1",
+          "System.Runtime.Caching": "6.0.0"
+        }
       },
       "Microsoft.Data.SqlClient.SNI.runtime": {
         "type": "Transitive",
@@ -689,8 +724,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -855,23 +890,29 @@
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
         }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
+        }
       }
     },
     "net7.0": {
-      "Microsoft.Data.SqlClient": {
+      "ExcelDataReader": {
         "type": "Direct",
-        "requested": "[5.2.0, )",
-        "resolved": "5.2.0",
-        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "AMv3oDETRHSRyXC17rBtKH45qIfFyo433LMeaMB3u4RNr/c9Luuc0Z+JMP6+3Cx9n4wXqFqcrEIVxrf/GgYnZg=="
+      },
+      "ExcelDataReader.DataSet": {
+        "type": "Direct",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "zA2/CVzbMspkNg0qf0/Zp+eU6VxYP5PtiJSErLDP46d/Y7F6of/NCcSGeXjs97KDq7UiEf6XJe+89s/92n2GYg==",
         "dependencies": {
-          "Azure.Identity": "1.10.3",
-          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
-          "Microsoft.Identity.Client": "4.56.0",
-          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
-          "Microsoft.SqlServer.Server": "1.0.0",
-          "System.Configuration.ConfigurationManager": "6.0.1",
-          "System.Runtime.Caching": "6.0.0"
+          "ExcelDataReader": "3.7.0"
         }
       },
       "Azure.Core": {
@@ -898,6 +939,21 @@
         "type": "Transitive",
         "resolved": "5.0.0",
         "contentHash": "W8DPQjkMScOMTtJbPwmPyj9c3zYSFGawDW3jwlBOOsnY+EzZFLgNQ/UMkK35JmkNOVPdCyPr2Tw7Vv9N+KA3ZQ=="
+      },
+      "Microsoft.Data.SqlClient": {
+        "type": "Transitive",
+        "resolved": "5.2.0",
+        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "dependencies": {
+          "Azure.Identity": "1.10.3",
+          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
+          "Microsoft.Identity.Client": "4.56.0",
+          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
+          "Microsoft.SqlServer.Server": "1.0.0",
+          "System.Configuration.ConfigurationManager": "6.0.1",
+          "System.Runtime.Caching": "6.0.0"
+        }
       },
       "Microsoft.Data.SqlClient.SNI.runtime": {
         "type": "Transitive",
@@ -1111,8 +1167,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -1263,23 +1319,29 @@
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
         }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
+        }
       }
     },
     "net8.0": {
-      "Microsoft.Data.SqlClient": {
+      "ExcelDataReader": {
         "type": "Direct",
-        "requested": "[5.2.0, )",
-        "resolved": "5.2.0",
-        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "AMv3oDETRHSRyXC17rBtKH45qIfFyo433LMeaMB3u4RNr/c9Luuc0Z+JMP6+3Cx9n4wXqFqcrEIVxrf/GgYnZg=="
+      },
+      "ExcelDataReader.DataSet": {
+        "type": "Direct",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "zA2/CVzbMspkNg0qf0/Zp+eU6VxYP5PtiJSErLDP46d/Y7F6of/NCcSGeXjs97KDq7UiEf6XJe+89s/92n2GYg==",
         "dependencies": {
-          "Azure.Identity": "1.10.3",
-          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
-          "Microsoft.Identity.Client": "4.56.0",
-          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
-          "Microsoft.SqlServer.Server": "1.0.0",
-          "System.Configuration.ConfigurationManager": "8.0.0",
-          "System.Runtime.Caching": "8.0.0"
+          "ExcelDataReader": "3.7.0"
         }
       },
       "Azure.Core": {
@@ -1306,6 +1368,21 @@
         "type": "Transitive",
         "resolved": "5.0.0",
         "contentHash": "W8DPQjkMScOMTtJbPwmPyj9c3zYSFGawDW3jwlBOOsnY+EzZFLgNQ/UMkK35JmkNOVPdCyPr2Tw7Vv9N+KA3ZQ=="
+      },
+      "Microsoft.Data.SqlClient": {
+        "type": "Transitive",
+        "resolved": "5.2.0",
+        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "dependencies": {
+          "Azure.Identity": "1.10.3",
+          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
+          "Microsoft.Identity.Client": "4.56.0",
+          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
+          "Microsoft.SqlServer.Server": "1.0.0",
+          "System.Configuration.ConfigurationManager": "8.0.0",
+          "System.Runtime.Caching": "8.0.0"
+        }
       },
       "Microsoft.Data.SqlClient.SNI.runtime": {
         "type": "Transitive",
@@ -1524,8 +1601,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -1683,24 +1760,30 @@
           "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
+        }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
         }
       }
     },
     "net9.0": {
-      "Microsoft.Data.SqlClient": {
+      "ExcelDataReader": {
         "type": "Direct",
-        "requested": "[5.2.0, )",
-        "resolved": "5.2.0",
-        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "AMv3oDETRHSRyXC17rBtKH45qIfFyo433LMeaMB3u4RNr/c9Luuc0Z+JMP6+3Cx9n4wXqFqcrEIVxrf/GgYnZg=="
+      },
+      "ExcelDataReader.DataSet": {
+        "type": "Direct",
+        "requested": "[3.7.0, )",
+        "resolved": "3.7.0",
+        "contentHash": "zA2/CVzbMspkNg0qf0/Zp+eU6VxYP5PtiJSErLDP46d/Y7F6of/NCcSGeXjs97KDq7UiEf6XJe+89s/92n2GYg==",
         "dependencies": {
-          "Azure.Identity": "1.10.3",
-          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
-          "Microsoft.Identity.Client": "4.56.0",
-          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
-          "Microsoft.SqlServer.Server": "1.0.0",
-          "System.Configuration.ConfigurationManager": "8.0.0",
-          "System.Runtime.Caching": "8.0.0"
+          "ExcelDataReader": "3.7.0"
         }
       },
       "Azure.Core": {
@@ -1727,6 +1810,21 @@
         "type": "Transitive",
         "resolved": "5.0.0",
         "contentHash": "W8DPQjkMScOMTtJbPwmPyj9c3zYSFGawDW3jwlBOOsnY+EzZFLgNQ/UMkK35JmkNOVPdCyPr2Tw7Vv9N+KA3ZQ=="
+      },
+      "Microsoft.Data.SqlClient": {
+        "type": "Transitive",
+        "resolved": "5.2.0",
+        "contentHash": "3alfyqRN3ELRtdvU1dGtLBRNQqprr3TJ0WrUJfMISPwg1nPUN2P3Lelah68IKWuV27Ceb7ig95hWNHFTSXfxMg==",
+        "dependencies": {
+          "Azure.Identity": "1.10.3",
+          "Microsoft.Data.SqlClient.SNI.runtime": "5.2.0",
+          "Microsoft.Identity.Client": "4.56.0",
+          "Microsoft.IdentityModel.JsonWebTokens": "6.35.0",
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.35.0",
+          "Microsoft.SqlServer.Server": "1.0.0",
+          "System.Configuration.ConfigurationManager": "8.0.0",
+          "System.Runtime.Caching": "8.0.0"
+        }
       },
       "Microsoft.Data.SqlClient.SNI.runtime": {
         "type": "Transitive",
@@ -1945,8 +2043,8 @@
       },
       "Microsoft.PowerPlatform.Dataverse.Client": {
         "type": "Transitive",
-        "resolved": "1.1.16",
-        "contentHash": "zrkb4MIwynYE+lBF1Y4ljyYWwQvXIvDgviSZ2r1TY9P9a3UmEGLWp/jJFbOt+3v4Uw4fXcL4Yed8HRfc/GOnQQ==",
+        "resolved": "1.1.17",
+        "contentHash": "gSgD7N52EATY0PkNIbBtqZeG0FDGK11X1x8nBnPclfykw73bvqyfortjNIwAGcj0esMqk8DSieuRCVi47hg9qQ==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Memory": "3.1.8",
           "Microsoft.Extensions.DependencyInjection": "3.1.8",
@@ -2104,6 +2202,13 @@
           "Microsoft.Extensions.Logging": "[7.0.0, )",
           "Microsoft.Extensions.Logging.Console": "[7.0.0, )",
           "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.16, )"
+        }
+      },
+      "root16.sprout.dataverse": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.PowerPlatform.Dataverse.Client": "[1.1.17, )",
+          "Root16.Sprout": "[1.0.0, )"
         }
       }
     }

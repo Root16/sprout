@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-    <TargetFrameworks>net8.0;net7.0;net6.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageProjectUrl>https://github.com/Root16/sprout</PackageProjectUrl>
@@ -19,7 +18,6 @@
 		<DebugType>embedded</DebugType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-		<LangVersion>default</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32602.215
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout", "Root16.Sprout\Root16.Sprout.csproj", "{25E60BE3-3DB2-4163-B3D7-7F6FECB5F1E1}"
 EndProject
@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.UnitTests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.CSV", "Root16.Sprout.CSV\Root16.Sprout.CSV.csproj", "{65ACAE92-DE3A-451C-9AD9-69DA9B5FE5B3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.CSV.Sample", "Root16.Sprout.CSV.Sample\Root16.Sprout.CSV.Sample.csproj", "{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout.Sample.CSV", "Root16.Sprout.CSV.Sample\Root16.Sprout.Sample.CSV.csproj", "{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Excel", "Root16.Sprout.Excel\Root16.Sprout.Excel.csproj", "{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}"
 EndProject

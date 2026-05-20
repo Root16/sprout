@@ -41,7 +41,7 @@ jobs:
     
     - name: Build solution and generate NuGet package
       run: |
-          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg Root16.Sprout.sln
+          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.sln
     - name: Push
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
