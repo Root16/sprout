@@ -5,7 +5,7 @@ name: Deploy to NuGet
 
 on:
   push:
-    branches: [ "main", "alpha" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set variables
       id: setvars
@@ -30,9 +30,9 @@ jobs:
         fi
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
         cache: true
         cache-dependency-path: '**/packages.lock.json'
         source-url: https://api.nuget.org/v3/index.json
@@ -41,12 +41,8 @@ jobs:
     
     - name: Build solution and generate NuGet package
       run: |
-          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout
-          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.Dataverse
-          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.SqlServer
-          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.CSV
-          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg src/Root16.Sprout.Excel      
+          dotnet pack -c Release -o out -p:PackageVersion="1.0.0.$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg Root16.Sprout.sln
     - name: Push
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-      run: dotnet nuget push out/*.nupkg --skip-duplicate --api-key $NUGET_API_KEY -ss https://api.nuget.org/v3/index.json
+      run: dotnet nuget push out/*.nupkg --skip-duplicate --api-key $NUGET_API_KEY -s https://api.nuget.org/v3/index.json
