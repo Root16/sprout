@@ -41,7 +41,7 @@ public class DataverseDataSource : IDataSource<Entity>
         IEnumerable<IGrouping<Guid?, DataOperation<Entity>>> groups;
         if (ImpersonateUsingAttribute is not null)
         {
-            groups = operations
+            groups = [.. operations
                 .GroupBy(op =>
                 {
                     var entityRef = op.Data.GetAttributeValue<EntityReference>(ImpersonateUsingAttribute);
@@ -50,12 +50,11 @@ public class DataverseDataSource : IDataSource<Entity>
                         return entityRef?.Id;
                     }
                     return null;
-                })
-                .ToArray();
+                })];
         }
         else
         {
-            groups = operations.GroupBy(op => (Guid?)null).ToArray();
+            groups = [.. operations.GroupBy(op => (Guid?)null)];
         }
 
         var results = new List<DataOperationResult<Entity>>();
@@ -63,9 +62,9 @@ public class DataverseDataSource : IDataSource<Entity>
         {
             RemoveAttribute(group, ImpersonateUsingAttribute);
 
-            IList<RequestAudit> reqAuds = group
+            IList<RequestAudit> reqAuds = [.. group
                 .Select(c => (Request:CreateOrganizationRequest(c, dataOperationFlags),Audit:c.Audit))
-                .Where(r => r.Request is not null).ToList();
+                .Where(r => r.Request is not null)];
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
             results.AddRange(await ExecuteMultipleAsync(reqAuds, dryRun));
