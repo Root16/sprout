@@ -296,88 +296,52 @@ public static class EntityExtensions
         return sb.ToString();
     }
 
-    public static string DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat = "u")
+    public static string DisplayAttributeValue(object? attributeValue, string? defaultDateTimeFormat = "u")
     {
-        if (attributeValue is null)
+        return attributeValue switch
         {
-            return "(null)";
-        }
-        else if (attributeValue is EntityCollection entityCol)
-        {
-            return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => GetActivityPartyAsString(entity)))}]";
-        }
-        else if (attributeValue is EntityReferenceCollection entityRefCol)
-        {
-            return $"[{string.Join(",", entityRefCol.OrderBy(e => e.Id).Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"))}]";
-        }
-        else if (attributeValue is EntityReference entityRef)
-        {
-            return $"{entityRef.LogicalName}({entityRef.Id})";
-        }
-        else if (attributeValue is Money money)
-        {
-            return money.Value.ToString();
-        }
-        else if (attributeValue is OptionSetValueCollection optionSetValueCol)
-        {
-            return $"[{string.Join(",", optionSetValueCol.OrderBy(op => op.Value).Select(op => op.Value))}]";
-        }
-        else if (attributeValue is DateTime dateTimeValue)
-        {
-            return dateTimeValue.ToString(defaultDateTimeFormat);
-        }
-        else if (attributeValue is OptionSetValue optionSetValue)
-        {
-            return optionSetValue.Value.ToString();
-        }
-        else
-        {
-            return $"{attributeValue}";
-        }
+            null => "(null)",
+            EntityCollection entityCol => $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(GetActivityPartyAsString))}]",
+            EntityReferenceCollection entityRefCol => $"[{string.Join(",", entityRefCol.OrderBy(e => e.Id).Select(e => $"{e.LogicalName}({e.Id})"))}]",
+            EntityReference entityRef => $"{entityRef.LogicalName}({entityRef.Id})",
+            Money money => money.Value.ToString(),
+            OptionSetValueCollection optionSetValueCol => $"[{string.Join(",", optionSetValueCol.OrderBy(op => op.Value).Select(op => op.Value))}]",
+            DateTime dateTimeValue => dateTimeValue.ToString(defaultDateTimeFormat),
+            OptionSetValue optionSetValue => optionSetValue.Value.ToString(),
+            _ => $"{attributeValue}"
+        };
     }
 
-    public static string GetFormattedValue(this Entity entity, string attributeKey)
-    {
-        string result = string.Empty;
-        if (entity.FormattedValues.ContainsKey(attributeKey))
-            result = entity.FormattedValues[attributeKey];
+    public static string GetFormattedValue(this Entity entity, string attributeKey) =>
+        entity.FormattedValues.TryGetValue(attributeKey, out string? result) ? result : string.Empty;
 
-        return result;
-    }
-
-    public static T GetAliasedAttributeValue<T>(this Entity entity, string attributeKey)
-    {
-        var aliasedValue = entity.GetAttributeValue<AliasedValue>(attributeKey);
-        if (aliasedValue?.Value is null)
-        {
-            return default!;
-        }
-
-        return (T)aliasedValue.Value;
-    }
+    public static T? GetAliasedAttributeValue<T>(this Entity entity, string attributeKey) =>
+        entity.GetAttributeValue<AliasedValue>(attributeKey)?.Value is T val ? val : default;
 
     public static bool TryGetAliasedAttributeValue<T>(this Entity entity, string attributeKey, out T result)
     {
-        try
+        if (entity.GetAttributeValue<AliasedValue>(attributeKey)?.Value is { } rawValue)
         {
-            AliasedValue aliasedValue = entity.GetAttributeValue<AliasedValue>(attributeKey);
-            if (aliasedValue?.Value is null)
+            if (rawValue is T typedValue)
             {
-                result = default!;
-                return false;
-            }
-
-            if (aliasedValue.Value is T val)
-            {
-                result = val;
+                result = typedValue;
                 return true;
             }
 
-            System.ComponentModel.TypeConverter converter = System.ComponentModel.TypeDescriptor.GetConverter(typeof(T));
-            result = (T)converter.ConvertFrom(aliasedValue.Value)!;
-            return true;
+            try
+            {
+                var converter = System.ComponentModel.TypeDescriptor.GetConverter(typeof(T));
+                if (converter.CanConvertFrom(rawValue.GetType()))
+                {
+                    result = (T)converter.ConvertFrom(rawValue)!;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Conversion failed, fall through to default return
+            }
         }
-        catch { }
 
         result = default!;
         return false;
