@@ -330,10 +330,6 @@ public static class EntityExtensions
         {
             return optionSetValue.Value.ToString();
         }
-        else if (attributeValue is string)
-        {
-            return $"{attributeValue}";
-        }
         else
         {
             return $"{attributeValue}";
