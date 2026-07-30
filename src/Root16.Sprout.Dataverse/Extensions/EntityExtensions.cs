@@ -140,8 +140,8 @@ public static class EntityExtensions
                 }
                 else
                 {
-                    var originalKeys = originalCollection.Entities.Select(GetActivityPartyAsStringForComparison).OrderBy(k => k).ToList();
-                    var updateKeys = updateCollection.Entities.Select(GetActivityPartyAsStringForComparison).OrderBy(k => k).ToList();
+                    var originalKeys = originalCollection.Entities.Select(GetActivityPartyAsString).OrderBy(k => k).ToList();
+                    var updateKeys = updateCollection.Entities.Select(GetActivityPartyAsString).OrderBy(k => k).ToList();
 
                     if (!originalKeys.SequenceEqual(updateKeys))
                     {
@@ -258,23 +258,29 @@ public static class EntityExtensions
         return delta;
     }
 
-    public static string GetActivityPartyAsStringForComparison(Entity party)
+    public static string GetActivityPartyAsString(Entity party)
     {
         var partyId = party.GetAttributeValue<EntityReference>("partyid");
         if (partyId is not null)
         {
+            // Use the Activity Party's partyid if it exists
             return $"{partyId.LogicalName}:{partyId.Id}";
         }
 
         var addressUsed = party.GetAttributeValue<string>("addressused");
         if (!string.IsNullOrWhiteSpace(addressUsed))
         {
-            // Unresolved email address
+            // Use the unresolved email address if it exists
             return $"unresolved:{addressUsed.ToLowerInvariant()}";
         }
 
-        // Fallback for an empty party record
-        return Guid.NewGuid().ToString();
+        if (party.Id != Guid.Empty)
+        {
+            // Use the Activity Party's own ID if it came from the database
+            return $"{party.LogicalName}:{party.Id}";
+        }
+
+        return "(empty_party)";
     }
 
     public static string FormatChanges(this Entity entity, Entity previousValues)
@@ -298,7 +304,7 @@ public static class EntityExtensions
         }
         else if (attributeValue is EntityCollection entityCol)
         {
-            return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => $"{entity.LogicalName}({entity.Id})"))}]";
+            return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => GetActivityPartyAsString(entity)))}]";
         }
         else if (attributeValue is EntityReferenceCollection entityRefCol)
         {
