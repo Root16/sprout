@@ -111,12 +111,13 @@ public static class EntityExtensions
                 }
                 else
                 {
-                    var originalPartyIds = new HashSet<Guid?>(originalCollection.Entities.Select(e => e.GetAttributeValue<EntityReference>("partyid")?.Id));
-                    var updatePartyIds = new HashSet<Guid?>(updateCollection.Entities.Select(e => e.GetAttributeValue<EntityReference>("partyid")?.Id));
+                    var originalKeys = originalCollection.Entities.Select(GetActivityPartyAsStringForComparison).OrderBy(k => k).ToList();
+                    var updateKeys = updateCollection.Entities.Select(GetActivityPartyAsStringForComparison).OrderBy(k => k).ToList();
 
-                    if (!originalPartyIds.SetEquals(updatePartyIds))
+                    if (!originalKeys.SequenceEqual(updateKeys))
                     {
-                        logger.LogDebug("Attribute {AttributeKey} has different party IDs. Original: {OriginalIds}, Update: {UpdateIds}", attribute.Key, string.Join(", ", originalPartyIds), string.Join(", ", updatePartyIds.Select(g => g?.ToString() ?? "null")));
+                        logger.LogDebug("Attribute {AttributeKey} has different Activity Parties. Original: {OriginalParties}, Update: {UpdateParties}",
+                            attribute.Key, string.Join(", ", originalKeys), string.Join(", ", updateKeys));
                         different = true;
                     }
                 }
@@ -226,6 +227,25 @@ public static class EntityExtensions
             }
         }
         return delta;
+    }
+
+    public static string GetActivityPartyAsStringForComparison(Entity party)
+    {
+        var partyId = party.GetAttributeValue<EntityReference>("partyid");
+        if (partyId is not null)
+        {
+            return $"{partyId.LogicalName}:{partyId.Id}";
+        }
+
+        var addressUsed = party.GetAttributeValue<string>("addressused");
+        if (!string.IsNullOrWhiteSpace(addressUsed))
+        {
+            // Unresolved email address
+            return $"unresolved:{addressUsed.ToLowerInvariant()}";
+        }
+
+        // Fallback for an empty party record
+        return Guid.NewGuid().ToString();
     }
 
     public static string FormatChanges(this Entity entity, Entity previousValues)
