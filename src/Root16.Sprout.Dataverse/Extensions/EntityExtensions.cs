@@ -10,12 +10,41 @@ public static class EntityExtensions
     {
         logger.LogDebug("Cloning entity {LogicalName} ({Id}) with modified attributes.", original?.LogicalName, original?.Id);
         Entity delta = new(original.LogicalName, original.Id);
+
         foreach (var attribute in updates.Attributes)
         {
+            if (attribute.Key == $"{original.LogicalName}id")
+            {
+                continue;
+            }
+
             logger.LogDebug("Checking attribute {AttributeKey} for changes.", attribute.Key);
             bool different = false;
             original.Attributes.TryGetValue(attribute.Key, out object originalValue);
+
+            if (originalValue is AliasedValue aliasedValue)
+            {
+                originalValue = aliasedValue.Value;
+            }
+
             var updateValue = attribute.Value;
+
+            // Do we want to handle users setting the backing values and us making it work.
+            // They set it as an int, but the original value is an OptionSetValue, so we should convert it to an OptionSetValue for comparison.
+            // They set it as a Guid, but the original value is an EntityReference, so we should convert it to an EntityReference for comparison.
+            // They set it as a decimal, but the original value is a Money, so we should convert it to a Money for comparison.
+            //if (updateValue is int intVal && originalValue is OptionSetValue)
+            //{
+            //    updateValue = new OptionSetValue(intVal);
+            //}
+            //else if (updateValue is Guid guidVal && originalValue is EntityReference origRef)
+            //{
+            //    updateValue = new EntityReference(origRef.LogicalName, guidVal);
+            //}
+            //else if (updateValue is decimal decVal && originalValue is Money)
+            //{
+            //    updateValue = new Money(decVal);
+            //}
 
             if (updateValue is EntityReference || originalValue is EntityReference)
             {
@@ -261,7 +290,7 @@ public static class EntityExtensions
         return sb.ToString();
     }
 
-    public static string DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat="u")
+    public static string DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat = "u")
     {
         if (attributeValue is null)
         {
@@ -271,9 +300,9 @@ public static class EntityExtensions
         {
             return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => $"{entity.LogicalName}({entity.Id})"))}]";
         }
-        else if (attributeValue is EntityReferenceCollection entityRefCol) 
+        else if (attributeValue is EntityReferenceCollection entityRefCol)
         {
-            return $"[{string.Join(",", entityRefCol.OrderBy(e=>e.Id).Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"))}]";
+            return $"[{string.Join(",", entityRefCol.OrderBy(e => e.Id).Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"))}]";
         }
         else if (attributeValue is EntityReference entityRef)
         {
@@ -283,9 +312,9 @@ public static class EntityExtensions
         {
             return money.Value.ToString();
         }
-        else if (attributeValue is OptionSetValueCollection optionSetValueCol) 
+        else if (attributeValue is OptionSetValueCollection optionSetValueCol)
         {
-            return $"[{string.Join(",", optionSetValueCol.OrderBy(op=>op.Value).Select(op => op.Value))}]";
+            return $"[{string.Join(",", optionSetValueCol.OrderBy(op => op.Value).Select(op => op.Value))}]";
         }
         else if (attributeValue is DateTime dateTimeValue)
         {
