@@ -1,72 +1,123 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk;
 using System.Text;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
 public static class EntityExtensions
 {
-    public static Entity CloneWithModifiedAttributes(this Entity updates, Entity original)
+    public static Entity CloneWithModifiedAttributes(this Entity updates, Entity original, ILogger logger)
     {
+        logger.LogDebug("Cloning entity {LogicalName} ({Id}) with modified attributes.", original?.LogicalName, original?.Id);
         Entity delta = new(original.LogicalName, original.Id);
+
         foreach (var attribute in updates.Attributes)
         {
+            if (attribute.Key == $"{original.LogicalName}id")
+            {
+                continue;
+            }
+
+            logger.LogDebug("Checking attribute {AttributeKey} for changes.", attribute.Key);
             bool different = false;
             original.Attributes.TryGetValue(attribute.Key, out object originalValue);
+
+            if (originalValue is AliasedValue aliasedValue)
+            {
+                originalValue = aliasedValue.Value;
+            }
+
             var updateValue = attribute.Value;
+
+            // Do we want to handle users setting the backing values and us making it work.
+            // They set it as an int, but the original value is an OptionSetValue, so we should convert it to an OptionSetValue for comparison.
+            // They set it as a Guid, but the original value is an EntityReference, so we should convert it to an EntityReference for comparison.
+            // They set it as a decimal, but the original value is a Money, so we should convert it to a Money for comparison.
+            //if (updateValue is int intVal && originalValue is OptionSetValue)
+            //{
+            //    updateValue = new OptionSetValue(intVal);
+            //}
+            //else if (updateValue is Guid guidVal && originalValue is EntityReference origRef)
+            //{
+            //    updateValue = new EntityReference(origRef.LogicalName, guidVal);
+            //}
+            //else if (updateValue is decimal decVal && originalValue is Money)
+            //{
+            //    updateValue = new Money(decVal);
+            //}
 
             if (updateValue is EntityReference || originalValue is EntityReference)
             {
-                var originalLookup = (EntityReference)originalValue;
-                var updateLookup = (EntityReference)updateValue;
+                logger.LogDebug("Comparing EntityReference attribute {AttributeKey}", attribute.Key);
+                var originalLookup = originalValue as EntityReference;
+                var updateLookup = updateValue as EntityReference;
 
                 if (updateLookup?.Id != originalLookup?.Id ||
                     updateLookup?.LogicalName != originalLookup?.LogicalName)
                 {
+                    logger.LogDebug("Attribute {AttributeKey} has different EntityReference values.", attribute.Key);
                     different = true;
                 }
             }
             else if (updateValue is EntityReferenceCollection || originalValue is EntityReferenceCollection)
             {
-                var originalCollection = (EntityReferenceCollection)originalValue;
-                var updateCollection = (EntityReferenceCollection)updateValue;
+                logger.LogDebug("Comparing EntityReferenceCollection attribute {AttributeKey}", attribute.Key);
+                var originalCollection = originalValue as EntityReferenceCollection;
+                var updateCollection = updateValue as EntityReferenceCollection;
 
-                var groupedOriginalCollection = originalCollection.GroupBy(o => o.LogicalName).OrderBy(g => g.Key).ToList();
-                var groupedUpdateCollection = updateCollection.GroupBy(o => o.LogicalName).OrderBy(g => g.Key).ToList();
-
-                // Check If Same Amount Of Groups
-                if (groupedOriginalCollection.Count != groupedUpdateCollection.Count)
+                if (originalCollection is null && updateCollection is null)
                 {
+                    continue;
+                }
+                if (originalCollection is null || updateCollection is null)
+                {
+                    logger.LogDebug("Attribute {AttributeKey} has different EntityReferenceCollection presence (one is null).", attribute.Key);
                     different = true;
                 }
                 else
                 {
-                    var originalTypes = groupedOriginalCollection.Select(g => g.Key).Distinct();
-                    var updateTypes = groupedUpdateCollection.Select(g => g.Key).Distinct();
+                    List<IGrouping<string?, EntityReference>> groupedOriginalCollection = [.. originalCollection.GroupBy(o => o?.LogicalName).OrderBy(g => g.Key)];
+                    List<IGrouping<string?, EntityReference>> groupedUpdateCollection = [.. updateCollection.GroupBy(o => o?.LogicalName).OrderBy(g => g.Key)];
 
-                    // Check if the distinct record types are the same
-                    if (!originalTypes.SequenceEqual(updateTypes))
+                    // Check If Same Amount Of Groups
+                    if (groupedOriginalCollection.Count != groupedUpdateCollection.Count)
                     {
+                        logger.LogDebug("Attribute {AttributeKey} has different number of groups. Original: {OriginalCount}, Update: {UpdateCount}", attribute.Key, groupedOriginalCollection.Count, groupedUpdateCollection.Count);
                         different = true;
                     }
                     else
                     {
-                        // Loop through each group and check if they have the same amount of records
-                        foreach (var originalGroup in groupedOriginalCollection)
+                        var originalTypes = groupedOriginalCollection.Select(g => g.Key).Distinct();
+                        var updateTypes = groupedUpdateCollection.Select(g => g.Key).Distinct();
+
+                        // Check if the distinct record types are the same
+                        if (!originalTypes.SequenceEqual(updateTypes))
                         {
-                            var updateGroup = groupedUpdateCollection.FirstOrDefault(g => g.Key == originalGroup.Key);
-                            if (updateGroup == null || originalGroup.Count() != updateGroup.Count())
+                            logger.LogDebug("Attribute {AttributeKey} has different record types. Original: {OriginalTypes}, Update: {UpdateTypes}", attribute.Key, string.Join(", ", originalTypes.Select(g => g?.ToString() ?? "null")), string.Join(", ", updateTypes.Select(g => g?.ToString() ?? "null")));
+                            different = true;
+                        }
+                        else
+                        {
+                            // Loop through each group and check if they have the same amount of records
+                            foreach (var originalGroup in groupedOriginalCollection)
                             {
-                                different = true;
-                                break;
-                            }
+                                var updateGroup = groupedUpdateCollection.FirstOrDefault(g => g.Key == originalGroup.Key);
+                                if (updateGroup is null || originalGroup.Count() != updateGroup.Count())
+                                {
+                                    logger.LogDebug("Attribute {AttributeKey} has different number of records for type {RecordType}. Original: {OriginalCount}, Update: {UpdateCount}", attribute.Key, originalGroup.Key, originalGroup.Count(), updateGroup?.Count() ?? 0);
+                                    different = true;
+                                    break;
+                                }
 
-                            var originalIds = new HashSet<Guid>(originalGroup.Select(o => o.Id));
-                            var updateIds = new HashSet<Guid>(updateGroup.Select(u => u.Id));
+                                var originalIds = new HashSet<Guid?>(originalGroup.Select(o => o?.Id));
+                                var updateIds = new HashSet<Guid?>(updateGroup.Select(u => u?.Id));
 
-                            if (!originalIds.SetEquals(updateIds))
-                            {
-                                different = true;
-                                break;
+                                if (!originalIds.SetEquals(updateIds))
+                                {
+                                    logger.LogDebug("Attribute {AttributeKey} has different record IDs for type {RecordType}. Original: {OriginalIds}, Update: {UpdateIds}", attribute.Key, originalGroup.Key, string.Join(", ", originalIds.Select(g => g?.ToString() ?? "null")), string.Join(", ", updateIds.Select(g => g?.ToString() ?? "null")));
+                                    different = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -74,92 +125,162 @@ public static class EntityExtensions
             }
             else if (updateValue is EntityCollection || originalValue is EntityCollection)
             {
-                var originalCollection = (EntityCollection)originalValue;
-                var updateCollection = (EntityCollection)updateValue;
+                logger.LogDebug("Comparing EntityCollection attribute {AttributeKey}", attribute.Key);
+                var originalCollection = originalValue as EntityCollection;
+                var updateCollection = updateValue as EntityCollection;
 
-                var originalPartyIds = new HashSet<Guid>(originalCollection.Entities.Select(e => e.GetAttributeValue<EntityReference>("partyid").Id));
-                var updatePartyIds = new HashSet<Guid>(updateCollection.Entities.Select(e => e.GetAttributeValue<EntityReference>("partyid").Id));
-
-                if (!originalPartyIds.SetEquals(updatePartyIds))
+                if (originalCollection is null && updateCollection is null)
                 {
+                    continue;
+                }
+                if (originalCollection is null || updateCollection is null)
+                {
+                    logger.LogDebug("Attribute {AttributeKey} has different EntityCollection presence (one is null).", attribute.Key);
                     different = true;
                 }
+                else
+                {
+                    var originalKeys = originalCollection.Entities.Select(GetActivityPartyAsString).OrderBy(k => k).ToList();
+                    var updateKeys = updateCollection.Entities.Select(GetActivityPartyAsString).OrderBy(k => k).ToList();
 
+                    if (!originalKeys.SequenceEqual(updateKeys))
+                    {
+                        logger.LogDebug("Attribute {AttributeKey} has different Activity Parties. Original: {OriginalParties}, Update: {UpdateParties}",
+                            attribute.Key, string.Join(", ", originalKeys), string.Join(", ", updateKeys));
+                        different = true;
+                    }
+                }
             }
             else if (updateValue is Money || originalValue is Money)
             {
-                var originalMoney = (Money)originalValue;
-                var updateMoney = (Money)updateValue;
+                logger.LogDebug("Comparing Money attribute {AttributeKey}", attribute.Key);
+                var originalMoney = originalValue as Money;
+                var updateMoney = updateValue as Money;
 
                 if (updateMoney?.Value != originalMoney?.Value)
                 {
+                    logger.LogDebug("Attribute {AttributeKey} has different Money values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalMoney?.Value, updateMoney?.Value);
                     different = true;
                 }
             }
             else if (updateValue is OptionSetValue || originalValue is OptionSetValue)
             {
-                var originalOptionSetValue = (OptionSetValue)originalValue;
-                var updateOptionSetValue = (OptionSetValue)updateValue;
+                logger.LogDebug("Comparing OptionSetValue attribute {AttributeKey}", attribute.Key);
+                var originalOptionSetValue = originalValue as OptionSetValue;
+                var updateOptionSetValue = updateValue as OptionSetValue;
 
                 if (updateOptionSetValue?.Value != originalOptionSetValue?.Value)
                 {
+                    logger.LogDebug("Attribute {AttributeKey} has different OptionSetValue values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalOptionSetValue?.Value, updateOptionSetValue?.Value);
                     different = true;
                 }
             }
             else if (updateValue is OptionSetValueCollection || originalValue is OptionSetValueCollection)
             {
-                var originalOptionSetValue = (OptionSetValueCollection)originalValue;
-                var updateOptionSetValue = (OptionSetValueCollection)updateValue;
+                logger.LogDebug("Comparing OptionSetValueCollection attribute {AttributeKey}", attribute.Key);
+                var originalOptionSetValue = originalValue as OptionSetValueCollection;
+                var updateOptionSetValue = updateValue as OptionSetValueCollection;
+
                 var originalOptions = originalOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
                 var updateOptions = updateOptionSetValue?.Select(o => o.Value)?.ToArray() ?? [];
 
                 if (originalOptions.Length != updateOptions.Length ||
                     originalOptions.Intersect(updateOptions).Count() != originalOptions.Length)
                 {
+                    logger.LogDebug("Attribute {AttributeKey} has different OptionSetValueCollection values. Original: {OriginalValues}, Update: {UpdateValues}", attribute.Key, string.Join(", ", originalOptions), string.Join(", ", updateOptions));
                     different = true;
                 }
             }
             else if (updateValue is string || originalValue is string)
             {
-                if ((string)updateValue == "" && originalValue is null)
+                logger.LogDebug("Comparing string attribute {AttributeKey}", attribute.Key);
+                string? strUpdate = updateValue as string;
+                string? strOriginal = originalValue as string;
+
+                if (strUpdate == "" && strOriginal is null)
                 {
+                    logger.LogDebug("Attribute {AttributeKey} is considered equal because update value is empty string and original value is null.", attribute.Key);
                     different = false;
                 }
-                else if (!Equals(updateValue, originalValue))
+                else
                 {
-                    different = true;
+                    bool areEqual = string.Equals(strUpdate, strOriginal, StringComparison.OrdinalIgnoreCase);
+
+                    if (!areEqual)
+                    {
+                        logger.LogDebug("Attribute {AttributeKey} has different string values.", attribute.Key);
+                        different = true;
+                    }
                 }
             }
             else if (updateValue is DateTime || originalValue is DateTime)
             {
-                if (updateValue is DateTime dt)
+                logger.LogDebug("Comparing DateTime attribute {AttributeKey}", attribute.Key);
+                DateTime? dtUpdate = updateValue as DateTime?;
+                DateTime? dtOriginal = originalValue as DateTime?;
+
+                if (dtUpdate.HasValue && dtOriginal.HasValue)
                 {
-                    updateValue = (new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Kind)).ToUniversalTime();
-                    if (originalValue is DateTime time)
+                    //Database doesn't have milliseconds, so we need to compare the values without milliseconds. We will convert both DateTime values to UTC to ensure accurate comparison across different time zones.
+                    var uTime = new DateTime(dtUpdate.Value.Year, dtUpdate.Value.Month, dtUpdate.Value.Day,
+                        dtUpdate.Value.Hour, dtUpdate.Value.Minute, dtUpdate.Value.Second, dtUpdate.Value.Kind).ToUniversalTime();
+
+                    var oTime = new DateTime(dtOriginal.Value.Year, dtOriginal.Value.Month, dtOriginal.Value.Day,
+                        dtOriginal.Value.Hour, dtOriginal.Value.Minute, dtOriginal.Value.Second, dtOriginal.Value.Kind).ToUniversalTime();
+
+                    if (uTime != oTime)
                     {
-                        originalValue = time.ToUniversalTime();
+                        logger.LogDebug("Attribute {AttributeKey} has different DateTime values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, oTime, uTime);
+                        different = true;
                     }
                 }
-
-                if (!Equals(updateValue, originalValue))
+                else if (dtUpdate.HasValue != dtOriginal.HasValue)
                 {
+                    logger.LogDebug("Attribute {AttributeKey} has different DateTime presence. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, dtOriginal, dtUpdate);
                     different = true;
                 }
-            } else
+            }
+            else
             {
                 if (!Equals(updateValue, originalValue))
                 {
+                    logger.LogDebug("Attribute {AttributeKey} has different values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalValue, updateValue);
                     different = true;
                 }
             }
 
-
             if (different)
             {
+                logger.LogDebug("Attribute {AttributeKey} has changed.", attribute.Key);
                 delta[attribute.Key] = updateValue;
             }
         }
         return delta;
+    }
+
+    public static string GetActivityPartyAsString(Entity party)
+    {
+        var partyId = party.GetAttributeValue<EntityReference>("partyid");
+        if (partyId is not null)
+        {
+            // Use the Activity Party's partyid if it exists
+            return $"{partyId.LogicalName}:{partyId.Id}";
+        }
+
+        var addressUsed = party.GetAttributeValue<string>("addressused");
+        if (!string.IsNullOrWhiteSpace(addressUsed))
+        {
+            // Use the unresolved email address if it exists
+            return $"unresolved:{addressUsed.ToLowerInvariant()}";
+        }
+
+        if (party.Id != Guid.Empty)
+        {
+            // Use the Activity Party's own ID if it came from the database
+            return $"{party.LogicalName}:{party.Id}";
+        }
+
+        return "(empty_party)";
     }
 
     public static string FormatChanges(this Entity entity, Entity previousValues)
@@ -175,92 +296,52 @@ public static class EntityExtensions
         return sb.ToString();
     }
 
-    public static string DisplayAttributeValue(object attributeValue, string? defaultDateTimeFormat="u")
+    public static string DisplayAttributeValue(object? attributeValue, string? defaultDateTimeFormat = "u")
     {
-        if (attributeValue is null)
+        return attributeValue switch
         {
-            return "(null)";
-        }
-        else if (attributeValue is EntityCollection entityCol)
-        {
-            return $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(entity => $"{entity.LogicalName}({entity.Id})"))}]";
-        }
-        else if (attributeValue is EntityReferenceCollection entityRefCol) 
-        {
-            return $"[{string.Join(",", entityRefCol.OrderBy(e=>e.Id).Select(entityRef => $"{entityRef.LogicalName}({entityRef.Id})"))}]";
-        }
-        else if (attributeValue is EntityReference entityRef)
-        {
-            return $"{entityRef.LogicalName}({entityRef.Id})";
-        }
-        else if (attributeValue is Money money)
-        {
-            return money.Value.ToString();
-        }
-        else if (attributeValue is OptionSetValueCollection optionSetValueCol) 
-        {
-            return $"[{string.Join(",", optionSetValueCol.OrderBy(op=>op.Value).Select(op => op.Value))}]";
-        }
-        else if (attributeValue is DateTime dateTimeValue)
-        {
-            return dateTimeValue.ToString(defaultDateTimeFormat);
-        }
-        else if (attributeValue is OptionSetValue optionSetValue)
-        {
-            return optionSetValue.Value.ToString();
-        }
-        else if (attributeValue is string)
-        {
-            return $"{attributeValue}";
-        }
-        else
-        {
-            return $"{attributeValue}";
-        }
+            null => "(null)",
+            EntityCollection entityCol => $"[{string.Join(",", entityCol.Entities.OrderBy(e => e.Id).Select(GetActivityPartyAsString))}]",
+            EntityReferenceCollection entityRefCol => $"[{string.Join(",", entityRefCol.OrderBy(e => e.Id).Select(e => $"{e.LogicalName}({e.Id})"))}]",
+            EntityReference entityRef => $"{entityRef.LogicalName}({entityRef.Id})",
+            Money money => money.Value.ToString(),
+            OptionSetValueCollection optionSetValueCol => $"[{string.Join(",", optionSetValueCol.OrderBy(op => op.Value).Select(op => op.Value))}]",
+            DateTime dateTimeValue => dateTimeValue.ToString(defaultDateTimeFormat),
+            OptionSetValue optionSetValue => optionSetValue.Value.ToString(),
+            _ => $"{attributeValue}"
+        };
     }
 
-    public static string GetFormattedValue(this Entity entity, string attributeKey)
-    {
-        string result = string.Empty;
-        if (entity.FormattedValues.ContainsKey(attributeKey))
-            result = entity.FormattedValues[attributeKey];
+    public static string GetFormattedValue(this Entity entity, string attributeKey) =>
+        entity.FormattedValues.TryGetValue(attributeKey, out string? result) ? result : string.Empty;
 
-        return result;
-    }
-
-    public static T GetAliasedAttributeValue<T>(this Entity entity, string attributeKey)
-    {
-        var aliasedValue = entity.GetAttributeValue<AliasedValue>(attributeKey);
-        if (aliasedValue?.Value is null)
-        {
-            return default!;
-        }
-
-        return (T)aliasedValue.Value;
-    }
+    public static T? GetAliasedAttributeValue<T>(this Entity entity, string attributeKey) =>
+        entity.GetAttributeValue<AliasedValue>(attributeKey)?.Value is T val ? val : default;
 
     public static bool TryGetAliasedAttributeValue<T>(this Entity entity, string attributeKey, out T result)
     {
-        try
+        if (entity.GetAttributeValue<AliasedValue>(attributeKey)?.Value is { } rawValue)
         {
-            AliasedValue aliasedValue = entity.GetAttributeValue<AliasedValue>(attributeKey);
-            if (aliasedValue?.Value is null)
+            if (rawValue is T typedValue)
             {
-                result = default!;
-                return false;
-            }
-
-            if (aliasedValue.Value is T val)
-            {
-                result = val;
+                result = typedValue;
                 return true;
             }
 
-            System.ComponentModel.TypeConverter converter = System.ComponentModel.TypeDescriptor.GetConverter(typeof(T));
-            result = (T)converter.ConvertFrom(aliasedValue.Value)!;
-            return true;
+            try
+            {
+                var converter = System.ComponentModel.TypeDescriptor.GetConverter(typeof(T));
+                if (converter.CanConvertFrom(rawValue.GetType()))
+                {
+                    result = (T)converter.ConvertFrom(rawValue)!;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Conversion failed, fall through to default return
+            }
         }
-        catch { }
 
         result = default!;
         return false;
