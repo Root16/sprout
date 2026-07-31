@@ -31,7 +31,7 @@ public class EntityOperationReducer(
         }
 
         updates.Attributes.Remove("overriddencreatedon");
-        return updates.CloneWithModifiedAttributes(original);
+        return updates.CloneWithModifiedAttributes(original, logger);
     }
 
     public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, string> keySelector, StringComparison stringComparison = StringComparison.InvariantCultureIgnoreCase)

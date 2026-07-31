@@ -1,11 +1,17 @@
 using System.ComponentModel;
 using Microsoft.Xrm.Sdk;
 using Root16.Sprout.DataSources.Dataverse;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions; // Add this
 
 namespace Root16.Sprout.UnitTests
 {
     public class EntityExtensionsTests
     {
+        // Creating a NullLogger instance to pass to the CloneWithModifiedAttributes method.
+        // We use NullLogger.Instance to avoid the need for a real logger in unit tests.
+        private readonly ILogger _logger = NullLogger.Instance;
+
         #region EntityReferenceCollection Tests
         [Fact]
         public void CloneWithModifiedAttributes_ShouldDetectDifferentNumberOfGroups()
@@ -37,7 +43,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Equal(updateCollection, delta["relatedEntities"]);
@@ -72,7 +78,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Equal(updateCollection, delta["relatedEntities"]);
@@ -108,7 +114,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Equal(updateCollection, delta["relatedEntities"]);
@@ -145,7 +151,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Equal(updateCollection, delta["relatedEntities"]);
@@ -182,7 +188,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Empty(delta.Attributes);
         }
@@ -218,7 +224,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Empty(delta.Attributes);
         }
@@ -252,7 +258,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.True(delta.Attributes.ContainsKey("partylist"));
@@ -281,7 +287,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.True(delta.Attributes.ContainsKey("partylist"));
@@ -310,13 +316,12 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.True(delta.Attributes.ContainsKey("partylist"));
         }
         #endregion
-
 
         #region DateTime Tests
         [Fact]
@@ -338,7 +343,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Equal(new DateTime(2023, 1, 2, 12, 0, 0, DateTimeKind.Utc), delta["modifiedon"]);
@@ -363,23 +368,22 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Empty(delta.Attributes);
         }
 
         [Fact]
-        public void CloneWithModifiedAttributes_ShouldDetectDifferentDateTimeValuesWithDifferentTimeZones()
+        public void CloneWithModifiedAttributes_ShouldReturnEmptyDelta_WhenDateTimesRepresentSameMomentInDifferentTimeZones()
         {
             var originalDateTime = new DateTime(2023, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-            var localTimeZone = TimeZoneInfo.Local;
-            var updateDateTime = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2023, 1, 1, 6, 0, 0, DateTimeKind.Local), localTimeZone);
+            var updateDateTime = originalDateTime.ToLocalTime();
 
             var original = new Entity("account", Guid.NewGuid())
             {
                 Attributes = new Microsoft.Xrm.Sdk.AttributeCollection
                 {
-                    { "modifiedon", originalDateTime }
+                    { "datefield", originalDateTime }
                 }
             };
 
@@ -387,12 +391,11 @@ namespace Root16.Sprout.UnitTests
             {
                 Attributes = new Microsoft.Xrm.Sdk.AttributeCollection
                 {
-                    { "modifiedon", updateDateTime }
+                    { "datefield", updateDateTime }
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
-
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
             Assert.Empty(delta.Attributes);
         }
 
@@ -415,7 +418,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Equal(new DateTime(2023, 1, 1, 12, 0, 0, DateTimeKind.Utc), delta["modifiedon"]);
@@ -440,7 +443,7 @@ namespace Root16.Sprout.UnitTests
                 }
             };
 
-            var delta = updates.CloneWithModifiedAttributes(original);
+            var delta = updates.CloneWithModifiedAttributes(original, _logger);
 
             Assert.Single(delta.Attributes);
             Assert.Null(delta["modifiedon"]);
