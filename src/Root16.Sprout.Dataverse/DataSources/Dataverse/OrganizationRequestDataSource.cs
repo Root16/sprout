@@ -35,7 +35,7 @@ public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSour
         };
         executeMultipleRequest.Requests.AddRange(operations.Select(op => CreateOrganizationRequest(op, dataOperationFlags)));
 
-        var executeMultipleResponse = (ExecuteMultipleResponse)await dataverseDataSource.CrmServiceClient.ExecuteAsync(executeMultipleRequest);
+        var executeMultipleResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(executeMultipleRequest);
 
         foreach (var response in executeMultipleResponse.Responses)
         {
