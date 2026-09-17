@@ -71,6 +71,16 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
         set => InnerClient.UseWebApi = value;
     }
 
+    public ServiceClientWithRetry? Clone()
+    {
+        ServiceClient cloned = InnerClient.Clone();
+        if (cloned == null)
+        {
+            return null;
+        }
+        return new(cloned, Logger);
+    }
+
     private OrganizationResponse ExecuteWithRetry(OrganizationRequest request)
     {
         int retryCount = 0;
