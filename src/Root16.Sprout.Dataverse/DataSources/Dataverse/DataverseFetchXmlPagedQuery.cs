@@ -1,5 +1,4 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
-using Microsoft.Xrm.Sdk;
+﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using System.Xml.Linq;
@@ -30,7 +29,7 @@ public class DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string 
 
     public async Task<PagedQueryResult<Entity>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
+        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(AddPaging(fetchXml, ++pageNumber, pageSize, (string?)bookmark)));
 
         return new PagedQueryResult<Entity>
         (
@@ -84,7 +83,7 @@ public class DataverseFetchXmlPagedQuery(DataverseDataSource dataSource, string 
         do
         {
             AddPaging(fetchDoc, page, pageSize, pagingCookie);
-            var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression { Query = fetchDoc.ToString(SaveOptions.DisableFormatting) });
+            var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression { Query = fetchDoc.ToString(SaveOptions.DisableFormatting) });
             totalCount += results.Entities.Count;
             moreRecords = results.MoreRecords;
             pagingCookie = results.PagingCookie;

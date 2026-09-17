@@ -2,6 +2,7 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Dataverse.DataSources.Dataverse;
 using System.Collections.Concurrent;
 using System.Net;
 using System.ServiceModel;
@@ -17,7 +18,7 @@ public class DataverseDataSource : IDataSource<Entity>
     const int MaxRetries = 10;
 
     public DataverseDataSource(
-        ServiceClient crmServiceClient, 
+        ServiceClientWithRetry crmServiceClient,
         ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
@@ -31,7 +32,7 @@ public class DataverseDataSource : IDataSource<Entity>
         this.logger = logger;
     }
 
-    public ServiceClient CrmServiceClient { get; }
+    public ServiceClientWithRetry CrmServiceClient { get; }
 
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)

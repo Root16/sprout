@@ -7,6 +7,7 @@ namespace Root16.Sprout.DataSources.Dataverse;
 
 public static class ServiceClientExtensions
 {
+    [Obsolete("Use ServiceClientWithRetry.RetrieveMultipleAsync instead")]
     public static async Task<EntityCollection> RetrieveMultipleWithRetryAsync(this ServiceClient serviceClient, QueryBase query, int retryCount = 5)
     {
         var retryAfter = TimeSpan.FromSeconds(0);
@@ -32,6 +33,7 @@ public static class ServiceClientExtensions
         throw new Exception($"{nameof(RetrieveMultipleWithRetryAsync)} : {serviceClient.LastException.Message}");
     }
 
+    [Obsolete("Use ServiceClientWithRetry.RetrieveMultipleAsync instead")]
     public static async Task<EntityCollection> RetrieveMultipleWithRetryAsync(this ServiceClient serviceClient, QueryBase query, int retryCount, CancellationToken cancellationToken = default)
     {
         var retryAfter = TimeSpan.FromSeconds(0);

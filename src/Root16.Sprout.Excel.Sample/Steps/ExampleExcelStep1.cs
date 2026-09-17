@@ -62,7 +62,7 @@ public class ExampleExcelStep1 : BatchIntegrationStep<TestClass1, Entity>
                     </entity>
                 </fetch>";
 
-			var potentialMatches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(fetchXml));
+			var potentialMatches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(fetchXml));
 			PotentialMatches = [.. potentialMatches.Entities];
 		}
 		else

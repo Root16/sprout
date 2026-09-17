@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Dataverse.DataSources.Dataverse;
 using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
@@ -9,7 +9,7 @@ namespace Root16.Sprout.DataSources.Dataverse;
 public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSource, ILogger<OrganizationRequestDataSource> logger) : IDataSource<OrganizationRequest>
 {
     const int MaxRetries = 10;
-    public ServiceClient CrmServiceClient { get { return dataverseDataSource.CrmServiceClient; } }
+    public ServiceClientWithRetry CrmServiceClient { get { return dataverseDataSource.CrmServiceClient; } }
 
     public async Task<IReadOnlyList<DataOperationResult<OrganizationRequest>>> PerformOperationsAsync(IEnumerable<DataOperation<OrganizationRequest>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
