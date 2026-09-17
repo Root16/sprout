@@ -16,7 +16,7 @@ public class DataverseDataSourceFactory(IServiceProvider serviceProvider) : IDat
         var logger = serviceProvider.GetRequiredService<ILogger<DataverseDataSource>>();
         var serviceClient = new ServiceClientWithRetry(
             config.GetConnectionString(connectionStringName)!,
-            serviceProvider.GetRequiredService<ILogger<ServiceClientWithRetry>>()
+            serviceProvider.GetRequiredService<ILogger<ServiceClient>>()
         );
         var ds = new DataverseDataSource(serviceClient, logger);
         return ds;
