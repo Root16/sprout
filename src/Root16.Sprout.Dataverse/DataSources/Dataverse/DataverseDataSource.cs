@@ -113,7 +113,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 if (!dryRun)
                 {
-                    var response = await TryExecuteRequestAsync(requestAudits[0].Request!);
+                    var response = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(requestAudits[0].Request!);
                 }
                 results.Add(ResultFromRequestType(requestAudits[0], true));
             }
@@ -150,7 +150,7 @@ public class DataverseDataSource : IDataSource<Entity>
                     };
                     request.Requests.AddRange(batch.Select(ra => ra.Request));
 
-                    ExecuteMultipleResponse batchResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(request, token);
+                    ExecuteMultipleResponse batchResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(request, token);
 
                     for (var k = 0; k < batch.Length; k++)
                     {
@@ -286,36 +286,5 @@ public class DataverseDataSource : IDataSource<Entity>
         }
 
         return request;
-    }
-
-    private Task<OrganizationResponse> TryExecuteRequestAsync(OrganizationRequest request, CancellationToken token = default)
-        => TryExecuteRequestAsync<OrganizationResponse>(request, token);
-
-    private async Task<T> TryExecuteRequestAsync<T>(OrganizationRequest request, CancellationToken token = default)
-        where T : OrganizationResponse
-    {
-        var retryCount = 0;
-        Exception? lastException = null;
-        do
-        {
-            try
-            {
-                return (T)await CrmServiceClient.ExecuteAsync(request, token);
-            }
-            catch (FaultException<OrganizationServiceFault>) { throw; }
-            catch (Exception ex)
-            {
-                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (logger.IsEnabled(LogLevel.Debug))
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                }
-                lastException = ex;
-            }
-        } while (retryCount++ < MaxRetries);
-        
-        throw lastException;
     }
 }

@@ -35,7 +35,7 @@ public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSour
         };
         executeMultipleRequest.Requests.AddRange(operations.Select(op => CreateOrganizationRequest(op, dataOperationFlags)));
 
-        var executeMultipleResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(executeMultipleRequest);
+        var executeMultipleResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(executeMultipleRequest);
 
         foreach (var response in executeMultipleResponse.Responses)
         {
@@ -100,33 +100,5 @@ public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSour
         }
 
         return request;
-    }
-
-    private Task<OrganizationResponse> TryExecuteRequestAsync(OrganizationRequest request, CancellationToken token = default)
-        => TryExecuteRequestAsync<OrganizationResponse>(request, token);
-
-    private async Task<T> TryExecuteRequestAsync<T>(OrganizationRequest request, CancellationToken token = default)
-        where T : OrganizationResponse
-    {
-        var retryCount = 0;
-        Exception? lastException = null;
-        do
-        {
-            try
-            {
-                return (T)await CrmServiceClient.ExecuteAsync(request, token);
-            }
-            catch (FaultException<OrganizationServiceFault>) { throw; }
-            catch (Exception ex)
-            {
-                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                lastException = ex;
-            }
-        } while (retryCount++ < MaxRetries);
-
-        throw lastException;
     }
 }

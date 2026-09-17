@@ -133,7 +133,7 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
             {
                 if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (Logger != null && Logger.IsEnabled(LogLevel.Debug))
+                    if (Logger != null && Logger.IsEnabled(LogLevel.Error))
                     {
                         Logger.LogError(ex, ex.Message);
                     }
