@@ -2,6 +2,7 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Dataverse.DataSources.Dataverse;
 using System.Collections.Concurrent;
 using System.Net;
 using System.ServiceModel;
@@ -17,7 +18,7 @@ public class DataverseDataSource : IDataSource<Entity>
     const int MaxRetries = 10;
 
     public DataverseDataSource(
-        ServiceClient crmServiceClient, 
+        ServiceClientWithRetry crmServiceClient,
         ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
@@ -31,7 +32,7 @@ public class DataverseDataSource : IDataSource<Entity>
         this.logger = logger;
     }
 
-    public ServiceClient CrmServiceClient { get; }
+    public ServiceClientWithRetry CrmServiceClient { get; }
 
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
@@ -112,7 +113,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 if (!dryRun)
                 {
-                    var response = await TryExecuteRequestAsync(requestAudits[0].Request!);
+                    var response = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(requestAudits[0].Request!);
                 }
                 results.Add(ResultFromRequestType(requestAudits[0], true));
             }
@@ -149,7 +150,7 @@ public class DataverseDataSource : IDataSource<Entity>
                     };
                     request.Requests.AddRange(batch.Select(ra => ra.Request));
 
-                    ExecuteMultipleResponse batchResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(request, token);
+                    ExecuteMultipleResponse batchResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(request, token);
 
                     for (var k = 0; k < batch.Length; k++)
                     {
@@ -285,36 +286,5 @@ public class DataverseDataSource : IDataSource<Entity>
         }
 
         return request;
-    }
-
-    private Task<OrganizationResponse> TryExecuteRequestAsync(OrganizationRequest request, CancellationToken token = default)
-        => TryExecuteRequestAsync<OrganizationResponse>(request, token);
-
-    private async Task<T> TryExecuteRequestAsync<T>(OrganizationRequest request, CancellationToken token = default)
-        where T : OrganizationResponse
-    {
-        var retryCount = 0;
-        Exception? lastException = null;
-        do
-        {
-            try
-            {
-                return (T)await CrmServiceClient.ExecuteAsync(request, token);
-            }
-            catch (FaultException<OrganizationServiceFault>) { throw; }
-            catch (Exception ex)
-            {
-                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (logger.IsEnabled(LogLevel.Debug))
-                    {
-                        logger.LogError(ex, ex.Message);
-                    }
-                }
-                lastException = ex;
-            }
-        } while (retryCount++ < MaxRetries);
-        
-        throw lastException;
     }
 }

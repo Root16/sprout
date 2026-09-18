@@ -1,5 +1,4 @@
-﻿using Microsoft.PowerPlatform.Dataverse.Client.Extensions;
-using Microsoft.Xrm.Sdk;
+﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
 using System.Xml.Linq;
@@ -33,7 +32,7 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
     // results should be 'different' everytime cause reducing
     public async Task<PagedQueryResult<Entity>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
-        var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(fetchXml)); 
+        var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(fetchXml)); 
 
         return new PagedQueryResult<Entity>
         (
@@ -91,7 +90,7 @@ public class DataverseFetchXmlReducingQuery(DataverseDataSource dataSource, stri
         do
         {
             AddPaging(fetchDoc, page, pageSize, pagingCookie);
-            var results = await dataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression { Query = fetchDoc.ToString(SaveOptions.DisableFormatting) });
+            var results = await dataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression { Query = fetchDoc.ToString(SaveOptions.DisableFormatting) });
             totalCount += results.Entities.Count;
             moreRecords = results.MoreRecords;
             pagingCookie = results.PagingCookie;
