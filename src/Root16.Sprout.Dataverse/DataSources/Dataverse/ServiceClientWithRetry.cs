@@ -96,16 +96,16 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
                 }
                 return InnerClient.Execute(request);
             }
+            catch (FaultException fault)
+            when (fault.Message.Contains("Database is currently unavailable", StringComparison.OrdinalIgnoreCase))
+            {
+                WriteExceptionToLog(fault, lastException);
+                lastException = fault;
+            }
             catch (FaultException<OrganizationServiceFault>) { throw; }
             catch (Exception ex)
             {
-                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (Logger != null && Logger.IsEnabled(LogLevel.Debug))
-                    {
-                        Logger.LogError(ex, ex.Message);
-                    }
-                }
+                WriteExceptionToLog(ex, lastException);
                 lastException = ex;
             }
         } while (retryCount++ < MaxRetryCount);
@@ -128,21 +128,32 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
                 }
                 return await InnerClient.ExecuteAsync(request, cancellationToken);
             }
+            catch (FaultException fault)
+            when (fault.Message.Contains("Database is currently unavailable", StringComparison.OrdinalIgnoreCase))
+            {
+                WriteExceptionToLog(fault, lastException);
+                lastException = fault;
+            }
             catch (FaultException<OrganizationServiceFault>) { throw; }
             catch (Exception ex)
             {
-                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (Logger != null && Logger.IsEnabled(LogLevel.Error))
-                    {
-                        Logger.LogError(ex, ex.Message);
-                    }
-                }
+                WriteExceptionToLog(ex, lastException);
                 lastException = ex;
             }
         } while (retryCount++ < MaxRetryCount);
 
-        throw lastException;
+        throw lastException!;
+    }
+
+    private void WriteExceptionToLog(Exception ex, Exception? lastException)
+    {
+        if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+        {
+            if (Logger != null && Logger.IsEnabled(LogLevel.Error))
+            {
+                Logger.LogError(ex, ex.Message);
+            }
+        }
     }
 
     public EntityMetadata GetEntityMetadata(string entityLogicalName, EntityFilters queryFilter = EntityFilters.Default)
