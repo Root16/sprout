@@ -113,7 +113,7 @@ public class DataverseDataSource : IDataSource<Entity>
             {
                 if (!dryRun)
                 {
-                    var response = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(requestAudits[0].Request!);
+                    await CrmServiceClient.ExecuteAsync(requestAudits[0].Request!);
                 }
                 results.Add(ResultFromRequestType(requestAudits[0], true));
             }
