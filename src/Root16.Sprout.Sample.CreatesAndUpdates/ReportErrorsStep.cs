@@ -69,7 +69,7 @@ internal class ReportErrorsStep : BatchIntegrationStep<Entity, Entity>
                     </entity>
                 </fetch>";
 
-			var potentialMatches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleWithRetryAsync(new FetchExpression(fetchXml));
+			var potentialMatches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression(fetchXml));
 
 			logger.LogInformation($"Potentional matches for: {batch.First()}: {potentialMatches.Entities.Count()}");
 

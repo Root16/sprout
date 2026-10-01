@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
+using Root16.Sprout.Dataverse.DataSources.Dataverse;
 using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
@@ -9,7 +9,7 @@ namespace Root16.Sprout.DataSources.Dataverse;
 public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSource, ILogger<OrganizationRequestDataSource> logger) : IDataSource<OrganizationRequest>
 {
     const int MaxRetries = 10;
-    public ServiceClient CrmServiceClient { get { return dataverseDataSource.CrmServiceClient; } }
+    public ServiceClientWithRetry CrmServiceClient { get { return dataverseDataSource.CrmServiceClient; } }
 
     public async Task<IReadOnlyList<DataOperationResult<OrganizationRequest>>> PerformOperationsAsync(IEnumerable<DataOperation<OrganizationRequest>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
@@ -35,7 +35,7 @@ public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSour
         };
         executeMultipleRequest.Requests.AddRange(operations.Select(op => CreateOrganizationRequest(op, dataOperationFlags)));
 
-        var executeMultipleResponse = await TryExecuteRequestAsync<ExecuteMultipleResponse>(executeMultipleRequest);
+        var executeMultipleResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(executeMultipleRequest);
 
         foreach (var response in executeMultipleResponse.Responses)
         {
@@ -100,33 +100,5 @@ public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSour
         }
 
         return request;
-    }
-
-    private Task<OrganizationResponse> TryExecuteRequestAsync(OrganizationRequest request, CancellationToken token = default)
-        => TryExecuteRequestAsync<OrganizationResponse>(request, token);
-
-    private async Task<T> TryExecuteRequestAsync<T>(OrganizationRequest request, CancellationToken token = default)
-        where T : OrganizationResponse
-    {
-        var retryCount = 0;
-        Exception? lastException = null;
-        do
-        {
-            try
-            {
-                return (T)await CrmServiceClient.ExecuteAsync(request, token);
-            }
-            catch (FaultException<OrganizationServiceFault>) { throw; }
-            catch (Exception ex)
-            {
-                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                lastException = ex;
-            }
-        } while (retryCount++ < MaxRetries);
-
-        throw lastException;
     }
 }
