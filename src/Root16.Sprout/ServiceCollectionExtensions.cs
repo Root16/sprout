@@ -68,7 +68,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// This method registers a step with the service collection, allowing you to specify prerequisite steps that should run before the step being registered is run, a custom step name, and also allows you to specify custom arguments that will be passed to the step's constructor when it is created.
     /// Custom arguments are useful for passing configuration or other data to the step when it is created
-    /// Custom arguments are passed to the step's constructor in the order they are provided, so make sure to provide them in the correct order for the step's constructor.
+    /// Custom arguments are passed to the step's constructor in the order provided while taking into consideration the Type of the arguments. If the step's constructor has multiple parameters of the same Type, the order of the arguments provided will be used to determine which argument is passed to which parameter.
     /// Custom arguments are not registered with the service collection, so they will not be available for dependency injection in other steps and they should not be registered with the service collection. They are only used for the step being registered.
     /// </summary>
     /// <typeparam name="TStep">The Type of the step that should be created.</typeparam>
@@ -118,7 +118,7 @@ public static class ServiceCollectionExtensions
     /// <param name="config">The configuration to be passed to the step</param>
     /// <param name="prerequisiteStepNames">The names of the steps that should run before the step being registered is run</param>
     /// <returns>Returns the service collection</returns>
-    public static IServiceCollection RegisterStepWithArguments<TStep, TConfig>(this IServiceCollection services, string stepName, TConfig config, params IEnumerable<string> prerequisiteStepNames) where TStep : class, IIntegrationStep
+    public static IServiceCollection RegisterStepWithArgument<TStep, TConfig>(this IServiceCollection services, string stepName, TConfig config, params IEnumerable<string> prerequisiteStepNames) where TStep : class, IIntegrationStep
     {
         services.AddSingleton(new StepRegistration(typeof(TStep), stepName, [.. prerequisiteStepNames]));
         services.AddKeyedTransient<TStep>(stepName, (serviceProvider, myKey) =>

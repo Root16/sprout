@@ -4,6 +4,7 @@ using Root16.Sprout.DataSources;
 using Root16.Sprout.DataSources.Dataverse;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.Sample.ParallelSteps.Models;
+using Root16.Sprout.Extensions;
 
 namespace Root16.Sprout.Sample;
 
@@ -21,17 +22,23 @@ internal class ContactTestStep : BatchIntegrationStep<Contact,Entity>
         this.batchProcessor = batchProcessor;
         this.memoryDS = memoryDS;
         DryRun = false;
+        KeySelector = entity => string.Concat(
+            entity.GetAttributeValue<string>("firstname"),
+            "|",
+            entity.GetAttributeValue<string>("lastname")
+        );
         BatchSize = 50;
     }
 
     public override async Task<IReadOnlyList<Contact>> OnBeforeMapAsync(IReadOnlyList<Contact> batch)
     {
-        var firstNameValues = string.Join("</value><value>", batch.Select(b => b.FirstName).Distinct(StringComparer.OrdinalIgnoreCase));
-        var lastNameValues = string.Join("</value><value>", batch.Select(b => b.LastName).Distinct(StringComparer.OrdinalIgnoreCase));
+        var firstNameValues = string.Join("</value><value>", batch.Select(b => b.FirstName.FormatForXML()).Distinct(StringComparer.OrdinalIgnoreCase));
+        var lastNameValues = string.Join("</value><value>", batch.Select(b => b.LastName.FormatForXML()).Distinct(StringComparer.OrdinalIgnoreCase));
 
         var matches = await dataverseDataSource.CrmServiceClient.RetrieveMultipleAsync(new FetchExpression($@"
                 <fetch>
                     <entity name='contact'>
+                        <attribute name='contactid' />
                         <attribute name='firstname' />
                         <attribute name='lastname' />
                         <filter>
@@ -52,11 +59,7 @@ internal class ContactTestStep : BatchIntegrationStep<Contact,Entity>
 
     public override IReadOnlyList<DataOperation<Entity>> OnBeforeDelivery(IReadOnlyList<DataOperation<Entity>> batch)
     {
-        return reducer.ReduceOperations(batch, entity => string.Concat(
-                entity.GetAttributeValue<string>("firstname"),
-                "|",
-                entity.GetAttributeValue<string>("lastname")
-        ));
+        return reducer.ReduceOperations(batch, KeySelector!);
     }
 
     public override async Task RunAsync(string stepName)
@@ -73,14 +76,9 @@ internal class ContactTestStep : BatchIntegrationStep<Contact,Entity>
 
     public override IReadOnlyList<DataOperation<Entity>> MapRecord(Contact source)
     {
-        var result = new Entity("contact")
-        {
-            Attributes =
-            {
-                {"firstname", source.FirstName },
-                {"lastname", source.LastName },
-            }
-        };
+        var result = new Entity("contact");
+        result["firstname"] = source.FirstName;
+        result["lastname"] = source.LastName;
 
         return [new DataOperation<Entity>("Create", result)];
     }

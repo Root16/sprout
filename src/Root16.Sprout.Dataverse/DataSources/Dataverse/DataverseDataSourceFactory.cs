@@ -1,24 +1,27 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Root16.Sprout.Dataverse.DataSources.Dataverse;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class DataverseDataSourceFactory(IServiceProvider serviceProvider) : IDataverseDataSourceFactory
+public class DataverseDataSourceFactory(
+    IConfiguration configuration,
+    ILogger<DataverseDataSource> dataSourceLogger,
+    ILogger<ServiceClient> serviceClientLogger) : IDataverseDataSourceFactory
 {
-    private readonly IServiceProvider serviceProvider = serviceProvider;
-
     public DataverseDataSource CreateDataSource(string connectionStringName)
     {
-        var config = serviceProvider.GetRequiredService<IConfiguration>();
-        var logger = serviceProvider.GetRequiredService<ILogger<DataverseDataSource>>();
-        var serviceClient = new ServiceClientWithRetry(
-            config.GetConnectionString(connectionStringName)!,
-            serviceProvider.GetRequiredService<ILogger<ServiceClient>>()
-        );
-        var ds = new DataverseDataSource(serviceClient, logger);
-        return ds;
+        var connectionString = configuration.GetConnectionString(connectionStringName)
+                               ?? configuration.GetValue<string>(connectionStringName);
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException($"Connection string '{connectionStringName}' was not found or is empty.");
+        }
+
+        var serviceClient = new ServiceClientWithRetry(connectionString, serviceClientLogger);
+
+        return new DataverseDataSource(serviceClient, dataSourceLogger);
     }
 }
