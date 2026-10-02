@@ -25,8 +25,12 @@ builder.Services.RegisterExcelDataSource<TestClass1, TestClass1Map>("EXCEL1", @"
 //Register excel with tab index of 1 for the same file
 builder.Services.RegisterExcelDataSource<TestClass1, TestClass1Map>("EXCEL2", @"..\..\..\Data\test.xlsx", tabIndex: 1);
 
+//Register excel with explicit worksheet name for the same file
+builder.Services.RegisterExcelDataSource<TestClass1, TestClass1Map>("EXCEL3", @"..\..\..\Data\test.xlsx", "ExampleSheet");
+
 builder.Services.RegisterStep<ExampleExcelStep1>();
 builder.Services.RegisterStep<ExampleExcelStep2>();
+builder.Services.RegisterStep<ExampleExcelStep3>();
 
 builder.Logging.AddFilter("Microsoft.PowerPlatform.Dataverse", LogLevel.Warning);
 
