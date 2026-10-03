@@ -17,6 +17,7 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
