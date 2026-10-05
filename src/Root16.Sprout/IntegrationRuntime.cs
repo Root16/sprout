@@ -37,15 +37,10 @@ public class IntegrationRuntime : IIntegrationRuntime
         return reg.Name;
     }
 
-    private static object _lock = new();
     private async Task<string> RunStepAsync(StepRegistration reg, Action<IIntegrationStep>? stepConfigurator = null)
     {
         progressListener.OnStepStart(reg.Name);
         using var scope = serviceScopeFactory.CreateScope();
-        lock (_lock)
-        {
-            Console.WriteLine($"{reg.Name} is running on Thread {Thread.CurrentThread.ManagedThreadId}");
-        }
         var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
         stepConfigurator?.Invoke(step);
         await step.RunAsync(reg.Name);
