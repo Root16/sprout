@@ -37,10 +37,15 @@ public class IntegrationRuntime : IIntegrationRuntime
         return reg.Name;
     }
 
+    private static object _lock = new();
     private async Task<string> RunStepAsync(StepRegistration reg, Action<IIntegrationStep>? stepConfigurator = null)
     {
         progressListener.OnStepStart(reg.Name);
         using var scope = serviceScopeFactory.CreateScope();
+        lock (_lock)
+        {
+            Console.WriteLine($"{reg.Name} is running on Thread {Thread.CurrentThread.ManagedThreadId}");
+        }
         var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
         stepConfigurator?.Invoke(step);
         await step.RunAsync(reg.Name);
@@ -64,7 +69,13 @@ public class IntegrationRuntime : IIntegrationRuntime
             queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
             waitingSteps = waitingSteps.Except(queuedSteps).ToList();
             int available = maxDegreesOfParallelism - runningSteps.Count;
-            runningSteps.AddRange(queuedSteps.Take(available).Select(x => x.StepRunner(x.StepRegistration)));
+            var newRunningSteps = queuedSteps
+                .Take(available)
+                .Select(x => maxDegreesOfParallelism > 1
+                    ? Task.Run(() => x.StepRunner(x.StepRegistration))
+                    : x.StepRunner(x.StepRegistration))
+                .ToList();
+            runningSteps.AddRange(newRunningSteps);
             queuedSteps.RemoveRange(0, Math.Min(queuedSteps.Count, available));
             var finishedFunction = await Task.WhenAny(runningSteps);
             runningSteps.Remove(finishedFunction);
