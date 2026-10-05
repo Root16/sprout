@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.4.11626.88 stable
+VisualStudioVersion = 18.4.11626.88
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Root16.Sprout", "Root16.Sprout\Root16.Sprout.csproj", "{25E60BE3-3DB2-4163-B3D7-7F6FECB5F1E1}"
 EndProject
@@ -24,6 +24,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Excel", "Root16.Sprout.Excel\Root16.Sprout.Excel.csproj", "{D3DBFFF8-200D-4F20-A4BB-1730C48F2CDF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Excel.Sample", "Root16.Sprout.Excel.Sample\Root16.Sprout.Excel.Sample.csproj", "{969358E7-77C8-4887-A7A9-6295F648C8B6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{A628163F-A711-4534-9CF7-EE661E7C1F3C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{493A2498-F450-43EA-8F19-0D5A4C1A5E10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Sample.StepRegistration", "Root16.Sprout.Sample.ReusableSteps\Root16.Sprout.Sample.StepRegistration.csproj", "{08CD8C1F-2CFB-417F-A093-5C32976510CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,9 +81,22 @@ Global
 		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{969358E7-77C8-4887-A7A9-6295F648C8B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{47345E65-F6CE-4D93-94D6-751515B31DCC} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
+		{258956BF-023D-46A4-BCC3-F3F3B339612C} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
+		{DE0FA5BD-0445-406E-9158-7F89FC2B6958} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
+		{EB25A8E9-F0D4-4F8A-98EA-0F27EE330598} = {493A2498-F450-43EA-8F19-0D5A4C1A5E10}
+		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
+		{969358E7-77C8-4887-A7A9-6295F648C8B6} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
+		{08CD8C1F-2CFB-417F-A093-5C32976510CE} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5325AEE1-471C-410A-8CC6-C8BCF4FD4C67}

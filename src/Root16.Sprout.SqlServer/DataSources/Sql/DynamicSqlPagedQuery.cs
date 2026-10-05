@@ -1,6 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xrm.Sdk;
 using System.Data;
 
 namespace Root16.Sprout.DataSources.Sql;

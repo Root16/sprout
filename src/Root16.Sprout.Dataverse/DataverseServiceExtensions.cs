@@ -14,6 +14,7 @@ public static class DataverseServiceExtensions
         services.TryAddTransient<EntityOperationReducer>();
         services.TryAddTransient<EntityBatchAnalyzer>();
         services.TryAddSingleton<IDataverseDataSourceFactory, DataverseDataSourceFactory>();
+        services.TryAddSingleton<IOrganizationRequestDataSourceFactory, OrganizationRequestDataSourceFactory>();
         services.TryAddSingleton<IMemoryCache, MemoryCache>();
         services.TryAddSingleton<IOptionSetMapper, OptionSetMapper>();
         return services;

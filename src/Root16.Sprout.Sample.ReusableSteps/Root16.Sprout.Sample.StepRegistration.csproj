@@ -2,16 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <TargetFrameworks></TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <UserSecretsId>362364fc-76c7-417a-a74f-91f03a55aefe</UserSecretsId>
+    <UserSecretsId>cff5d691-ce11-414b-a0c8-2721b03f4595</UserSecretsId>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Root16.Sprout.CSV\Root16.Sprout.CSV.csproj" />
+    <ProjectReference Include="..\Root16.Sprout.Dataverse\Root16.Sprout.Dataverse.csproj" />
     <ProjectReference Include="..\Root16.Sprout\Root16.Sprout.csproj" />
   </ItemGroup>
 

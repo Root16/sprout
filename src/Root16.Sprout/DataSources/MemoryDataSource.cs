@@ -6,7 +6,7 @@ public class MemoryDataSource<T> : IDataSource<T>
 
 	public MemoryDataSource(IEnumerable<T> records)
 	{
-		Records = new List<T>(records);
+		Records = [.. records];
 	}
 	public MemoryDataSource()
 	{
@@ -21,9 +21,7 @@ public class MemoryDataSource<T> : IDataSource<T>
     public virtual Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
 		Records.AddRange(operations.Select(r => r.Data));
-		IReadOnlyList<DataOperationResult<T>> results = operations
-			.Select(r => new DataOperationResult<T>(r, true))
-			.ToList();
+		IReadOnlyList<DataOperationResult<T>> results = [.. operations.Select(r => new DataOperationResult<T>(r, true))];
 		return Task.FromResult(results);
 	}
 }

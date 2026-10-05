@@ -4,5 +4,6 @@
     <LangVersion>latest</LangVersion>
 	<DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
+	<IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>
