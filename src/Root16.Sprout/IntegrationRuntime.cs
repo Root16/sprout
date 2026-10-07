@@ -64,7 +64,13 @@ public class IntegrationRuntime : IIntegrationRuntime
             queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
             waitingSteps = waitingSteps.Except(queuedSteps).ToList();
             int available = maxDegreesOfParallelism - runningSteps.Count;
-            runningSteps.AddRange(queuedSteps.Take(available).Select(x => x.StepRunner(x.StepRegistration)));
+            var newRunningSteps = queuedSteps
+                .Take(available)
+                .Select(x => maxDegreesOfParallelism > 1
+                    ? Task.Run(() => x.StepRunner(x.StepRegistration))
+                    : x.StepRunner(x.StepRegistration))
+                .ToList();
+            runningSteps.AddRange(newRunningSteps);
             queuedSteps.RemoveRange(0, Math.Min(queuedSteps.Count, available));
             var finishedFunction = await Task.WhenAny(runningSteps);
             runningSteps.Remove(finishedFunction);
