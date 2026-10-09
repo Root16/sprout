@@ -12,6 +12,7 @@ using Root16.Sprout.Sample.StepRegistration.Steps;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
+
 builder.Services.AddSprout();
 builder.Services.AddSproutDataverse();
 builder.Services.AddDataverseDataSource("dataverse");
@@ -23,7 +24,7 @@ builder.Services.AddSingleton<MemoryDataSource<SampleClass>>();
 
 // We will build up this list as we register steps to pass into the subsequent steps
 // to simulate a more complex scenario where the preregistration steps are generated dynamically
-List<string> runningPreReqs = new();
+List<string> runningPreReqs = [];
 
 #region RegisterStep & RegisterStepWithName
 
@@ -42,8 +43,8 @@ runningPreReqs.Add("NamedStandard1");
 
 // Register the step with an alternate name and only getting dependency injection from the DI container
 // Making prerequeisite step a regular params
-// OVERLOAD HIT: params string[]
-builder.Services.RegisterStep<StandardStep>("NamedStandard2", nameof(StandardStep), "NamedStandard1");
+// OVERLOAD HIT: params string[] (Using .ToArray())
+builder.Services.RegisterStep<StandardStep>("NamedStandard2", runningPreReqs.ToArray());
 runningPreReqs.Add("NamedStandard2");
 
 #endregion
@@ -53,9 +54,10 @@ runningPreReqs.Add("NamedStandard2");
 // Register the step with no alternate name and passing the tuple parameter as part of registration.
 // Registration method will handle the creation of the step and its dependencies.
 // Making prerequeisite step empty
-// OVERLOAD HIT: params string[]
+// OVERLOAD HIT: params string[] (Using collection spread [.. ])
 builder.Services.RegisterStepWithArgument<ReusableStepWithSingleParam, (string, string)>(
-    (value1, value2));
+    (value1, value2),
+    [.. runningPreReqs]);
 runningPreReqs.Add(nameof(ReusableStepWithSingleParam));
 
 // Register the step with an alternate name and passing the tuple parameter as part of registration.
@@ -72,11 +74,11 @@ runningPreReqs.Add("NamedArg1");
 // Register the step with an alternate name and passing the tuple parameter as part of registration.
 // Registration method will handle the creation of the step and its dependencies.
 // Making prequresities a List/Array
-// OVERLOAD HIT: params string[]
+// OVERLOAD HIT: params string[] (Using explicit comma-separated list of all prior steps)
 builder.Services.RegisterStepWithArgument<ReusableStepWithSingleParam, (string, string)>(
     "NamedArg2",
     (value1, value2),
-    nameof(StandardStep), nameof(ReusableStepWithSingleParam));
+    nameof(StandardStep), "NamedStandard1", "NamedStandard2", nameof(ReusableStepWithSingleParam), "NamedArg1");
 runningPreReqs.Add("NamedArg2");
 
 #endregion
@@ -88,8 +90,10 @@ runningPreReqs.Add("NamedArg2");
 // Registration method does not care if parameters are at the beginning, middle, or end or even next to each other.
 // It will handle the creation of the step and its dependencies and pass the parameters to the constructor in the correct order that they are passed in
 // Making prerequeisite step empty
-// OVERLOAD HIT: params string[]
-builder.Services.RegisterStepWithArguments<ReusableStepWithMultipleParams>([value1, value2]);
+// OVERLOAD HIT: params string[] (Using .ToArray())
+builder.Services.RegisterStepWithArguments<ReusableStepWithMultipleParams>(
+    [value1, value2],
+    runningPreReqs.ToArray());
 runningPreReqs.Add(nameof(ReusableStepWithMultipleParams));
 
 // Register the step with an alternate name and passing the parameters to the registration method.
@@ -109,11 +113,11 @@ runningPreReqs.Add("NamedMultiArgs1");
 // Registration method does not care if parameters are at the beginning, middle, or end or even next to each other.
 // It will handle the creation of the step and its dependencies and pass the parameters to the constructor in the correct order that they are passed in
 // Making prerequeisite step a regular params
-// OVERLOAD HIT: params string[]
+// OVERLOAD HIT: params string[] (Using explicit comma-separated list of all prior steps)
 builder.Services.RegisterStepWithArguments<ReusableStepWithMultipleParams>(
     "NamedMultiArgs2",
     [value1, value2],
-    "NamedArg1", "NamedArg2");
+    nameof(StandardStep), "NamedStandard1", "NamedStandard2", nameof(ReusableStepWithSingleParam), "NamedArg1", "NamedArg2", nameof(ReusableStepWithMultipleParams), "NamedMultiArgs1");
 runningPreReqs.Add("NamedMultiArgs2");
 
 #endregion
@@ -129,25 +133,29 @@ builder.Services.RegisterStep<ReusableStepWithSingleParam>("NamedFactory1", (sp,
     var dataverseDataSource = sp.GetRequiredService<DataverseDataSource>();
     var reducer = sp.GetRequiredService<EntityOperationReducer>();
     var batchProcessor = sp.GetRequiredService<BatchProcessor>();
+
     return new ReusableStepWithSingleParam(memoryDS, dataverseDataSource, (value1, value2), reducer, batchProcessor);
 }, runningPreReqs.Select(x => x));
 runningPreReqs.Add("NamedFactory1");
 
 // Register the step with an alternate name and passing the parameters directly to the constructor
 // Making prerequeisite step a regular params
-// OVERLOAD HIT: params string[]
+// OVERLOAD HIT: params string[] (Using collection spread [.. ])
 builder.Services.RegisterStep<ReusableStepWithSingleParam>("NamedFactory2", (sp, _) =>
 {
     var memoryDS = sp.GetRequiredService<MemoryDataSource<SampleClass>>();
     var dataverseDataSource = sp.GetRequiredService<DataverseDataSource>();
     var reducer = sp.GetRequiredService<EntityOperationReducer>();
     var batchProcessor = sp.GetRequiredService<BatchProcessor>();
+
     return new ReusableStepWithSingleParam(memoryDS, dataverseDataSource, (value1, value2), reducer, batchProcessor);
-}, nameof(StandardStep), "NamedMultiArgs1");
+}, [.. runningPreReqs]);
 
 #endregion
 
 var host = builder.Build();
 host.Start();
+
 var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
+
 await runtime.RunAllStepsAsync();
