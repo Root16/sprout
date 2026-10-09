@@ -5,13 +5,13 @@ public class StepRegistration
     public Type StepType { get; }
     public string Name { get; }
     public List<string> PrerequisteSteps { get; } = [];
-    internal HashSet<string> DependentSteps { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    internal HashSet<string> DependentSteps { get; set; } = new HashSet<string>(StringComparer.Ordinal);
 
-    public StepRegistration(Type stepType, List<string>? prerequisteSteps = default) 
+    public StepRegistration(Type stepType, List<string>? prerequisteSteps = default)
     {
         StepType = stepType;
         Name = stepType.Name;
-        if(prerequisteSteps is not null)
+        if (prerequisteSteps is not null)
         {
             PrerequisteSteps = prerequisteSteps;
         }
@@ -21,7 +21,7 @@ public class StepRegistration
     {
         StepType = stepType;
         Name = name;
-        if(prerequisteSteps is not null)
+        if (prerequisteSteps is not null)
         {
             PrerequisteSteps = prerequisteSteps;
         }
