@@ -33,7 +33,11 @@ builder.Services.AddSproutDataverse();
 builder.Services.AddDataverseDataSource("Dataverse");
 
 builder.Services.AddSingleton(
-    _ => new MemoryDataSource<CreateContact>(SampleData.GenerateCreateContactSampleData(amount: 2000))
+    _ => new MemoryDataSource<CreateContact>(
+    [
+        new CreateContact { FirstName = "Ada", LastName = "Lovelace" },
+        new CreateContact { FirstName = "Alan", LastName = "Turing" },
+    ])
 );
 
 builder.Services.RegisterStep<CreateContactTestStep>();
@@ -85,7 +89,7 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
 
     public override async Task RunAsync(string stepName)
     {
-        await batchProcessor.ProcessBatchesAsync(this, stepName, maxDegreesOfParallelism: 5);
+        await batchProcessor.ProcessBatchesAsync(this, stepName);
     }
 }
 ```
@@ -93,8 +97,33 @@ internal class CreateContactTestStep : BatchIntegrationStep<CreateContact, Entit
 Steps can hook into the batch lifecycle (`OnBeforeMapAsync`, `OnAfterMapAsync`, `OnBeforeDeliveryAsync`, `OnAfterDeliveryAsync`) to do things like duplicate detection, deduplication of operations within a batch, or custom logging/error handling. Declare prerequisites when registering a step so the runtime sequences dependent steps correctly:
 
 ```csharp
-builder.Services.RegisterStep<UpdateContactTestStep>(prerequisiteStepNames: nameof(CreateContactTestStep));
+builder.Services.RegisterStep<UpdateContactTestStep>(nameof(CreateContactTestStep));
 ```
+
+### Reusing a step with different configuration
+
+The same step type can be registered more than once under different names, each with its own configuration object passed to the constructor. This is useful when one mapping applies to several source files, tables, or environments:
+
+```csharp
+public record ImportOptions(string TableName, string FilePath);
+
+internal class ImportStep : BatchIntegrationStep<DataRow, Entity>
+{
+    public ImportStep(ImportOptions options, DataverseDataSource dataverse, BatchProcessor batchProcessor) { /* … */ }
+    // …
+}
+
+builder.Services.RegisterStepWithArgument<ImportStep, ImportOptions>(
+    "ImportAccounts", new ImportOptions("account", "data/accounts.csv"));
+
+builder.Services.RegisterStepWithArgument<ImportStep, ImportOptions>(
+    "ImportContacts", new ImportOptions("contact", "data/contacts.csv"),
+    "ImportAccounts"); // prerequisite step name(s)
+
+await runtime.RunStepAsync("ImportContacts");
+```
+
+`RegisterStepWithArguments` (plural) accepts an ordered list of constructor arguments instead of a single configuration object, and the `RegisterStep` overloads that take a `Func<IServiceProvider, object?, TStep>` let you construct the step yourself.
 
 ## Samples
 
