@@ -1,14 +1,8 @@
-﻿
-namespace Root16.Sprout.DataSources;
+﻿namespace Root16.Sprout.DataSources;
 
-public class MemoryPagedQuery<T> : IPagedQuery<T>
+public class MemoryPagedQuery<T>(IEnumerable<T> data) : IPagedQuery<T>
 {
-	private readonly List<T> data;
-
-	public MemoryPagedQuery(IEnumerable<T> data)
-	{
-		this.data = data.ToList();
-	}
+	private readonly List<T> data = [.. data];
 
     public Task<PagedQueryResult<T>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
@@ -22,8 +16,10 @@ public class MemoryPagedQuery<T> : IPagedQuery<T>
         ));
     }
 
-    public Task<int?> GetTotalRecordCountAsync()
+    public Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount = null)
     {
-        return Task.FromResult((int?)data.Count);
+        return maxBatchCount is null
+            ? Task.FromResult((int?)data.Count)
+            : Task.FromResult<int?>(Math.Min(data.Count, batchSize * maxBatchCount.Value));
     }
 }

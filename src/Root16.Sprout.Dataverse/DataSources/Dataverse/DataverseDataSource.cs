@@ -2,7 +2,11 @@
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using Root16.Sprout.Extensions;
+using Root16.Sprout.Dataverse.DataSources.Dataverse;
+using System.Collections.Concurrent;
+using System.Net;
+using System.ServiceModel;
+using RequestAudit = (Microsoft.Xrm.Sdk.OrganizationRequest? Request, Root16.Sprout.Logging.Audit? Audit);
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
@@ -11,14 +15,24 @@ public class DataverseDataSource : IDataSource<Entity>
     private readonly ILogger<DataverseDataSource> logger;
     public string? ImpersonateUsingAttribute { get; set; }
 
-    public DataverseDataSource(ServiceClient crmServiceClient, ILogger<DataverseDataSource> logger)
+    const int MaxRetries = 10;
+
+    public DataverseDataSource(
+        ServiceClientWithRetry crmServiceClient,
+        ILogger<DataverseDataSource> logger)
     {
         CrmServiceClient = crmServiceClient;
         ServiceClient.MaxConnectionTimeout = TimeSpan.FromMinutes(11);
+        CrmServiceClient.EnableAffinityCookie = false;
+        // TODO: Is there a better place to do this?
+        ThreadPool.SetMinThreads(100, 100);
+        ServicePointManager.DefaultConnectionLimit = 65000;
+        ServicePointManager.Expect100Continue = false;
+        ServicePointManager.UseNagleAlgorithm = false;
         this.logger = logger;
     }
 
-    public ServiceClient CrmServiceClient { get; }
+    public ServiceClientWithRetry CrmServiceClient { get; }
 
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> PerformOperationsAsync(IEnumerable<DataOperation<Entity>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
@@ -28,7 +42,7 @@ public class DataverseDataSource : IDataSource<Entity>
         IEnumerable<IGrouping<Guid?, DataOperation<Entity>>> groups;
         if (ImpersonateUsingAttribute is not null)
         {
-            groups = operations
+            groups = [.. operations
                 .GroupBy(op =>
                 {
                     var entityRef = op.Data.GetAttributeValue<EntityReference>(ImpersonateUsingAttribute);
@@ -37,12 +51,11 @@ public class DataverseDataSource : IDataSource<Entity>
                         return entityRef?.Id;
                     }
                     return null;
-                })
-                .ToArray();
+                })];
         }
         else
         {
-            groups = operations.GroupBy(op => (Guid?)null).ToArray();
+            groups = [.. operations.GroupBy(op => (Guid?)null)];
         }
 
         var results = new List<DataOperationResult<Entity>>();
@@ -50,15 +63,12 @@ public class DataverseDataSource : IDataSource<Entity>
         {
             RemoveAttribute(group, ImpersonateUsingAttribute);
 
-            var requests = new OrganizationRequestCollection();
-
-            requests.AddRange(group
-                .Select(c => CreateOrganizationRequest(c, dataOperationFlags))
-                .Where(r => r is not null)
-            );
+            IList<RequestAudit> reqAuds = [.. group
+                .Select(c => (Request:CreateOrganizationRequest(c, dataOperationFlags),Audit:c.Audit))
+                .Where(r => r.Request is not null)];
 
             CrmServiceClient.CallerId = group.Key ?? Guid.Empty;
-            results.AddRange(await ExecuteMultipleAsync(requests, dryRun));
+            results.AddRange(await ExecuteMultipleAsync(reqAuds, dryRun));
             CrmServiceClient.CallerId = Guid.Empty;
         }
 
@@ -91,112 +101,115 @@ public class DataverseDataSource : IDataSource<Entity>
     }
 
     public async Task<IReadOnlyList<DataOperationResult<Entity>>> ExecuteMultipleAsync(
-        OrganizationRequestCollection requestCollection,
+        IList<RequestAudit> requestAudits,
         bool dryRun)
     {
         var results = new List<DataOperationResult<Entity>>();
 
-        if (requestCollection.Count == 1)
+        if (requestAudits.Count == 1)
         {
+            var request = requestAudits[0];
             try
             {
                 if (!dryRun)
                 {
-                    var response = await CrmServiceClient.ExecuteAsync(requestCollection[0]);
+                    await CrmServiceClient.ExecuteAsync(requestAudits[0].Request!);
                 }
-                results.Add(ResultFromRequestType(requestCollection[0], true));
+                results.Add(ResultFromRequestType(requestAudits[0], true));
             }
             catch (Exception e)
             {
                 logger.LogError(e.Message);
-                results.Add(ResultFromRequestType(requestCollection[0], false));
+                results.Add(ResultFromRequestType(requestAudits[0], false, e.Message));
             }
         }
-        else if (requestCollection.Count > 1)
+        else if (requestAudits.Count > 1)
         {
             if (dryRun)
             {
-                for (var i = 0; i < requestCollection.Count; i++)
+                for (var i = 0; i < requestAudits.Count; i++)
                 {
-                    results.Add(ResultFromRequestType(requestCollection[i], true));
+                    results.Add(ResultFromRequestType(requestAudits[i], true));
                 }
             }
             else
             {
-                List<OrganizationRequestCollection> ListofRequestCollections = [];
+                ConcurrentBag<DataOperationResult<Entity>> parallelResults = [];
 
-                foreach (var request in requestCollection.ChunkBy(1000))
+                ParallelOptions parallelOptions = new() { MaxDegreeOfParallelism = CrmServiceClient.RecommendedDegreesOfParallelism };
+
+                await Parallel.ForEachAsync(requestAudits.Chunk(10), parallelOptions, async (batch, token) =>
                 {
-                    var orgRequestCollection = new OrganizationRequestCollection();
-                    orgRequestCollection.AddRange(request);
-                    ListofRequestCollections.Add(orgRequestCollection);
-                }
-
-                List<Task<OrganizationResponse>> requestTasks = [];
-
-                foreach (var requests in ListofRequestCollections)
-                {
-                    requestTasks.Add(CrmServiceClient.ExecuteAsync(new ExecuteMultipleRequest
+                    ExecuteMultipleRequest request = new()
                     {
                         Settings = new ExecuteMultipleSettings
                         {
                             ContinueOnError = true,
                         },
-                        Requests = requests
-                    }));
-                }
+                        Requests = []
+                    };
+                    request.Requests.AddRange(batch.Select(ra => ra.Request));
 
-                OrganizationResponse[] organizationResponses = await Task.WhenAll(requestTasks);
-                List<ExecuteMultipleResponse> executeMultipleResponses = organizationResponses.Select(x => (ExecuteMultipleResponse)x).ToList();
+                    ExecuteMultipleResponse batchResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(request, token);
 
-                for (var i = 0; i < executeMultipleResponses.Count; i++)
-                {
-                    var responses = executeMultipleResponses[i].Responses;
-                    var matchingRequests = ListofRequestCollections[i];
-                    for (var k = 0; k < matchingRequests.Count; k++)
+                    for (var k = 0; k < batch.Length; k++)
                     {
-                        var response = responses.FirstOrDefault(r => r.RequestIndex == k);
+                        var req = batch[k];
+                        var response = batchResponse.Responses.FirstOrDefault(r => r.RequestIndex == k);
                         if (response?.Fault is not null)
                         {
-                            results.Add(ResultFromRequestType(matchingRequests[k], false));
-                            if (response?.Fault?.InnerFault?.InnerFault?.Message is not null
-                                && response.Fault.InnerFault.InnerFault is OrganizationServiceFault innermostFault)
+                            var errorMessage = response.Fault.InnerFault?.InnerFault?.Message 
+                                           ?? response.Fault.Message;
+
+                            parallelResults.Add(ResultFromRequestType(req, false, errorMessage));
+
+                            if (logger.IsEnabled(LogLevel.Debug))
                             {
-                                logger.LogError(innermostFault.Message);
-                            }
-                            else
-                            {
-                                logger.LogError(response?.Fault.Message);
+                                logger.LogError(errorMessage);
                             }
                         }
                         else
                         {
-                            results.Add(ResultFromRequestType(matchingRequests[k], true));
+                            parallelResults.Add(ResultFromRequestType(req, true));
                         }
                     }
-                }
+                });
+
+                results.AddRange(parallelResults);
             }
         }
         return results;
     }
 
-    private static DataOperationResult<Entity> ResultFromRequestType(OrganizationRequest request, bool wasSuccessful)
+    private static DataOperationResult<Entity> ResultFromRequestType(RequestAudit request, bool wasSuccessful, string? errorMessage = null)
     {
         Entity target;
-        if (request.Parameters["Target"] is EntityReference entityRef)
+        if (request.Request!.Parameters["Target"] is EntityReference entityRef)
         {
             target = new Entity(entityRef.LogicalName, entityRef.Id);
         }
         else
         {
-            target = (Entity)request.Parameters["Target"];
+            target = (Entity)request.Request!.Parameters["Target"];
         }
-        return new DataOperationResult<Entity>(new DataOperation<Entity>(request.RequestName, target), wasSuccessful);
+
+        return new DataOperationResult<Entity>(
+            new DataOperation<Entity>(request.Request.RequestName, target, request.Audit),
+            wasSuccessful,
+            target.Id.ToString(),
+            target.LogicalName,
+            errorMessage
+            );
     }
 
     public IPagedQuery<Entity> CreateFetchXmlQuery(string fetchXml)
     {
         return new DataverseFetchXmlPagedQuery(this, fetchXml);
+    }
+
+    public IPagedQuery<Entity> CreateFetchXmlReducingQuery(string fetchXml, string? countByAttribute = null)
+    {
+        return new DataverseFetchXmlReducingQuery(this, fetchXml, countByAttribute);
     }
 
     protected static OrganizationRequest? CreateOrganizationRequest(DataOperation<Entity> change, IEnumerable<string> dataOperationFlags)
@@ -236,6 +249,40 @@ public class DataverseDataSource : IDataSource<Entity>
         if (dataOperationFlags.Contains(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob) == true)
         {
             request.Parameters.Add(DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob, true);
+        }
+
+        if (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecution)
+            || (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync) && dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync)))
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomSync,CustomAsync");
+        }
+        else if(dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionSync))
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomSync");
+        }
+        else if (dataOperationFlags.Contains(DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync))
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecution, "CustomAsync");
+        }
+
+        var stepIds = dataOperationFlags
+            .Where(flag =>
+                new[]
+                {
+                    DataverseDataSourceFlags.BypassCustomPluginExecution,
+                    DataverseDataSourceFlags.SuppressCallbackRegistrationExpanderJob,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecution,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecutionAsync,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecutionSync,
+                    DataverseDataSourceFlags.BypassBusinessLogicExecutionStepIds
+                }.All(param => param != flag))
+            .SelectMany(flag =>
+                flag.Split([',',';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                    .Where(s => !string.IsNullOrWhiteSpace(s) && Guid.TryParse(s, out var _)))
+            .ToArray();
+        if (stepIds.Length > 0)
+        {
+            request.Parameters.Add(DataverseDataSourceFlags.BypassBusinessLogicExecutionStepIds, string.Join(",", stepIds));
         }
 
         return request;

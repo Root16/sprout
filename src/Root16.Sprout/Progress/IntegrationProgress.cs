@@ -6,16 +6,24 @@ using System.Threading;
 
 namespace Root16.Sprout.Progress;
 
-public class IntegrationProgress(string stepName, int? totalRecordCount)
+public class IntegrationProgress
 {
-    private readonly Dictionary<string, int> operationCounts = new(StringComparer.OrdinalIgnoreCase);
+	public IntegrationProgress(string stepName, int? totalRecordCount)
+	{
+		StepName = stepName;
+		OperationCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		TotalRecordCount = totalRecordCount;
+		StartTime = DateTime.Now;
+	}
+
+	public Dictionary<string, int> OperationCounts { get; private set; }
 
 
-    public string StepName { get; private set; } = stepName;
-    public int? TotalRecordCount { get; private set; } = totalRecordCount;
-    public int ProcessedRecordCount { get; private set; }
-    public DateTime StartTime { get; private set; } = DateTime.Now;
-    public TimeSpan RunningTime { get { return DateTime.Now - StartTime; } }
+	public string StepName { get; private set; }
+	public int? TotalRecordCount { get; private set; }
+	public int ProcessedRecordCount { get; private set; }
+	public DateTime StartTime { get; private set; }
+	public TimeSpan RunningTime { get { return DateTime.Now - StartTime; } }
 	public TimeSpan? EstimatedRemainingTime
 	{
 		get
@@ -36,14 +44,14 @@ public class IntegrationProgress(string stepName, int? totalRecordCount)
 		ProcessedRecordCount += processedRecordCount;
 		foreach (var operationGroup in operations.GroupBy(o => o, StringComparer.OrdinalIgnoreCase))
 		{
-			if (operationCounts.ContainsKey(operationGroup.Key))
+			if (OperationCounts.ContainsKey(operationGroup.Key))
 			{
-				operationCounts[operationGroup.Key] += operationGroup.Count();
+				OperationCounts[operationGroup.Key] += operationGroup.Count();
 			}
 			else
 			{
-                operationCounts[operationGroup.Key] = operationGroup.Count();
-            }
+				OperationCounts[operationGroup.Key] = operationGroup.Count();
+			}
 		}
 	}
 
@@ -87,7 +95,7 @@ public class IntegrationProgress(string stepName, int? totalRecordCount)
 		}
 
 		message.Append(
-			string.Join(", ", operationCounts.Select(pair => $"{pair.Key}: {pair.Value}")));
+			string.Join(", ", OperationCounts.Select(pair => $"{pair.Key}: {pair.Value}")));
 		return message.ToString();
 	}
 }

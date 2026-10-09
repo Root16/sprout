@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>0b1b1af8-4ba4-4491-82cd-b2dfb96db68a</UserSecretsId>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Root16.Sprout.Dataverse\Root16.Sprout.Dataverse.csproj" />
+    <ProjectReference Include="..\Root16.Sprout.SqlServer\Root16.Sprout.SqlServer.csproj" />
+    <ProjectReference Include="..\Root16.Sprout\Root16.Sprout.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="SQLFiles\" />
+  </ItemGroup>
+
+</Project>

@@ -1,27 +1,56 @@
 ﻿using Root16.Sprout.DataSources;
+using Root16.Sprout.Logging;
 using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
-public class BatchProcessor(IProgressListener progressListener)
+public class BatchProcessor(
+    IProgressListener progressListener, 
+    BatchLogger batchLogger,
+    TimeSpan batchDelay = default)
 {
     private readonly IProgressListener progressListener = progressListener;
+    private readonly TimeSpan defaultBatchDelay = batchDelay;
 
+    [Obsolete("Please use ProcessBatches.", true)]
     public async Task ProcessAllBatchesAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput, TOutput> step)
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName)
     {
+        await ProcessBatchesAsync(step, stepName);
+    }
+
+    public async Task ProcessBatchesAsync<TInput, TOutput>(
+        IBatchIntegrationStep<TInput, TOutput> step, string stepName, int? maxBatchCount = null)
+    {
+        step.OnStepStart();
+
         BatchState<TInput>? batchState = null;
+        TimeSpan batchDelay = step.BatchDelay ?? defaultBatchDelay;
+        int batchCount = 0;
+
         do
         {
-            batchState = await ProcessBatchAsync(step, batchState);
+            if (batchState is not null && batchDelay.Ticks > 0) await Task.Delay(batchDelay);
+            batchState = await ProcessBatchAsync(step, stepName, batchState, maxBatchCount);
+            batchCount++;
+
+            if (maxBatchCount is not null && batchCount == maxBatchCount)
+            {
+                break;
+            }
         }
         while (batchState.QueryState?.MoreRecords == true);
 
+        batchLogger.LogTotalsAndReset(stepName);
+
+        step.OnStepFinished();
     }
 
     public async Task<BatchState<TInput>> ProcessBatchAsync<TInput, TOutput>(
-        IBatchIntegrationStep<TInput,TOutput> step,
-        BatchState<TInput>? batchState)
+        IBatchIntegrationStep<TInput, TOutput> step,
+        string stepName,
+        BatchState<TInput>? batchState,
+        int? maxBatchCount = null)
     {
 
         var queryState = batchState?.QueryState;
@@ -31,11 +60,11 @@ public class BatchProcessor(IProgressListener progressListener)
         var query = step.GetInputQuery();
         if (queryState is null)
         {
-            var total = await query.GetTotalRecordCountAsync();
+            var total = await query.GetTotalRecordCountAsync(step.BatchSize, maxBatchCount);
             queryState = new(0, step.BatchSize, 0, total, true, null);
         }
 
-        progress ??= new IntegrationProgress(step.GetType().Name, queryState.TotalRecordCount);
+        progress ??= new IntegrationProgress(stepName, queryState.TotalRecordCount);
 
         // get batch of data (IPagedQuery)
         var result = await query.GetNextPageAsync(queryState.NextPageNumber, queryState.RecordsPerPage, queryState.Bookmark);
@@ -49,12 +78,17 @@ public class BatchProcessor(IProgressListener progressListener)
         data = await step.OnAfterMapAsync(data);
 
         data = await step.OnBeforeDeliveryAsync(data);
+
         var results = await step.OutputDataSource.PerformOperationsAsync(data, step.DryRun, step.DataOperationFlags);
+
+        batchLogger.LogFailures(results, step.KeySelector);
+        batchLogger.UpdateTotals(results);
+
         await step.OnAfterDeliveryAsync(results);
 
         // report progress (IProgressListener)
         progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? (r.Operation.OperationType?.ToString() ?? "Error") : "Error"));
-        await progressListener.OnProgressChange(progress);
+        progressListener.OnProgressChange(progress);
 
 
         // return state (more records, paging details) from IPagedQuery
@@ -68,7 +102,7 @@ public class BatchProcessor(IProgressListener progressListener)
                 proccessedCount,
                 queryState.TotalRecordCount,
                 result.MoreRecords,
-                queryState.Bookmark
+                result.Bookmark
             ),
             progress
         );

@@ -1,25 +1,41 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using System.Data;
 
-namespace Root16.Sprout.DataSources.Dataverse;
+namespace Root16.Sprout.DataSources.Sql;
 
-public class SqlPagedQuery(SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
+public class SqlPagedQuery(ILogger<SqlPagedQuery> logger, SqlConnection connection, string commandText, string? totalRowCountCommandText = null, bool addPaging = true) : IPagedQuery<DataRow>
 {
+    private readonly ILogger<SqlPagedQuery> logger = logger;
     private readonly SqlConnection connection = connection;
     private readonly string commandText = commandText;
     private readonly string? totalRowCountCommandText = totalRowCountCommandText;
     private readonly bool addPaging = addPaging;
 
+    const int MaxRetries = 10;
+
     public async Task<PagedQueryResult<DataRow>> GetNextPageAsync(int pageNumber, int pageSize, object? bookmark)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = commandText;
+        command.CommandText = commandText.Trim();
         if (addPaging)
         {
-            command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            if (command.CommandText.EndsWith(";"))
+            {
+                command.CommandText = command.CommandText.Remove(command.CommandText.Length - 1);
+            }
+
+            if (commandText.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
+            {
+                command.CommandText += $" OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            }
+            else
+            {
+                command.CommandText += $" ORDER BY 1 OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            }
         }
         command.Connection.Open();
-        var reader = await command.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+        var reader = await TryAsync(() => command.ExecuteReaderAsync(CommandBehavior.CloseConnection));
         try
         {
             DataTable table = new();
@@ -39,20 +55,50 @@ public class SqlPagedQuery(SqlConnection connection, string commandText, string?
         }
     }
 
-    public async Task<int?> GetTotalRecordCountAsync()
+    public async Task<int?> GetTotalRecordCountAsync(int batchSize, int? maxBatchCount)
     {
-        if (string.IsNullOrEmpty(totalRowCountCommandText)) return null;
+        if (string.IsNullOrWhiteSpace(totalRowCountCommandText)) return null;
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = totalRowCountCommandText;
         cmd.Connection.Open();
         try
         {
-            return (int?)await cmd.ExecuteScalarAsync();
+
+            var totalCount = await TryAsync(async () => (int?)await cmd.ExecuteScalarAsync());
+
+            return maxBatchCount is null
+                ? totalCount
+                : Math.Min((int) totalCount, batchSize * maxBatchCount.Value);
         }
         finally
         {
             cmd.Connection.Close();
         }
     }
+
+
+    private async Task<T> TryAsync<T>(Func<Task<T>> sqlRequest)
+    {
+        var retryCount = 0;
+        Exception? lastException = null;
+        do
+        {
+            try
+            {
+                return await sqlRequest();
+            }
+            catch (Exception ex)
+            {
+                if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                lastException = ex;
+            }
+        } while (retryCount++ < MaxRetries);
+
+        throw lastException;
+    }
+
 }

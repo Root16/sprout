@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageProjectUrl>https://github.com/Root16/sprout</PackageProjectUrl>
@@ -16,10 +15,9 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<DebugType>embedded</DebugType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-		<LangVersion>default</LangVersion>
+    <IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
@@ -35,11 +33,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
-		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.16" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.12" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

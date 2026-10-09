@@ -1,22 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
+using Root16.Sprout.Extensions;
 using System.Text;
 
 namespace Root16.Sprout.DataSources.Dataverse;
 
-public class EntityOperationReducer
+public class EntityOperationReducer(
+    ILogger<EntityOperationReducer> logger,
+    EntityBatchAnalyzer analyzer
+    )
 {
-    private IEnumerable<Entity>? entities;
-    private readonly ILogger<EntityOperationReducer> logger;
-
-    public EntityOperationReducer(ILogger<EntityOperationReducer> logger)
-    {
-        this.logger = logger;
-    }
+    private IEnumerable<Entity>? potentialMatches;
+    private readonly ILogger<EntityOperationReducer> logger = logger;
 
     public void SetPotentialMatches(IEnumerable<Entity> entities)
     {
-        this.entities = entities;
+        this.potentialMatches = entities;
     }
 
     private Entity ReduceEntityChanges(Entity updates, Entity? original)
@@ -32,20 +31,17 @@ public class EntityOperationReducer
         }
 
         updates.Attributes.Remove("overriddencreatedon");
-        return updates.CloneWithModifiedAttributes(original);
+        return updates.CloneWithModifiedAttributes(original, logger);
     }
 
-    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, string> keySelector)
+    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, string> keySelector, StringComparison stringComparison = StringComparison.InvariantCultureIgnoreCase)
     {
-        return ReduceOperations(changes, (e1, e2) => StringComparer.OrdinalIgnoreCase.Equals(keySelector(e1), keySelector(e2)));
-    }
-
-    public IReadOnlyList<DataOperation<Entity>> ReduceOperations(IEnumerable<DataOperation<Entity>> changes, Func<Entity, Entity, bool> entityEqualityComparer)
-    {
-        if (entities is null)
+        if (potentialMatches is null || !potentialMatches.Any())
         {
             return changes.ToList();
         }
+
+        Dictionary<string, List<Entity>> potentialMatchDict = potentialMatches.GroupBy(x => keySelector(x), StringComparer.FromComparison(stringComparison)).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.FromComparison(stringComparison));
 
         var results = new List<DataOperation<Entity>>();
 
@@ -55,9 +51,10 @@ public class EntityOperationReducer
         {
             if (change is null) continue;
 
-            var matches = entities.Where(e => entityEqualityComparer(e, change.Data)).ToList();
+            var matches = potentialMatchDict.GetValue(keySelector(change.Data));
+            var altKey = keySelector(change.Data);
 
-            if (matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
+            if (matches is not null && matches.Any() && (change.OperationType.Equals("Update", StringComparison.OrdinalIgnoreCase) || change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase)))
             {
                 if (matches.Count > 1)
                 {
@@ -68,9 +65,10 @@ public class EntityOperationReducer
                 var match = matches[0];
                 change.Data.Id = match.Id;
                 var delta = ReduceEntityChanges(change.Data, match);
+                var audit = analyzer.GetDifference(altKey, delta, match);
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
-                    results.Add(new DataOperation<Entity>("Update", delta));
+                    results.Add(new DataOperation<Entity>("Update", delta, audit));
                     if (logger.IsEnabled(LogLevel.Debug))
                     {
                         logger.LogDebug(delta.FormatChanges(match));
@@ -80,10 +78,11 @@ public class EntityOperationReducer
             else if (change.OperationType.Equals("Create", StringComparison.OrdinalIgnoreCase))
             {
                 var delta = ReduceEntityChanges(change.Data, null);
+                var audit = analyzer.GetDifference(altKey, delta);
 
                 if (delta is not null && delta.Attributes.Count > 0)
                 {
-                    results.Add(new DataOperation<Entity>("Create", delta));
+                    results.Add(new DataOperation<Entity>("Create", delta, audit));
 
                     if (logger.IsEnabled(LogLevel.Debug))
                     {

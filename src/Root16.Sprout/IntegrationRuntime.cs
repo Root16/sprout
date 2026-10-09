@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DependencyInjection;
 using Root16.Sprout.Progress;
 
@@ -10,37 +11,40 @@ public class IntegrationRuntime : IIntegrationRuntime
     private readonly IEnumerable<StepRegistration> stepRegistrations = [];
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IProgressListener progressListener;
+    private readonly IEnumerable<IIntegrationStep> _steps;
 
-    public IntegrationRuntime(IEnumerable<StepRegistration> stepRegistrations, IServiceScopeFactory serviceScopeFactory, IProgressListener progressListener)
+    public IntegrationRuntime(IEnumerable<StepRegistration> stepRegistrations, IEnumerable<IIntegrationStep> steps, IServiceScopeFactory serviceScopeFactory, IProgressListener progressListener)
     {
         this.stepRegistrations = stepRegistrations;
+        _steps = steps;
         this.serviceScopeFactory = serviceScopeFactory;
         this.progressListener = progressListener;
         CheckRegistrations();
         BuildDependencyTree();
     }
 
-    public async Task<string> RunStepAsync(string name)
+    public async Task<string> RunStepAsync(string name, Action<IIntegrationStep>? stepConfigurator = null)
     {
         var reg = stepRegistrations.FirstOrDefault(step => step.Name == name) ?? throw new InvalidOperationException($"Step named '{name}' is not registered.");
-        await RunStepAsync(reg);
+        await RunStepAsync(reg, stepConfigurator);
         return reg.Name;
     }
 
-    public async Task<string> RunStepAsync<TStep>() where TStep : class, IIntegrationStep
+    public async Task<string> RunStepAsync<TStep>(Action<IIntegrationStep>? stepConfigurator = null) where TStep : class, IIntegrationStep
     {
         var reg = stepRegistrations.FirstOrDefault(step => step.StepType == typeof(TStep)) ?? throw new InvalidOperationException($"Step of type '{typeof(TStep)}' is not registered.");
-        await RunStepAsync(reg);
+        await RunStepAsync(reg, stepConfigurator);
         return reg.Name;
     }
 
-    private async Task<string> RunStepAsync(StepRegistration reg)
+    private async Task<string> RunStepAsync(StepRegistration reg, Action<IIntegrationStep>? stepConfigurator = null)
     {
-        await progressListener.OnStepStart(reg.Name);
+        progressListener.OnStepStart(reg.Name);
         using var scope = serviceScopeFactory.CreateScope();
-        var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredService(reg.StepType);
-        await step.RunAsync();
-        await progressListener.OnStepComplete(reg.Name);
+        var step = (IIntegrationStep)scope.ServiceProvider.GetRequiredKeyedService(reg.StepType, reg.Name);
+        stepConfigurator?.Invoke(step);
+        await step.RunAsync(reg.Name);
+        progressListener.OnStepComplete(reg.Name);
         return reg.Name;
     }
 
@@ -49,7 +53,7 @@ public class IntegrationRuntime : IIntegrationRuntime
     public async Task RunAllStepsAsync(int maxDegreesOfParallelism = 1, Action<string>? completionHandler = null)
     {
         CheckStepDependencyTree();
-        await progressListener.OnRunStart(GetStepNames().ToList());
+        progressListener.OnRunStart();
         var waitingSteps = stepRegistrations.Select(reg => new DelayedStep(reg, RunStepAsync)).ToList();
         var completedStepNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var queuedSteps = new List<DelayedStep>();
@@ -60,15 +64,21 @@ public class IntegrationRuntime : IIntegrationRuntime
             queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
             waitingSteps = waitingSteps.Except(queuedSteps).ToList();
             int available = maxDegreesOfParallelism - runningSteps.Count;
-            runningSteps.AddRange(queuedSteps.Take(available).Select(x => x.StepRunner(x.StepRegistration)));
+            var newRunningSteps = queuedSteps
+                .Take(available)
+                .Select(x => maxDegreesOfParallelism > 1
+                    ? Task.Run(() => x.StepRunner(x.StepRegistration))
+                    : x.StepRunner(x.StepRegistration))
+                .ToList();
+            runningSteps.AddRange(newRunningSteps);
             queuedSteps.RemoveRange(0, Math.Min(queuedSteps.Count, available));
-            var finishedStep = await Task.WhenAny(runningSteps);
-            runningSteps.Remove(finishedStep);
-            var stepName = await finishedStep;
+            var finishedFunction = await Task.WhenAny(runningSteps);
+            runningSteps.Remove(finishedFunction);
+            var stepName = await finishedFunction;
             completedStepNames.Add(stepName);
             completionHandler?.Invoke(stepName);
         }
-        await progressListener.OnRunComplete();
+        progressListener.OnRunComplete();
     }
 
     private void CheckRegistrations()
@@ -116,7 +126,7 @@ public class IntegrationRuntime : IIntegrationRuntime
         return [.. stepsThatWontRun];
     }
 
-    private IEnumerable<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
+    private List<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
     {
         if (stepsThatWontRun.Count == 0)
         {
@@ -130,7 +140,7 @@ public class IntegrationRuntime : IIntegrationRuntime
             .ToList();
 
         steps.AddRange(newStepsThatWontRun);
-        steps.AddRange(GetAllStepsThatWontRun(steps).ToList());
+        steps.AddRange([.. GetAllStepsThatWontRun(steps)]);
         return steps;
     }
 }

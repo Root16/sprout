@@ -1,29 +1,32 @@
-﻿namespace Root16.Sprout.DataSources;
+﻿using System.Collections.Concurrent;
+
+namespace Root16.Sprout.DataSources;
 
 public class MemoryDataSource<T> : IDataSource<T>
 {
-	public List<T> Records { get; }
+	public ConcurrentBag<T> Records { get; }
 
 	public MemoryDataSource(IEnumerable<T> records)
 	{
-		Records = new List<T>(records);
+		Records = [.. records];
 	}
 	public MemoryDataSource()
 	{
-		Records = new List<T>();
+		Records = [];
 	}
 
 	public IPagedQuery<T> CreatePagedQuery()
 	{
-		return new MemoryPagedQuery<T>(Records.ToArray());
+        return new MemoryPagedQuery<T>([.. Records]);
 	}
 
-    public Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
+    public virtual Task<IReadOnlyList<DataOperationResult<T>>> PerformOperationsAsync(IEnumerable<DataOperation<T>> operations, bool dryRun, IEnumerable<string> dataOperationFlags)
     {
-		Records.AddRange(operations.Select(r => r.Data));
-		IReadOnlyList<DataOperationResult<T>> results = operations
-			.Select(r => new DataOperationResult<T>(r, true))
-			.ToList();
+		foreach (var record in operations.Select(r => r.Data))
+		{
+			Records.Add(record);
+		}
+		IReadOnlyList<DataOperationResult<T>> results = [.. operations.Select(r => new DataOperationResult<T>(r, true))];
 		return Task.FromResult(results);
 	}
 }

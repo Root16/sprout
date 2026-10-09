@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Root16.Sprout;
 using Root16.Sprout.DataSources;
-using Root16.Sprout.DataSources.Dataverse;
+using Root16.Sprout.Dataverse.Extensions;
 using Root16.Sprout.Sample;
 using Root16.Sprout.Sample.ParallelSteps;
 using Root16.Sprout.Sample.ParallelSteps.Models;
@@ -54,9 +54,10 @@ var runtime = host.Services.GetRequiredService<IIntegrationRuntime>();
 
 //This will throw an error unless AccountInvalidDependencyTestStep, and ContactInvalidDependencyTestStep are both commented out
 // Contact and Task will run, then Email and Account and then letter. Takes into account dependencies, but then also still only runs 2 at a time
-await runtime.RunAllStepsAsync(2, finishedStep =>
-{
-    Console.WriteLine($"Step Finished - {finishedStep}");
-});
+await runtime.RunStepAsync<ContactTestStep>();
+//await runtime.RunAllStepsAsync(2, finishedStep =>
+//{
+//    Console.WriteLine($"Step Finished - {finishedStep}");
+//});
 
 Console.WriteLine("Sprout Sample Complete.");
