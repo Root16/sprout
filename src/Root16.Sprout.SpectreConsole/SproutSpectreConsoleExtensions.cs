@@ -1,23 +1,37 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Root16.Sprout.Progress;
-using Root16.Sprout.Progress.SpectreConsole;
 
-namespace Root16.Sprout;
+namespace Root16.Sprout.SpectreConsole;
 
 public static class SproutSpectreConsoleExtensions
 {
+    /// <summary>
+    /// Registers the SpectreConsoleProgressListener as the IProgressListener implementation, replacing the default ConsoleProgressListener.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
     public static IServiceCollection AddSpectreConsole(this IServiceCollection services)
     {
-        if (services.IsReadOnly)
+        services.RemoveConsoleListener();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProgressListener, SpectreConsoleProgressListener>());
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the SpectreConsoleProgressListener as the IProgressListener implementation, replacing the default ConsoleProgressListener, and allows specifying a custom refresh rate for the console output.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="refreshRate"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddSpectreConsole(this IServiceCollection services, TimeSpan refreshRate)
+    {
+        services.RemoveConsoleListener();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProgressListener, SpectreConsoleProgressListener>(sp =>
         {
-            return services;
-        }
-        var progressListenerToRemove = services.FirstOrDefault(x => x.ServiceType.Name == typeof(IProgressListener).Name);
-        if (progressListenerToRemove is not null)
-        {
-            services.Remove(progressListenerToRemove);
-        }
-        services.AddSingleton<IProgressListener, SpectreConsoleProgressListener>();
+            return ActivatorUtilities.CreateInstance<SpectreConsoleProgressListener>(sp, refreshRate);
+        }));
+
         return services;
     }
 }

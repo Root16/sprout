@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Root16.Sprout.BatchProcessing;
 using Root16.Sprout.DependencyInjection;
@@ -139,7 +139,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IIntegrationRuntime, IntegrationRuntime>();
         services.TryAddTransient<BatchProcessor>();
         services.TryAddTransient<BatchLogger>();
-        services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProgressListener, ConsoleProgressListener>());
         return services;
     }
 
@@ -152,7 +152,10 @@ public static class ServiceCollectionExtensions
     /// <returns>Returns the service collection</returns>
     public static IServiceCollection RemoveConsoleListener(this IServiceCollection services)
     {
-        var progressListenerToRemove = services.FirstOrDefault(x => x.ServiceType.Name == typeof(IProgressListener).Name);
+        var progressListenerToRemove = services.FirstOrDefault(x => 
+            x.ServiceType == typeof(IProgressListener) && 
+            x.ImplementationType == typeof(ConsoleProgressListener));
+            
         if (progressListenerToRemove is not null)
         {
             services.Remove(progressListenerToRemove);
@@ -174,10 +177,9 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<BatchLogger>();
         services.TryAddTransient<BatchProcessor>((serviceProvider) =>
         {
-            var batchLogger = serviceProvider.GetRequiredService<BatchLogger>();
-            return new (serviceProvider.GetRequiredService<IProgressListener>(), batchLogger, defaultBatchDelay);
+            return ActivatorUtilities.CreateInstance<BatchProcessor>(serviceProvider, defaultBatchDelay);
         });
-        services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IProgressListener, ConsoleProgressListener>());
         return services;
     }
 }
