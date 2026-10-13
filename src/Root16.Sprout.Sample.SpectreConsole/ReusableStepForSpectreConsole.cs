@@ -13,8 +13,9 @@ namespace Root16.Sprout.Sample.SpectreConsole
 
         public ReusableStepForSpectreConsole(BatchProcessor batchProcessor)
         {
+            BatchSize = 5000;
             processor = batchProcessor;
-            for (int i = 0; i < Random.Shared.Next(500000, 1000000); i++)
+            for (int i = 0; i < Random.Shared.Next(10000, 60000); i++)
             {
                 InputDataSource.Records.Add(new SampleData());
             }
@@ -30,11 +31,6 @@ namespace Root16.Sprout.Sample.SpectreConsole
         public override IReadOnlyList<DataOperation<SampleData>> MapRecord(SampleData source)
         {
             return [];
-        }
-
-        public override async Task OnAfterDeliveryAsync(IReadOnlyList<DataOperationResult<SampleData>> results)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
         public override async Task RunAsync(string stepName)

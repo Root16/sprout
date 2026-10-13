@@ -28,7 +28,11 @@ public static class SproutSpectreConsoleExtensions
     {
         services.RemoveConsoleListener();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IProgressListener, SpectreConsoleProgressListener>(sp =>
-        {
+        { 
+            if(refreshRate >= TimeSpan.FromMilliseconds(100))
+            {
+                return ActivatorUtilities.CreateInstance<SpectreConsoleProgressListener>(sp);
+            }
             return ActivatorUtilities.CreateInstance<SpectreConsoleProgressListener>(sp, refreshRate);
         }));
 

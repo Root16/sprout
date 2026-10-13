@@ -16,7 +16,6 @@ builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddSprout();
 builder.Services.AddSproutDataverse();
-builder.Services.AddSpectreConsole();
 
 builder.Services.RegisterStep<ContactTestStep>();
 builder.Services.RegisterStep<TaskTestStep>();
