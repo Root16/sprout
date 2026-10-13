@@ -55,14 +55,14 @@ public class IntegrationRuntime : IIntegrationRuntime
         CheckStepDependencyTree();
         progressListener.OnRunStart();
         var waitingSteps = stepRegistrations.Select(reg => new DelayedStep(reg, RunStepAsync)).ToList();
-        var completedStepNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var completedStepNames = new HashSet<string>(StringComparer.Ordinal);
         var queuedSteps = new List<DelayedStep>();
         var runningSteps = new List<Task<string>>();
 
         while (queuedSteps.Count != 0 || runningSteps.Count != 0 || waitingSteps.Count != 0)
         {
             queuedSteps.AddRange(waitingSteps.Where(s => s.StepRegistration.PrerequisteSteps.TrueForAll(preReq => completedStepNames.Contains(preReq))));
-            waitingSteps = waitingSteps.Except(queuedSteps).ToList();
+            waitingSteps = [.. waitingSteps.Except(queuedSteps)];
             int available = maxDegreesOfParallelism - runningSteps.Count;
             var newRunningSteps = queuedSteps
                 .Take(available)
@@ -99,7 +99,7 @@ public class IntegrationRuntime : IIntegrationRuntime
 
             foreach (var preRegStep in preRegSteps)
             {
-                var stepToUpdate = stepRegistrations.FirstOrDefault(x => x.Name.Equals(preRegStep, StringComparison.OrdinalIgnoreCase));
+                var stepToUpdate = stepRegistrations.FirstOrDefault(x => x.Name.Equals(preRegStep));
                 stepToUpdate?.DependentSteps.Add(stepReg.Name);
             }
         }
@@ -115,32 +115,65 @@ public class IntegrationRuntime : IIntegrationRuntime
         }
     }
 
+    /// <summary>
+    /// Checks for steps that will not run due to missing prerequisites or circular dependencies.
+    /// </summary>
+    /// <returns>A Hashset of all of the steps that will not run</returns>
     private HashSet<string> CheckForStepsThatWillNotRun()
     {
-        List<string> stepsThatWontRun =
-        [
-            .. stepRegistrations.Where(x => x.PrerequisteSteps.Intersect(x.DependentSteps).Any()).Select(x => x.Name),
-        ];
-        stepsThatWontRun.AddRange(GetAllStepsThatWontRun(stepsThatWontRun));
-        stepsThatWontRun.AddRange(stepRegistrations.Where(x => !x.PrerequisteSteps.TrueForAll(x => stepRegistrations.Select(x => x.Name).Contains(x))).Select(x => x.Name));
-        return [.. stepsThatWontRun];
-    }
+        HashSet<string> stepsThatWontRun = new(StringComparer.Ordinal);
+        HashSet<string> registeredNames = new(stepRegistrations.Select(r => r.Name), StringComparer.Ordinal);
 
-    private List<string> GetAllStepsThatWontRun(List<string> stepsThatWontRun)
-    {
-        if (stepsThatWontRun.Count == 0)
+        // Check for steps with missing prerequisites
+        foreach (var reg in stepRegistrations)
         {
-            return [];
+            if (!reg.PrerequisteSteps.TrueForAll(p => registeredNames.Contains(p)))
+            {
+                stepsThatWontRun.Add(reg.Name);
+            }
         }
-        var steps = new List<string>();
-        var newStepsThatWontRun = stepRegistrations
-            .Where(x => !stepsThatWontRun.Contains(x.Name))
-            .Where(x => x.PrerequisteSteps.Intersect(stepsThatWontRun).Any())
-            .Select(x => x.Name)
-            .ToList();
 
-        steps.AddRange(newStepsThatWontRun);
-        steps.AddRange([.. GetAllStepsThatWontRun(steps)]);
-        return steps;
+        // Check for circular dependencies using BFS on a directed graph representation of the steps
+        Dictionary<string, int> stepToDegree = new(StringComparer.Ordinal);
+        foreach (var reg in stepRegistrations)
+        {
+            // Count the number of prerequisites for each step
+            stepToDegree[reg.Name] = reg.PrerequisteSteps.Count(p => registeredNames.Contains(p));
+        }
+
+        // Initialize a queue with steps that have no prerequisites (degree 0)
+        Queue<string> queue = new(stepToDegree.Where(kvp => kvp.Value == 0).Select(kvp => kvp.Key));
+        HashSet<string> processedSteps = new(StringComparer.Ordinal);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            processedSteps.Add(current);
+
+            // For each dependent step of the current step, reduce its degree and enqueue it if it becomes 0
+            var currentReg = stepRegistrations.First(r => r.Name.Equals(current, StringComparison.Ordinal));
+            foreach (var dependent in currentReg.DependentSteps)
+            {
+                if (stepToDegree.TryGetValue(dependent, out int value))
+                {
+                    stepToDegree[dependent] = --value;
+                    if (stepToDegree[dependent] == 0)
+                    {
+                        queue.Enqueue(dependent);
+                    }
+                }
+            }
+        }
+
+        // Any steps that were not processed are part of a circular dependency or have unmet prerequisites
+        foreach (var reg in stepRegistrations)
+        {
+            if (!processedSteps.Contains(reg.Name))
+            {
+                stepsThatWontRun.Add(reg.Name);
+            }
+        }
+
+        return stepsThatWontRun;
     }
 }
