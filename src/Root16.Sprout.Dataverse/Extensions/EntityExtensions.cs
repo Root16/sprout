@@ -8,7 +8,7 @@ public static class EntityExtensions
 {
     public static Entity CloneWithModifiedAttributes(this Entity updates, Entity original, ILogger logger)
     {
-        logger.LogDebug("Cloning entity {LogicalName} ({Id}) with modified attributes.", original?.LogicalName, original?.Id);
+        logger.LogTrace("Cloning entity {LogicalName} ({Id}) with modified attributes.", original?.LogicalName, original?.Id);
         Entity delta = new(original.LogicalName, original.Id);
 
         foreach (var attribute in updates.Attributes)
@@ -18,7 +18,7 @@ public static class EntityExtensions
                 continue;
             }
 
-            logger.LogDebug("Checking attribute {AttributeKey} for changes.", attribute.Key);
+            logger.LogTrace("Checking attribute {AttributeKey} for changes.", attribute.Key);
             bool different = false;
             original.Attributes.TryGetValue(attribute.Key, out object originalValue);
 
@@ -48,20 +48,20 @@ public static class EntityExtensions
 
             if (updateValue is EntityReference || originalValue is EntityReference)
             {
-                logger.LogDebug("Comparing EntityReference attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing EntityReference attribute {AttributeKey}", attribute.Key);
                 var originalLookup = originalValue as EntityReference;
                 var updateLookup = updateValue as EntityReference;
 
                 if (updateLookup?.Id != originalLookup?.Id ||
                     updateLookup?.LogicalName != originalLookup?.LogicalName)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different EntityReference values.", attribute.Key);
+                    logger.LogTrace("Attribute {AttributeKey} has different EntityReference values.", attribute.Key);
                     different = true;
                 }
             }
             else if (updateValue is EntityReferenceCollection || originalValue is EntityReferenceCollection)
             {
-                logger.LogDebug("Comparing EntityReferenceCollection attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing EntityReferenceCollection attribute {AttributeKey}", attribute.Key);
                 var originalCollection = originalValue as EntityReferenceCollection;
                 var updateCollection = updateValue as EntityReferenceCollection;
 
@@ -71,7 +71,7 @@ public static class EntityExtensions
                 }
                 if (originalCollection is null || updateCollection is null)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different EntityReferenceCollection presence (one is null).", attribute.Key);
+                    logger.LogTrace("Attribute {AttributeKey} has different EntityReferenceCollection presence (one is null).", attribute.Key);
                     different = true;
                 }
                 else
@@ -82,7 +82,7 @@ public static class EntityExtensions
                     // Check If Same Amount Of Groups
                     if (groupedOriginalCollection.Count != groupedUpdateCollection.Count)
                     {
-                        logger.LogDebug("Attribute {AttributeKey} has different number of groups. Original: {OriginalCount}, Update: {UpdateCount}", attribute.Key, groupedOriginalCollection.Count, groupedUpdateCollection.Count);
+                        logger.LogTrace("Attribute {AttributeKey} has different number of groups. Original: {OriginalCount}, Update: {UpdateCount}", attribute.Key, groupedOriginalCollection.Count, groupedUpdateCollection.Count);
                         different = true;
                     }
                     else
@@ -93,7 +93,7 @@ public static class EntityExtensions
                         // Check if the distinct record types are the same
                         if (!originalTypes.SequenceEqual(updateTypes))
                         {
-                            logger.LogDebug("Attribute {AttributeKey} has different record types. Original: {OriginalTypes}, Update: {UpdateTypes}", attribute.Key, string.Join(", ", originalTypes.Select(g => g?.ToString() ?? "null")), string.Join(", ", updateTypes.Select(g => g?.ToString() ?? "null")));
+                            logger.LogTrace("Attribute {AttributeKey} has different record types. Original: {OriginalTypes}, Update: {UpdateTypes}", attribute.Key, string.Join(", ", originalTypes.Select(g => g?.ToString() ?? "null")), string.Join(", ", updateTypes.Select(g => g?.ToString() ?? "null")));
                             different = true;
                         }
                         else
@@ -104,7 +104,7 @@ public static class EntityExtensions
                                 var updateGroup = groupedUpdateCollection.FirstOrDefault(g => g.Key == originalGroup.Key);
                                 if (updateGroup is null || originalGroup.Count() != updateGroup.Count())
                                 {
-                                    logger.LogDebug("Attribute {AttributeKey} has different number of records for type {RecordType}. Original: {OriginalCount}, Update: {UpdateCount}", attribute.Key, originalGroup.Key, originalGroup.Count(), updateGroup?.Count() ?? 0);
+                                    logger.LogTrace("Attribute {AttributeKey} has different number of records for type {RecordType}. Original: {OriginalCount}, Update: {UpdateCount}", attribute.Key, originalGroup.Key, originalGroup.Count(), updateGroup?.Count() ?? 0);
                                     different = true;
                                     break;
                                 }
@@ -114,7 +114,7 @@ public static class EntityExtensions
 
                                 if (!originalIds.SetEquals(updateIds))
                                 {
-                                    logger.LogDebug("Attribute {AttributeKey} has different record IDs for type {RecordType}. Original: {OriginalIds}, Update: {UpdateIds}", attribute.Key, originalGroup.Key, string.Join(", ", originalIds.Select(g => g?.ToString() ?? "null")), string.Join(", ", updateIds.Select(g => g?.ToString() ?? "null")));
+                                    logger.LogTrace("Attribute {AttributeKey} has different record IDs for type {RecordType}. Original: {OriginalIds}, Update: {UpdateIds}", attribute.Key, originalGroup.Key, string.Join(", ", originalIds.Select(g => g?.ToString() ?? "null")), string.Join(", ", updateIds.Select(g => g?.ToString() ?? "null")));
                                     different = true;
                                     break;
                                 }
@@ -125,7 +125,7 @@ public static class EntityExtensions
             }
             else if (updateValue is EntityCollection || originalValue is EntityCollection)
             {
-                logger.LogDebug("Comparing EntityCollection attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing EntityCollection attribute {AttributeKey}", attribute.Key);
                 var originalCollection = originalValue as EntityCollection;
                 var updateCollection = updateValue as EntityCollection;
 
@@ -135,7 +135,7 @@ public static class EntityExtensions
                 }
                 if (originalCollection is null || updateCollection is null)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different EntityCollection presence (one is null).", attribute.Key);
+                    logger.LogTrace("Attribute {AttributeKey} has different EntityCollection presence (one is null).", attribute.Key);
                     different = true;
                 }
                 else
@@ -145,7 +145,7 @@ public static class EntityExtensions
 
                     if (!originalKeys.SequenceEqual(updateKeys))
                     {
-                        logger.LogDebug("Attribute {AttributeKey} has different Activity Parties. Original: {OriginalParties}, Update: {UpdateParties}",
+                        logger.LogTrace("Attribute {AttributeKey} has different Activity Parties. Original: {OriginalParties}, Update: {UpdateParties}",
                             attribute.Key, string.Join(", ", originalKeys), string.Join(", ", updateKeys));
                         different = true;
                     }
@@ -153,31 +153,31 @@ public static class EntityExtensions
             }
             else if (updateValue is Money || originalValue is Money)
             {
-                logger.LogDebug("Comparing Money attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing Money attribute {AttributeKey}", attribute.Key);
                 var originalMoney = originalValue as Money;
                 var updateMoney = updateValue as Money;
 
                 if (updateMoney?.Value != originalMoney?.Value)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different Money values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalMoney?.Value, updateMoney?.Value);
+                    logger.LogTrace("Attribute {AttributeKey} has different Money values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalMoney?.Value, updateMoney?.Value);
                     different = true;
                 }
             }
             else if (updateValue is OptionSetValue || originalValue is OptionSetValue)
             {
-                logger.LogDebug("Comparing OptionSetValue attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing OptionSetValue attribute {AttributeKey}", attribute.Key);
                 var originalOptionSetValue = originalValue as OptionSetValue;
                 var updateOptionSetValue = updateValue as OptionSetValue;
 
                 if (updateOptionSetValue?.Value != originalOptionSetValue?.Value)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different OptionSetValue values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalOptionSetValue?.Value, updateOptionSetValue?.Value);
+                    logger.LogTrace("Attribute {AttributeKey} has different OptionSetValue values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalOptionSetValue?.Value, updateOptionSetValue?.Value);
                     different = true;
                 }
             }
             else if (updateValue is OptionSetValueCollection || originalValue is OptionSetValueCollection)
             {
-                logger.LogDebug("Comparing OptionSetValueCollection attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing OptionSetValueCollection attribute {AttributeKey}", attribute.Key);
                 var originalOptionSetValue = originalValue as OptionSetValueCollection;
                 var updateOptionSetValue = updateValue as OptionSetValueCollection;
 
@@ -187,19 +187,19 @@ public static class EntityExtensions
                 if (originalOptions.Length != updateOptions.Length ||
                     originalOptions.Intersect(updateOptions).Count() != originalOptions.Length)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different OptionSetValueCollection values. Original: {OriginalValues}, Update: {UpdateValues}", attribute.Key, string.Join(", ", originalOptions), string.Join(", ", updateOptions));
+                    logger.LogTrace("Attribute {AttributeKey} has different OptionSetValueCollection values. Original: {OriginalValues}, Update: {UpdateValues}", attribute.Key, string.Join(", ", originalOptions), string.Join(", ", updateOptions));
                     different = true;
                 }
             }
             else if (updateValue is string || originalValue is string)
             {
-                logger.LogDebug("Comparing string attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing string attribute {AttributeKey}", attribute.Key);
                 string? strUpdate = updateValue as string;
                 string? strOriginal = originalValue as string;
 
                 if (strUpdate == "" && strOriginal is null)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} is considered equal because update value is empty string and original value is null.", attribute.Key);
+                    logger.LogTrace("Attribute {AttributeKey} is considered equal because update value is empty string and original value is null.", attribute.Key);
                     different = false;
                 }
                 else
@@ -208,14 +208,14 @@ public static class EntityExtensions
 
                     if (!areEqual)
                     {
-                        logger.LogDebug("Attribute {AttributeKey} has different string values.", attribute.Key);
+                        logger.LogTrace("Attribute {AttributeKey} has different string values.", attribute.Key);
                         different = true;
                     }
                 }
             }
             else if (updateValue is DateTime || originalValue is DateTime)
             {
-                logger.LogDebug("Comparing DateTime attribute {AttributeKey}", attribute.Key);
+                logger.LogTrace("Comparing DateTime attribute {AttributeKey}", attribute.Key);
                 DateTime? dtUpdate = updateValue as DateTime?;
                 DateTime? dtOriginal = originalValue as DateTime?;
 
@@ -230,13 +230,13 @@ public static class EntityExtensions
 
                     if (uTime != oTime)
                     {
-                        logger.LogDebug("Attribute {AttributeKey} has different DateTime values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, oTime, uTime);
+                        logger.LogTrace("Attribute {AttributeKey} has different DateTime values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, oTime, uTime);
                         different = true;
                     }
                 }
                 else if (dtUpdate.HasValue != dtOriginal.HasValue)
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different DateTime presence. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, dtOriginal, dtUpdate);
+                    logger.LogTrace("Attribute {AttributeKey} has different DateTime presence. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, dtOriginal, dtUpdate);
                     different = true;
                 }
             }
@@ -244,14 +244,14 @@ public static class EntityExtensions
             {
                 if (!Equals(updateValue, originalValue))
                 {
-                    logger.LogDebug("Attribute {AttributeKey} has different values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalValue, updateValue);
+                    logger.LogTrace("Attribute {AttributeKey} has different values. Original: {OriginalValue}, Update: {UpdateValue}", attribute.Key, originalValue, updateValue);
                     different = true;
                 }
             }
 
             if (different)
             {
-                logger.LogDebug("Attribute {AttributeKey} has changed.", attribute.Key);
+                logger.LogTrace("Attribute {AttributeKey} has changed.", attribute.Key);
                 delta[attribute.Key] = updateValue;
             }
         }
