@@ -97,7 +97,8 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
                 return InnerClient.Execute(request);
             }
             catch (FaultException fault)
-            when (fault.Message.Contains("Database is currently unavailable", StringComparison.OrdinalIgnoreCase))
+            when (fault.Message.Contains("Database", StringComparison.OrdinalIgnoreCase)
+                || fault.Message.Contains("SQL", StringComparison.OrdinalIgnoreCase))
             {
                 WriteExceptionToLog(fault, lastException);
                 lastException = fault;
