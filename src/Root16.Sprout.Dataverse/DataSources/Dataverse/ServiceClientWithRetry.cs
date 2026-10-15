@@ -92,7 +92,7 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
             {
                 if (retryCount > 0)
                 {
-                    Task.Delay(retryCount * RetryPauseTime).Wait();
+                    Thread.Sleep(retryCount * RetryPauseTime);
                 }
                 return InnerClient.Execute(request);
             }
@@ -100,13 +100,13 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
             when (fault.Message.Contains("Database", StringComparison.OrdinalIgnoreCase)
                 || fault.Message.Contains("SQL", StringComparison.OrdinalIgnoreCase))
             {
-                WriteExceptionToLog(fault, lastException);
+                WriteExceptionToLog(fault, lastException, retryCount);
                 lastException = fault;
             }
             catch (FaultException<OrganizationServiceFault>) { throw; }
             catch (Exception ex)
             {
-                WriteExceptionToLog(ex, lastException);
+                WriteExceptionToLog(ex, lastException, retryCount);
                 lastException = ex;
             }
         } while (retryCount++ < MaxRetryCount);
@@ -130,15 +130,16 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
                 return await InnerClient.ExecuteAsync(request, cancellationToken);
             }
             catch (FaultException fault)
-            when (fault.Message.Contains("Database is currently unavailable", StringComparison.OrdinalIgnoreCase))
+            when (fault.Message.Contains("Database", StringComparison.OrdinalIgnoreCase)
+                || fault.Message.Contains("SQL", StringComparison.OrdinalIgnoreCase))
             {
-                WriteExceptionToLog(fault, lastException);
+                WriteExceptionToLog(fault, lastException, retryCount);
                 lastException = fault;
             }
             catch (FaultException<OrganizationServiceFault>) { throw; }
             catch (Exception ex)
             {
-                WriteExceptionToLog(ex, lastException);
+                WriteExceptionToLog(ex, lastException, retryCount);
                 lastException = ex;
             }
         } while (retryCount++ < MaxRetryCount);
@@ -146,13 +147,18 @@ public class ServiceClientWithRetry : IOrganizationServiceAsync2
         throw lastException!;
     }
 
-    private void WriteExceptionToLog(Exception ex, Exception? lastException)
+    private void WriteExceptionToLog(Exception ex, Exception? lastException, int numRetries)
     {
-        if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
+        if (Logger != null && Logger.IsEnabled(LogLevel.Error))
         {
-            if (Logger != null && Logger.IsEnabled(LogLevel.Error))
+            int numAttempts = numRetries + 1;
+            if (lastException is null || !ex.Message.Equals(lastException.Message, StringComparison.OrdinalIgnoreCase))
             {
-                Logger.LogError(ex, ex.Message);
+                Logger.LogError(ex, "(Sprout attempt #{numAttempts}): {errorMessage}", numAttempts, ex.Message);
+            }
+            else
+            {
+                Logger.LogError("(Sprout attempt #{numAttempts}): Retry failed", numAttempts);
             }
         }
     }
