@@ -103,11 +103,17 @@ public class SpectreConsoleProgressListener(ILogger<SpectreConsoleProgressListen
 
     private void CreateSpectreConsole(IList<string> stepNames)
     {
-        if (_consoleTask != null) return;
+        if (_consoleTask != null)
+        {
+            return;
+        }
 
         lock (_lock)
         {
-            if (_consoleTask != null) return;
+            if (_consoleTask != null)
+            {
+                return;
+            }
 
             // If refreshRate has a value, we turn OFF AutoRefresh so we can control it manually.
             bool useAutoRefresh = !refreshRate.HasValue;
