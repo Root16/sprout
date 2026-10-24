@@ -31,6 +31,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{493A2498
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Sample.StepRegistration", "Root16.Sprout.Sample.ReusableSteps\Root16.Sprout.Sample.StepRegistration.csproj", "{08CD8C1F-2CFB-417F-A093-5C32976510CE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{3F963493-D85D-4585-81E9-78045767F061}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Root16.Sprout.Utilities.Dataverse.ColumnAnalyzer", "Root16.Sprout.Utilities.Dataverse.ColumnAnalyzer\Root16.Sprout.Utilities.Dataverse.ColumnAnalyzer.csproj", "{B084627F-3E1D-4DB7-877F-04D4BA4AADFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +89,10 @@ Global
 		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08CD8C1F-2CFB-417F-A093-5C32976510CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B084627F-3E1D-4DB7-877F-04D4BA4AADFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B084627F-3E1D-4DB7-877F-04D4BA4AADFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B084627F-3E1D-4DB7-877F-04D4BA4AADFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B084627F-3E1D-4DB7-877F-04D4BA4AADFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +105,7 @@ Global
 		{8B66EBEA-F9B3-4E65-8BEB-6EDB311E5DE9} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
 		{969358E7-77C8-4887-A7A9-6295F648C8B6} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
 		{08CD8C1F-2CFB-417F-A093-5C32976510CE} = {A628163F-A711-4534-9CF7-EE661E7C1F3C}
+		{B084627F-3E1D-4DB7-877F-04D4BA4AADFE} = {3F963493-D85D-4585-81E9-78045767F061}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5325AEE1-471C-410A-8CC6-C8BCF4FD4C67}
