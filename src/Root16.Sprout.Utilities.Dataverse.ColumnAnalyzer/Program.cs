@@ -95,26 +95,6 @@ if (settings.GetRowCounts)
     rcCsv.WriteRecords(rowcounts);
 }
 
-List<string> ExcludedColumns =
-[
-    "*_base",
-    "*idtype",
-    "*yominame",
-    "importsequencenumber",
-    "parentcustomeridtype",
-    "processid",
-    "regardingobjectidname",
-    "regardingobjecttypecode",
-    "slaid",
-    "stageid",
-    "timezoneruleversionnumber",
-    "traversedpath",
-    "utcconversiontimezonecode",
-    "yomi*",
-];
-
-ExcludedColumns.AddRange(settings.ExcludePrefixes.Select(prefix => $"{(prefix.EndsWith('_') ? prefix : prefix + '_')}*"));
-
 List<TableColumnOutput> tableColumns = [];
 
 foreach (var table in tables)
@@ -139,7 +119,7 @@ foreach (var table in tables)
                 : col.SourceType.ToString() // Formula?
         };
 
-        foreach (var exclude in ExcludedColumns)
+        foreach (var exclude in settings.ExcludeKeywords)
         {
             var key = exclude.Trim('*');
             if (exclude.StartsWith('*') && exclude.EndsWith('*') && col.LogicalName.Contains(key))
@@ -153,6 +133,11 @@ foreach (var table in tables)
             else if (exclude.EndsWith('*') && col.LogicalName.StartsWith(key))
             {
                 output.ExcludedBy = exclude;
+            }
+            else if (col.LogicalName == key && exclude == "traversedpath" && metadata.IsBPFEntity == true)
+            {
+                output.IsIncluded = true;
+                output.Note = "Exclusion overridden for BPF table";
             }
             else if (col.LogicalName == key)
             {
@@ -200,13 +185,13 @@ foreach (var table in tables)
     }
 }
 
+var metadataMap = entityMetadataMap
+    .SelectMany(e => e.Value.Attributes)
+    .ToDictionary(e => (e.EntityLogicalName, e.LogicalName));
+
 if (settings.GetColumnUsageCounts)
 {
     Console.WriteLine("\nGetting column usage counts...");
-
-    var metadataMap = entityMetadataMap
-        .SelectMany(e => e.Value.Attributes)
-        .ToDictionary(e => (e.EntityLogicalName, e.LogicalName));
 
     const int CHUNK_SIZE = 2;
     var columnsToProcess = tableColumns
@@ -230,7 +215,7 @@ if (settings.GetColumnUsageCounts)
         var tds = new SqlConnection(config.GetConnectionString("TDS"));
         tds.Open();
         var table = columns[0].Table;
-        var currentCount = countByTable.AddOrUpdate(table, (_) => 0, (_, prev) => prev);
+        var currentCount = countByTable.AddOrUpdate(table, (_) => 0, (_, prev) => prev + columns.Length);
 
         lock (_consoleLock)
         {
@@ -272,10 +257,11 @@ if (settings.GetColumnUsageCounts)
         }
 
         tds.Close();
+        SqlConnection.ClearPool(tds);
 
         lock (_consoleLock)
         {
-            currentCount = countByTable.AddOrUpdate(table, (_) => 0, (_, prev) => prev + columns.Length);
+            currentCount = countByTable[table];
             Console.WriteLine($"{table}: processed {currentCount} of {totalByTable[table]}...");
         }
     });
@@ -366,7 +352,35 @@ if (settings.GetColumnUsageCounts)
 
 using var writer = new StreamWriter($"{settings.FolderPath}\\table-columns-output.csv");
 using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-csv.WriteRecords(tableColumns);
+{
+    csv.WriteRecords(tableColumns);
+}
+
+List<TableLookupColumn> lookups = [];
+foreach (var tableColumn in tableColumns.Where(e => e.IsIncluded))
+{
+    if (metadataMap[(tableColumn.Table, tableColumn.Column)] is not LookupAttributeMetadata lookup)
+    {
+        continue;
+    }
+
+    foreach (var target in lookup.Targets.Order())
+    {
+        lookups.Add(new TableLookupColumn
+        {
+            Table = tableColumn.Table,
+            Column = tableColumn.Column,
+            LookupTable = target,
+            LookupTableIsMissing = tables.Contains(target)
+        });
+    }
+}
+
+using var lookupWriter = new StreamWriter($"{settings.FolderPath}\\table-lookups-output.csv");
+using var lookupCsv = new CsvWriter(lookupWriter, CultureInfo.InvariantCulture);
+{
+    lookupCsv.WriteRecords(lookups);
+}
 
 var minimalOutput = tableColumns
     .Where(e => e.IsIncluded)
@@ -374,6 +388,7 @@ var minimalOutput = tableColumns
     .ToDictionary(e => e.Key, e => e.Select(col => col.Column).ToList());
 var jsonOptions = new JsonSerializerOptions
 {
-    WriteIndented = true
+    WriteIndented = true,
+    IndentSize = 4
 };
 File.WriteAllText($"{settings.FolderPath}\\table-columns-minimal.json", JsonSerializer.Serialize(minimalOutput, jsonOptions));

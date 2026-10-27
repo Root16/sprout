@@ -7,5 +7,5 @@ public record Settings
     public bool GetRowCounts { get; set; } = false;
     public bool GetColumnUsageCounts { get; set; } = false;
     public bool DetermineStepOrder { get; set; } = false;
-    public List<string> ExcludePrefixes { get; set; } = [];
+    public List<string> ExcludeKeywords { get; set; } = [];
 }
