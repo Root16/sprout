@@ -328,8 +328,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<BatchLogger>();
         services.TryAddTransient<BatchProcessor>((serviceProvider) =>
         {
-            var batchLogger = serviceProvider.GetRequiredService<BatchLogger>();
-            return new(serviceProvider.GetRequiredService<IProgressListener>(), batchLogger, defaultBatchDelay);
+            return ActivatorUtilities.CreateInstance<BatchProcessor>(serviceProvider, defaultBatchDelay);
         });
         services.TryAddSingleton<IProgressListener, ConsoleProgressListener>();
         return services;

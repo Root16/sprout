@@ -1,15 +1,15 @@
-﻿using Root16.Sprout.DataSources;
+using Root16.Sprout.DataSources;
 using Root16.Sprout.Logging;
 using Root16.Sprout.Progress;
 
 namespace Root16.Sprout.BatchProcessing;
 
 public class BatchProcessor(
-    IProgressListener progressListener, 
+    IEnumerable<IProgressListener> progressListeners, 
     BatchLogger batchLogger,
     TimeSpan batchDelay = default)
 {
-    private readonly IProgressListener progressListener = progressListener;
+    private readonly IEnumerable<IProgressListener> progressListeners = progressListeners;
     private readonly TimeSpan defaultBatchDelay = batchDelay;
 
     [Obsolete("Please use ProcessBatches.", true)]
@@ -88,7 +88,7 @@ public class BatchProcessor(
 
         // report progress (IProgressListener)
         progress.AddOperations(proccessedCount, results.Select(r => r.WasSuccessful ? (r.Operation.OperationType?.ToString() ?? "Error") : "Error"));
-        progressListener.OnProgressChange(progress);
+        await Task.WhenAll(progressListeners.Select(l => l.OnProgressChange(progress)));
 
 
         // return state (more records, paging details) from IPagedQuery

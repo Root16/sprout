@@ -1,31 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Root16.Sprout.Progress;
+﻿namespace Root16.Sprout.Progress;
 
 public class ConsoleProgressListener : IProgressListener
 {
-	public void OnRunStart()
+	public Task OnRunStart(IList<string> stepNames)
 	{
+		return Task.CompletedTask;
 	}
 
-	public void OnStepStart(string name)
+	public Task OnStepStart(string name)
 	{
+		return Task.CompletedTask;
 	}
 
-	public void OnProgressChange(IntegrationProgress progress)
+	public Task OnProgressChange(IntegrationProgress progress)
 	{
 		Console.CursorLeft = 0;
 		Console.Write(progress.ToString());
+		return Task.CompletedTask;
 	}
 
-	public void OnStepComplete(string name)
+	public Task OnStepComplete(string name)
 	{
 		Console.WriteLine();
+		return Task.CompletedTask;
 	}
 
-	public void OnRunComplete()
+	public Task OnRunComplete()
 	{
+		return Task.CompletedTask;
 	}
 }
