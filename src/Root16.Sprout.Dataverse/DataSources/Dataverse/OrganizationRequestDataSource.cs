@@ -2,6 +2,7 @@
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Root16.Sprout.Dataverse.DataSources.Dataverse;
+using System.Collections.Concurrent;
 using System.ServiceModel;
 
 namespace Root16.Sprout.DataSources.Dataverse;
@@ -24,30 +25,37 @@ public class OrganizationRequestDataSource(DataverseDataSource dataverseDataSour
             return results;
         }
 
-        var executeMultipleRequest = new ExecuteMultipleRequest
+        ConcurrentBag<DataOperationResult<OrganizationRequest>> parallelResults = [];
+        ParallelOptions parallelOptions = new() { MaxDegreeOfParallelism = CrmServiceClient.RecommendedDegreesOfParallelism };
+
+        await Parallel.ForEachAsync(operations.Chunk(10), parallelOptions, async (batch, token) =>
         {
-            Requests = new OrganizationRequestCollection(),
-            Settings = new ExecuteMultipleSettings
+            var executeMultipleRequest = new ExecuteMultipleRequest
             {
-                ContinueOnError = true,
-                ReturnResponses = true,
-            }
-        };
-        executeMultipleRequest.Requests.AddRange(operations.Select(op => CreateOrganizationRequest(op, dataOperationFlags)));
+                Requests = new OrganizationRequestCollection(),
+                Settings = new ExecuteMultipleSettings
+                {
+                    ContinueOnError = true,
+                    ReturnResponses = true,
+                }
+            };
+            executeMultipleRequest.Requests.AddRange(batch.Select(op => CreateOrganizationRequest(op, dataOperationFlags)));
 
-        var executeMultipleResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(executeMultipleRequest);
+            var executeMultipleResponse = (ExecuteMultipleResponse)await CrmServiceClient.ExecuteAsync(executeMultipleRequest, token);
 
-        foreach (var response in executeMultipleResponse.Responses)
-        {
-            if (response.Fault is not null)
+            foreach (var response in executeMultipleResponse.Responses)
             {
-                logger.LogError(response.Fault.ToString());
-            }
+                if (response.Fault is not null)
+                {
+                    logger.LogError(response.Fault.ToString());
+                }
 
-            results.Add(new DataOperationResult<OrganizationRequest>(
-                operations.Skip(response.RequestIndex).First(),
-                response.Fault is null));
-        }
+                parallelResults.Add(new DataOperationResult<OrganizationRequest>(
+                    batch[response.RequestIndex],
+                    response.Fault is null));
+            }
+        });
+        results.AddRange(parallelResults);
         return results;
     }
 
